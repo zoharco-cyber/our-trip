@@ -22,8 +22,7 @@
 5. **Project Settings > API**: מעתיקים את **Project URL** ואת המפתח **anon public**.
 
 ### 2. GitHub
-1. **Settings > Secrets and variables > Actions > Variables**: יוצרים שני משתנים:
-   `SUPABASE_URL` ו-`SUPABASE_ANON_KEY` עם הערכים מהשלב הקודם.
+1. מעדכנים את שני הערכים בקובץ `.env.production`.
 2. **Settings > Pages > Source**: בוחרים **GitHub Actions**.
 3. כל שינוי שנדחף ל-`main` מתפרסם אוטומטית לכתובת `https://<שם-המשתמש>.github.io/<שם-הריפו>/`.
 
