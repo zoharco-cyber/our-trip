@@ -1,10 +1,11 @@
 import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
-import { ACCOUNTS } from '../config';
 import Countdown from '../components/Countdown';
 
 export default function Login() {
-  const { signIn, enterAsGuest } = useAuth();
+  const { signIn, enterAsGuest, profiles } = useAuth();
+  const accounts = [...profiles].sort((a, b) => Number(a.is_admin) - Number(b.is_admin) || a.slug.localeCompare(b.slug));
+  const firstNames = profiles.filter((p) => p.is_traveler).map((p) => p.display_name.split(' ')[0]);
   const [slug, setSlug] = useState<string | null>(null);
   const [pw, setPw] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-hero">
-        <p className="eyebrow">אלה · ליהי · ליאור</p>
+        <p className="eyebrow">{firstNames.join(' · ') || '\u00a0'}</p>
         <h1 className="login-title">הטיול שלנו</h1>
         <p className="login-sub">דרום אמריקה ומה שיבוא אחריה</p>
         <Countdown compact />
@@ -31,10 +32,11 @@ export default function Login() {
       <form className="card login-card" onSubmit={submit}>
         <h2>מי נכנסת?</h2>
         <div className="who-grid">
-          {ACCOUNTS.map((a) => (
+          {accounts.length === 0 && <p className="muted small">טוען את רשימת המטיילות… (צריך חיבור לאינטרנט בכניסה הראשונה)</p>}
+          {accounts.map((a) => (
             <button type="button" key={a.slug} className={'who-btn' + (slug === a.slug ? ' on' : '')}
               onClick={() => { setSlug(a.slug); setErr(null); }}>
-              {a.name}
+              {a.display_name}
             </button>
           ))}
         </div>

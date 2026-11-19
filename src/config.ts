@@ -1,12 +1,6 @@
 // הגדרות קבועות של הטיול
 export const EMAIL_DOMAIN = 'our-trip.app';
 
-export const ACCOUNTS = [
-  { slug: 'ella', name: 'אלה כרמי' },
-  { slug: 'lihi', name: 'ליהי שבח' },
-  { slug: 'lior', name: 'ליאור בן צבי' },
-  { slug: 'admin', name: 'מנהל' },
-];
 
 // אם עוד לא הוזנו תאריכים במערכת
 export const FIRST_FLIGHT = '2026-12-22T00:00:00+02:00';

@@ -25,10 +25,9 @@ begin
   insert into public.profiles (id, slug, display_name, color, is_admin, is_traveler)
   values (
     new.id, s,
-    case s when 'ella' then 'אלה כרמי' when 'lihi' then 'ליהי שבח'
-           when 'lior' then 'ליאור בן צבי' when 'admin' then 'מנהל' else s end,
-    case s when 'ella' then '#d9467a' when 'lihi' then '#2f7fd6'
-           when 'lior' then '#e08a00' else '#5b6470' end,
+    case s when 'admin' then 'מנהל' else s end,  -- השם המלא מתעדכן אחר כך בטבלת profiles
+    case s when 't1' then '#d9467a' when 't2' then '#2f7fd6'
+           when 't3' then '#e08a00' when 't4' then '#7a4fd6' else '#5b6470' end,
     s = 'admin', s <> 'admin')
   on conflict (id) do nothing;
   return new;
