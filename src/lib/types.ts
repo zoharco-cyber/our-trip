@@ -1,0 +1,20 @@
+export type Profile = {
+  id: string; slug: string; display_name: string; color: string;
+  is_admin: boolean; is_traveler: boolean; initial_budget_usd: number;
+};
+export type TripEvent = { id: string; title: string; starts_at: string; created_by: string | null };
+export type Expense = {
+  id: string; description: string; amount_usd: number; orig_amount: number; orig_currency: 'USD' | 'ILS';
+  paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string;
+};
+export type Transfer = { id: string; from_id: string; to_id: string; amount_usd: number; created_at: string };
+export type ShoppingItem = { id: string; text: string; qty: string | null; done: boolean; week_of: string; created_by: string | null };
+export type Wish = { id: string; text: string; place: string | null; done: boolean; done_at: string | null; created_by: string | null; created_at: string };
+export type Doc = { id: string; owner: string; name: string; path: string; mime: string | null; size: number | null; created_at: string };
+export type CapsuleEntry = { id: string; content: string; created_by: string; created_at: string };
+export type Place = { id: string; name: string; lat: number; lng: number; visited_on: string | null; created_by: string | null; created_at: string };
+export type Story = { id: string; place_id: string; content: string; created_by: string | null; created_at: string };
+export type Photo = { id: string; place_id: string | null; path: string; caption: string | null; is_public: boolean; created_by: string | null; created_at: string };
+export type GearItem = { id: string; text: string; category: string };
+export type GearCheck = { item_id: string; user_id: string };
+export type Tip = { id: string; destination: string; content: string; created_by: string | null; created_at: string };
