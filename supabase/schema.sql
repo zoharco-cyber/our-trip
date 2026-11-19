@@ -265,6 +265,10 @@ drop policy if exists photos_obj_read on storage.objects;
 create policy photos_obj_read on storage.objects for select
   using (bucket_id = 'photos' and (public.is_member()
     or exists (select 1 from public.photos p where p.path = objects.name and p.is_public)));
+-- תמונות דף הבית (תיקיית home) גלויות לכולם, גם לאורחים
+drop policy if exists home_photos_read on storage.objects;
+create policy home_photos_read on storage.objects for select
+  using (bucket_id = 'photos' and name like 'home/%');
 drop policy if exists photos_obj_insert on storage.objects;
 create policy photos_obj_insert on storage.objects for insert
   with check (bucket_id = 'photos' and public.is_member());

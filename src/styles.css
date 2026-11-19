@@ -416,13 +416,15 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(50%) } }
 
 /* תמונות מתחלפות */
-.slideshow { position: relative; aspect-ratio: 16 / 9; max-height: 440px; width: 100%; max-width: 100%; border-radius: 26px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 0 0 3px var(--brand), 0 10px 30px rgba(224, 21, 127, .25); background: var(--surface-2); }
-@media (max-width: 600px) { .slideshow { aspect-ratio: 4 / 3; } }
+.slideshow { position: relative; aspect-ratio: 16 / 10; max-height: 520px; width: 100%; max-width: 100%; border-radius: 26px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 0 0 3px var(--brand), 0 10px 30px rgba(224, 21, 127, .25); background: var(--surface-2); }
+@media (max-width: 600px) { .slideshow { aspect-ratio: 4 / 5; max-height: 70vh; } }
 .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; display: grid; place-items: center; }
 .slide.on { opacity: 1; }
-.slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); }
-.slide.on img { animation: kenburns 7s ease-out forwards; }
-@keyframes kenburns { from { transform: scale(1.02) } to { transform: scale(1.12) } }
+.slide img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.slide-bg { object-fit: cover; filter: blur(22px) saturate(1.3) brightness(.95); transform: scale(1.2); }
+.slide-img { object-fit: contain; }
+.slide.on .slide-img { animation: kenburns 7s ease-out forwards; }
+@keyframes kenburns { from { transform: scale(1) } to { transform: scale(1.06) } }
 .slide-art { font-size: clamp(4rem, 14vw, 7rem); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .2)); }
 .slide.on .slide-art { animation: floaty 4s ease-in-out infinite; }
 @keyframes floaty { 50% { transform: translateY(-10px) } }
@@ -482,5 +484,5 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .wish.done .wish-text::after { content: " 🌟"; }
 
 @media (prefers-reduced-motion: reduce) {
-  h1, .topbar, .marquee > div, body::after, .slide.on img, .slide.on .slide-art { animation: none !important; }
+  h1, .topbar, .marquee > div, body::after, .slide.on .slide-img, .slide.on .slide-art { animation: none !important; }
 }

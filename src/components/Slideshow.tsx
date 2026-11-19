@@ -1,6 +1,27 @@
 import { useEffect, useState } from 'react';
 import { reducedMotion } from '../lib/fx';
-import { HOME_SLIDES } from '../data/slides';
+import { supabase } from '../lib/supabase';
+
+/** התמונות של דף הבית: תיקיית home בתוך האחסון (גלויה לכולם), לא הגלריה */
+function useHomeSlides() {
+  const [urls, setUrls] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('cache:home-slides') || '[]'); } catch { return []; }
+  });
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.storage.from('photos').list('home', { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+      const paths = (data || []).filter((f) => f.id && /\.(jpe?g|png|webp)$/i.test(f.name)).map((f) => `home/${f.name}`);
+      if (!paths.length) return;
+      const signed = await supabase.storage.from('photos').createSignedUrls(paths, 60 * 60 * 24 * 7);
+      const list = (signed.data || []).map((x) => x.signedUrl).filter(Boolean) as string[];
+      if (list.length) {
+        setUrls(list);
+        try { localStorage.setItem('cache:home-slides', JSON.stringify(list)); } catch { /* ignore */ }
+      }
+    })();
+  }, []);
+  return urls;
+}
 
 // שקופיות מאוירות עד שיהיו תמונות אמיתיות
 const DREAMS = [
@@ -11,9 +32,9 @@ const DREAMS = [
 ];
 
 export default function Slideshow() {
-  const ready = HOME_SLIDES;
+  const ready = useHomeSlides();
   const slides = ready.length
-    ? ready.map((p) => ({ key: p.file, img: import.meta.env.BASE_URL + 'slides/' + p.file, title: p.caption || '', sub: '' }))
+    ? ready.map((url, k) => ({ key: 'h' + k, img: url, title: '', sub: '' }))
     : DREAMS.map((d) => ({ key: d.title, img: '', title: d.title, sub: d.sub, art: d.art, bg: d.bg }));
   const [i, setI] = useState(0);
   const n = slides.length;
@@ -29,7 +50,7 @@ export default function Slideshow() {
       {slides.map((s: any, k) => (
         <div key={s.key} className={'slide' + (k === i % n ? ' on' : '')} aria-hidden={k !== i % n}
           style={s.img ? undefined : { background: s.bg }}>
-          {s.img ? <img src={s.img} alt={s.title} /> : <span className="slide-art">{s.art}</span>}
+          {s.img ? <><img className="slide-bg" src={s.img} alt="" aria-hidden="true" /><img className="slide-img" src={s.img} alt="הבנות" loading={k < 2 ? 'eager' : 'lazy'} /></> : <span className="slide-art">{s.art}</span>}
           {(s.title || !ready.length) && <div className="slide-cap">
             {!ready.length && <span className="slide-kicker">חלומות על הדרך ✨</span>}
             {s.title && <b>{s.title}</b>}
