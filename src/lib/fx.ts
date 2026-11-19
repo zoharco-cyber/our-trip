@@ -80,31 +80,3 @@ export function paidStamp(x?: number, y?: number) {
   setTimeout(() => el.classList.add('out'), 1500);
   setTimeout(() => el.remove(), 2000);
 }
-
-/** שובל נצנצים אחרי העכבר או האצבע */
-export function startSparkleTrail() {
-  if (reducedMotion()) return () => {};
-  let last = 0;
-  const glyphs = ['✦', '✧', '⋆', '♥', '✨'];
-  const spawn = (x: number, y: number) => {
-    const s = document.createElement('span');
-    s.className = 'sparkle';
-    s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
-    s.style.left = x + (Math.random() * 16 - 8) + 'px';
-    s.style.top = y + (Math.random() * 16 - 8) + 'px';
-    s.style.color = PALETTE[(Math.random() * 4) | 0];
-    s.style.fontSize = 10 + Math.random() * 12 + 'px';
-    document.body.appendChild(s);
-    setTimeout(() => s.remove(), 900);
-  };
-  const onMove = (e: PointerEvent) => {
-    const now = performance.now();
-    if (now - last < 45) return;
-    last = now;
-    spawn(e.clientX, e.clientY);
-  };
-  const onDown = (e: PointerEvent) => { for (let i = 0; i < 6; i++) spawn(e.clientX, e.clientY); };
-  window.addEventListener('pointermove', onMove, { passive: true });
-  window.addEventListener('pointerdown', onDown, { passive: true });
-  return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerdown', onDown); };
-}

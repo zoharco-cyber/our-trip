@@ -444,10 +444,6 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 }
 .money-page > *:not(.floating-money) { position: relative; z-index: 1; }
 
-/* שובל נצנצים */
-.sparkle { position: fixed; pointer-events: none; z-index: 5000; transform: translate(-50%, -50%); animation: sparkle .9s ease-out forwards; text-shadow: 0 0 6px #fff; }
-@keyframes sparkle { to { opacity: 0; transform: translate(-50%, 10px) scale(.3) rotate(90deg); } }
-
 /* אפקטים במסך מלא */
 .fx-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 6000; }
 .fx-overlay { position: fixed; inset: 0; z-index: 5500; display: grid; place-items: center; pointer-events: none; transition: opacity .5s; }

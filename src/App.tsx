@@ -1,7 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from './lib/auth';
-import { startSparkleTrail } from './lib/fx';
 import { isConfigured } from './lib/supabase';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -42,7 +41,6 @@ function useOnline() {
 export default function App() {
   const { ready, session, guest, me, isAdmin, signOut } = useAuth();
   const online = useOnline();
-  useEffect(() => startSparkleTrail(), []);
 
   if (!isConfigured) return <SetupNeeded />;
   if (!ready) return <div className="splash">רגע…</div>;
