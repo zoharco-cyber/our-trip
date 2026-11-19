@@ -40,8 +40,7 @@ create trigger on_auth_user_created after insert on auth.users
 -- ---------- הגדרות כלליות ----------
 create table if not exists public.settings (key text primary key, value jsonb not null);
 insert into public.settings values
-  ('capsule_open', 'false'::jsonb),
-  ('usd_ils_rate', '3.6'::jsonb)
+  ('capsule_open', 'false'::jsonb)
 on conflict do nothing;
 
 create or replace function public.is_member() returns boolean

@@ -44,7 +44,7 @@ export function computeBalances(ids: string[], expenses: Expense[], transfers: T
 
 export default function MoneyPage() {
   const { travelers, me, reloadProfiles } = useAuth();
-  const { rate, rateSource } = useMoney();
+  const { rate, rateSource, rateAt } = useMoney();
   const exp = useTable<Expense>('expenses', { order: 'spent_on', ascending: false });
   const tr = useTable<Transfer>('transfers', { order: 'created_at', ascending: false });
   const ids = travelers.map((t) => t.id);
@@ -89,7 +89,7 @@ export default function MoneyPage() {
       <div className="row-between">
         <div>
           <h1>כסף</h1>
-          <p className="muted">סך הכול הוצאות: <Money usd={total} /> · שער: ₪{rate.toFixed(2)} לדולר{rateSource === 'live' ? ' (עדכני)' : ''}</p>
+          <p className="muted">סך הכול הוצאות: <Money usd={total} /> · שער: ₪{rate.toFixed(2)} לדולר{rateSource === 'live' ? ' (עדכני)' : rateAt ? ` (עודכן לאחרונה ${fmtDate(rateAt)})` : ''}</p>
         </div>
         <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>{showForm ? 'סגירה' : 'הוצאה חדשה'}</button>
       </div>
