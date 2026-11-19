@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useTable } from '../lib/useTable';
-import { usePhotoUrls } from '../lib/photos';
-import type { Photo, Place } from '../lib/types';
 import { reducedMotion } from '../lib/fx';
+import { HOME_SLIDES } from '../data/slides';
 
 // שקופיות מאוירות עד שיהיו תמונות אמיתיות
 const DREAMS = [
@@ -13,13 +11,9 @@ const DREAMS = [
 ];
 
 export default function Slideshow() {
-  const photos = useTable<Photo>('photos', { order: 'created_at', ascending: false });
-  const places = useTable<Place>('places');
-  const list = photos.rows.slice(0, 20);
-  const urls = usePhotoUrls(list);
-  const ready = list.filter((p) => urls[p.path]);
+  const ready = HOME_SLIDES;
   const slides = ready.length
-    ? ready.map((p) => ({ key: p.id, img: urls[p.path], title: places.rows.find((x) => x.id === p.place_id)?.name || p.caption || '', sub: p.caption && p.place_id ? p.caption : '' }))
+    ? ready.map((p) => ({ key: p.file, img: import.meta.env.BASE_URL + 'slides/' + p.file, title: p.caption || '', sub: '' }))
     : DREAMS.map((d) => ({ key: d.title, img: '', title: d.title, sub: d.sub, art: d.art, bg: d.bg }));
   const [i, setI] = useState(0);
   const n = slides.length;
@@ -36,11 +30,11 @@ export default function Slideshow() {
         <div key={s.key} className={'slide' + (k === i % n ? ' on' : '')} aria-hidden={k !== i % n}
           style={s.img ? undefined : { background: s.bg }}>
           {s.img ? <img src={s.img} alt={s.title} /> : <span className="slide-art">{s.art}</span>}
-          <div className="slide-cap">
+          {(s.title || !ready.length) && <div className="slide-cap">
             {!ready.length && <span className="slide-kicker">חלומות על הדרך ✨</span>}
             {s.title && <b>{s.title}</b>}
             {s.sub && <span>{s.sub}</span>}
-          </div>
+          </div>}
         </div>
       ))}
       {n > 1 && (
