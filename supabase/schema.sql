@@ -181,6 +181,11 @@ create or replace function public.capsule_count() returns integer
 language sql stable security definer set search_path = public as $$
   select count(*)::int from capsule_entries $$;
 
+-- כמה מכתבים אני כתבתי (בלי לחשוף את התוכן)
+create or replace function public.my_capsule_count() returns integer
+language sql stable security definer set search_path = public as $$
+  select count(*)::int from capsule_entries where created_by = auth.uid() $$;
+
 -- ---------- הרשאות (Row Level Security) ----------
 do $$
 declare t text;
@@ -223,16 +228,15 @@ create policy photos_read on public.photos for select using (is_public or public
 drop policy if exists photos_write on public.photos;
 create policy photos_write on public.photos for all using (public.is_member()) with check (public.is_member());
 
--- קפסולת הזמן: כל אחת רואה רק את מה שהיא כתבה, עד שהמנהל פותח
+-- קפסולת הזמן: אחרי שנכתב, אף אחד לא יכול לקרוא, לערוך או למחוק (גם לא הכותבת)
+-- עד שהמנהל פותח את הקפסולה. אז כולן רואות הכול.
 drop policy if exists capsule_read on public.capsule_entries;
 create policy capsule_read on public.capsule_entries for select
-  using (created_by = auth.uid() or (public.capsule_is_open() and public.is_member()));
+  using (public.capsule_is_open() and public.is_member());
 drop policy if exists capsule_insert on public.capsule_entries;
 create policy capsule_insert on public.capsule_entries for insert
-  with check (created_by = auth.uid() and public.is_member());
+  with check (created_by = auth.uid() and public.is_member() and not public.capsule_is_open());
 drop policy if exists capsule_delete on public.capsule_entries;
-create policy capsule_delete on public.capsule_entries for delete
-  using (created_by = auth.uid() and not public.capsule_is_open());
 
 -- ---------- אחסון קבצים ----------
 insert into storage.buckets (id, name, public) values

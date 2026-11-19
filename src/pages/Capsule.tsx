@@ -16,12 +16,15 @@ export default function Capsule() {
   const { open, reload: reloadOpen } = useCapsuleOpen();
   const entries = useTable<CapsuleEntry>('capsule_entries', { order: 'created_at' }, [open]);
   const [count, setCount] = useState<number | null>(null);
+  const [myCount, setMyCount] = useState<number | null>(null);
   const [text, setText] = useState('');
   const [sent, setSent] = useState(false);
 
   async function loadCount() {
     const { data } = await supabase.rpc('capsule_count');
     if (typeof data === 'number') setCount(data);
+    const mine = await supabase.rpc('my_capsule_count');
+    if (typeof mine.data === 'number') setMyCount(mine.data);
   }
   useEffect(() => { loadCount(); }, [entries.rows.length]);
 
@@ -36,8 +39,6 @@ export default function Capsule() {
     await supabase.from('settings').upsert({ key: 'capsule_open', value: v });
     reloadOpen(); entries.reload();
   }
-
-  const mine = entries.rows.filter((e) => e.created_by === me?.id);
 
   if (open) {
     return (
@@ -63,23 +64,16 @@ export default function Capsule() {
     <div className="stack-lg narrow">
       <div className="capsule-head">
         <h1>קפסולת זמן</h1>
-        <p>מה שנכתב כאן נשאר סודי עד סוף הטיול. רק המנהל יכול לפתוח את הקפסולה, ואז כולן יקראו הכול.</p>
-        <p className="capsule-count"><b className="tnum">{count ?? '–'}</b> מכתבים חתומים</p>
+        <p>מה שנחתם כאן ננעל: אי אפשר לקרוא אותו, לערוך או למחוק, גם לא את מה שכתבת בעצמך. רק כשהמנהל יפתח את הקפסולה בסוף הטיול, כולן יקראו הכול.</p>
+        <p className="capsule-count"><b className="tnum">{count ?? '–'}</b> מכתבים חתומים{myCount ? ` · ${myCount} שלך` : ''}</p>
       </div>
       {me?.is_traveler && (
         <form className="card stack" onSubmit={add}>
           <textarea id="capsule-text" rows={6} placeholder="מכתב לעצמך, לבנות, לעתיד…" value={text} onChange={(e) => setText(e.target.value)} />
-          <button className="btn btn-primary" disabled={!text.trim()}>חתימה בקפסולה</button>
-          {sent && <p className="ok">נחתם. ייפתח בסוף הטיול.</p>}
+          <p className="muted small">אחרי החתימה לא תוכלי לראות או לשנות את המכתב.</p>
+          <button className="btn btn-primary" disabled={!text.trim()}>חתימה ונעילה בקפסולה</button>
+          {sent && <p className="ok">ננעל בקפסולה. ייפתח בסוף הטיול.</p>}
         </form>
-      )}
-      {mine.length > 0 && (
-        <details>
-          <summary>המכתבים שלי ({mine.length})</summary>
-          <ul className="letters">
-            {mine.map((e) => <li key={e.id} className="letter"><p>{e.content}</p><footer>{fmtDate(e.created_at)}</footer></li>)}
-          </ul>
-        </details>
       )}
       {isAdmin && (
         <div className="card admin-box">
