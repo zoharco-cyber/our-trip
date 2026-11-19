@@ -1,19 +1,19 @@
 /* מבנה: אפליקציה לטלפון קודם. סרגל עליון במחשב, סרגל תחתון בטלפון.
-   צבעים: ירוק ג׳ונגל עמוק, צהוב שמש אנדי וורוד טקסטיל. */
+   צבעים: ורוד פטל, אפרסק שקיעה וסגול שזיף. */
 :root {
-  --bg: #eef2ee;
+  --bg: #fbf0f4;
   --surface: #ffffff;
-  --surface-2: #e3e9e3;
-  --ink: #15201c;
-  --muted: #5c6b65;
-  --line: #d2dbd4;
-  --brand: #0d5c4f;
+  --surface-2: #f7e3ec;
+  --ink: #2a1520;
+  --muted: #7c5a69;
+  --line: #eed2de;
+  --brand: #c2185b;
   --brand-ink: #ffffff;
-  --sun: #f3b33d;
-  --rose: #d9467a;
+  --sun: #ffb38a;
+  --rose: #8e3a8e;
   --ok: #1d7a46;
   --danger: #b4233c;
-  --shadow: 0 1px 2px rgba(15, 40, 30, .06), 0 4px 16px rgba(15, 40, 30, .06);
+  --shadow: 0 1px 2px rgba(120, 20, 60, .07), 0 4px 16px rgba(120, 20, 60, .07);
   --font-body: 'Rubik', 'Segoe UI', Arial, sans-serif;
   --font-display: 'Secular One', 'Rubik', Arial, sans-serif;
   --r: 14px;
@@ -21,16 +21,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1614;
-    --surface: #17211e;
-    --surface-2: #1f2b27;
-    --ink: #e8efeb;
-    --muted: #96a59f;
-    --line: #2b3a35;
-    --brand: #3fb59a;
-    --brand-ink: #06231c;
-    --sun: #f5c35e;
-    --rose: #ec6b98;
+    --bg: #1a1016;
+    --surface: #251820;
+    --surface-2: #30212a;
+    --ink: #f7e9ef;
+    --muted: #b897a6;
+    --line: #402c37;
+    --brand: #f06292;
+    --brand-ink: #2a0716;
+    --sun: #ffb38a;
+    --rose: #c983c9;
     --ok: #5ccf8a;
     --danger: #f0697f;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3);
@@ -211,7 +211,7 @@ details summary { cursor: pointer; color: var(--muted); margin-bottom: .5rem; }
 /* ---------- ספירה לאחור ---------- */
 .hero-card {
   background: var(--brand); color: var(--brand-ink); border-radius: calc(var(--r) + 6px); padding: 1.5rem;
-  background-image: radial-gradient(circle at 100% 0, color-mix(in srgb, var(--sun) 55%, transparent) 0 6rem, transparent 6.1rem);
+  background-image: radial-gradient(circle at 100% 0, color-mix(in srgb, var(--sun) 30%, transparent) 0 4.5rem, transparent 4.6rem);
 }
 .hero-card .muted { color: inherit; opacity: .8; }
 .countdown { display: grid; gap: .75rem; }
@@ -270,7 +270,7 @@ details summary { cursor: pointer; color: var(--muted); margin-bottom: .5rem; }
 .wish.done { border-inline-start-color: var(--ok); }
 .wish.done .wish-text { color: var(--muted); }
 
-.capsule-head { background: linear-gradient(160deg, #2b2140, #4b2a4f); color: #f6eefc; border-radius: calc(var(--r) + 6px); padding: 1.5rem; display: grid; gap: .5rem; }
+.capsule-head { background: linear-gradient(160deg, #3a1530, #6b2350); color: #f6eefc; border-radius: calc(var(--r) + 6px); padding: 1.5rem; display: grid; gap: .5rem; }
 .capsule-head.open { background: linear-gradient(160deg, var(--sun), var(--rose)); color: #2b1020; }
 .capsule-count b { font-family: var(--font-display); font-size: 2.4rem; font-weight: 400; margin-inline-end: .3rem; }
 .letters { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }

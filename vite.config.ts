@@ -18,8 +18,8 @@ export default defineConfig({
         dir: 'rtl',
         display: 'standalone',
         start_url: '.',
-        background_color: '#f6f3ee',
-        theme_color: '#0d5c4f',
+        background_color: '#fbf0f4',
+        theme_color: '#c2185b',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
