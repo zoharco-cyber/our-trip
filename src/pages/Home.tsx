@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Countdown from '../components/Countdown';
+import Slideshow from '../components/Slideshow';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
@@ -22,7 +23,7 @@ const BLURB: Record<string, string> = {
 };
 
 export default function Home() {
-  const { guest } = useAuth();
+  const { guest, me } = useAuth();
   const { rows, reload } = useTable<TripEvent>('events', { order: 'starts_at' });
   const [title, setTitle] = useState('');
   const [when, setWhen] = useState('');
@@ -41,6 +42,10 @@ export default function Home() {
   const now = Date.now();
   return (
     <div className="stack-lg">
+      <div className="marquee" aria-hidden="true"><div>
+        {[0, 1].map((k) => <span key={k}>✨ {me ? `היי ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
+      </div></div>
+      <Slideshow />
       <section className="hero-card">
         <Countdown />
       </section>

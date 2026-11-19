@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import type { CapsuleEntry } from '../lib/types';
 import { fmtDate } from '../lib/util';
 import { Who } from '../components/Avatar';
+import { waxSeal } from '../lib/fx';
 
 export function useCapsuleOpen() {
   const { rows, reload } = useTable<{ key: string; value: any }>('settings', { filter: (q) => q.eq('key', 'capsule_open') });
@@ -31,7 +32,9 @@ export default function Capsule() {
   async function add(e: FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    await supabase.from('capsule_entries').insert({ content: text.trim() });
+    const { error } = await supabase.from('capsule_entries').insert({ content: text.trim() });
+    if (error) return;
+    waxSeal();
     setText(''); setSent(true); entries.reload(); loadCount();
     setTimeout(() => setSent(false), 3000);
   }

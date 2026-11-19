@@ -7,6 +7,7 @@ import type { Expense, Transfer } from '../lib/types';
 import { EXPENSE_CATEGORIES } from '../config';
 import { fmtDate, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
+import { paidStamp, reducedMotion } from '../lib/fx';
 
 type Debt = { from: string; to: string; amount: number };
 
@@ -71,8 +72,9 @@ export default function MoneyPage() {
     await supabase.from('profiles').update({ initial_budget_usd: Math.round(usd * 100) / 100 }).eq('id', me.id);
     setEditBudget(false); setBudget(''); reloadProfiles();
   }
-  async function settle(d: Debt) {
-    await supabase.from('transfers').insert({ from_id: d.from, to_id: d.to, amount_usd: d.amount });
+  async function settle(d: Debt, e: React.MouseEvent) {
+    const { error } = await supabase.from('transfers').insert({ from_id: d.from, to_id: d.to, amount_usd: d.amount });
+    if (!error) paidStamp(e.clientX, e.clientY);
     tr.reload();
   }
   async function removeExpense(id: string) {
@@ -85,7 +87,8 @@ export default function MoneyPage() {
   const list = filter === 'all' ? exp.rows : exp.rows.filter((e) => e.paid_by === filter || e.split_among.includes(filter));
 
   return (
-    <div className="stack-lg">
+    <div className="stack-lg money-page">
+      <FloatingMoney />
       <div className="row-between">
         <div>
           <h1>כסף</h1>
@@ -139,7 +142,7 @@ export default function MoneyPage() {
               <li key={i} className="card debt">
                 <Who id={d.from} /><span className="arrow">חייבת ל</span><Who id={d.to} />
                 <Money usd={d.amount} />
-                <button className="btn btn-small" onClick={() => settle(d)}>סימון כשולם</button>
+                <button className="btn btn-small" onClick={(e) => settle(d, e)}>סימון כשולם</button>
               </li>
             ))}
           </ul>
@@ -289,5 +292,18 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
       {err && <p className="error">{err}</p>}
       <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length}>הוספה</button>
     </form>
+  );
+}
+
+/** דולרים שמרחפים ברקע */
+function FloatingMoney() {
+  if (reducedMotion()) return null;
+  const items = ['💵', '💸', '🪙', '💰', '💵', '💖', '💵', '🪙', '💸', '💵', '✨', '💵'];
+  return (
+    <div className="floating-money" aria-hidden="true">
+      {items.map((x, i) => (
+        <span key={i} style={{ left: `${(i * 83) % 100}%`, animationDelay: `${(i * 1.7) % 12}s`, animationDuration: `${11 + (i % 5) * 2}s`, fontSize: `${1.2 + (i % 3) * .5}rem` }}>{x}</span>
+      ))}
+    </div>
   );
 }

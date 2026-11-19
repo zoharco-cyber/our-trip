@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { Wish } from '../lib/types';
 import { fmtDate } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
+import { confetti } from '../lib/fx';
 
 export default function Wishes() {
   const { rows, reload, setRows } = useTable<Wish>('wishes', { order: 'created_at', ascending: false });
@@ -17,8 +18,9 @@ export default function Wishes() {
     await supabase.from('wishes').insert({ text: text.trim(), place: place.trim() || null });
     setText(''); setPlace(''); reload();
   }
-  async function toggle(w: Wish) {
+  async function toggle(w: Wish, e?: React.MouseEvent) {
     const done = !w.done;
+    if (done) confetti(e?.clientX, e?.clientY, 160);
     setRows((r) => r.map((x) => x.id === w.id ? { ...x, done } : x));
     await supabase.from('wishes').update({ done, done_at: done ? new Date().toISOString() : null }).eq('id', w.id);
   }
@@ -57,7 +59,7 @@ export default function Wishes() {
               <div className="row-between small">
                 <span className="muted"><Who id={w.created_by} />{w.place && <> · {w.place}</>}{w.done && w.done_at && <> · הוגשם ב-{fmtDate(w.done_at)}</>}</span>
                 <span className="row gap">
-                  <button className={'btn btn-small' + (w.done ? '' : ' btn-primary')} onClick={() => toggle(w)}>{w.done ? 'החזרה לרשימה' : 'הגשמנו!'}</button>
+                  <button className={'btn btn-small' + (w.done ? '' : ' btn-primary')} onClick={(e) => toggle(w, e)}>{w.done ? 'החזרה לרשימה' : 'הגשמנו!'}</button>
                   <button className="icon-btn" aria-label="מחיקה" onClick={() => remove(w.id)}>×</button>
                 </span>
               </div>
