@@ -276,6 +276,8 @@ details summary { cursor: pointer; color: var(--muted); margin-bottom: .5rem; }
 .letters { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
 .letter { background: var(--surface); padding: 1.1rem 1.2rem; border-radius: 4px 16px 16px 16px; box-shadow: var(--shadow); white-space: pre-wrap; display: grid; gap: .6rem; }
 .letter footer { font-size: .85rem; color: var(--muted); }
+.capsule-meta { background: var(--surface-2); border-radius: 12px; padding: .75rem .9rem; display: grid; gap: .4rem; border-inline-start: 4px solid var(--c); min-width: 0; }
+.meta-dates { list-style: none; margin: 0; padding: 0; display: grid; gap: .15rem; color: var(--muted); max-height: 9rem; overflow-y: auto; }
 .admin-box { border: 1px dashed var(--line); box-shadow: none; display: grid; gap: .5rem; }
 
 /* ---------- מסמכים ---------- */

@@ -184,6 +184,15 @@ create or replace function public.my_capsule_count() returns integer
 language sql stable security definer set search_path = public as $$
   select count(*)::int from capsule_entries where created_by = auth.uid() $$;
 
+-- למנהל בלבד: מי כתבה ומתי, בלי התוכן
+create or replace function public.capsule_meta()
+returns table (created_by uuid, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select c.created_by, c.created_at from capsule_entries c
+  where public.is_admin()
+  order by c.created_at $$;
+revoke execute on function public.capsule_meta() from anon;
+
 -- ---------- הרשאות (Row Level Security) ----------
 do $$
 declare t text;
