@@ -30,6 +30,8 @@ export default function Challenges() {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
   const [points, setPoints] = useState('10');
+  const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [q, setQ] = useState('');
 
   const isDone = (c: string, u: string) => done.rows.some((d) => d.challenge_id === c && d.user_id === u);
   const score = (u: string) => done.rows.filter((d) => d.user_id === u).reduce((s, d) => s + (ch.rows.find((c) => c.id === d.challenge_id)?.points || 0), 0);
@@ -79,8 +81,24 @@ export default function Challenges() {
         </ol>
       </section>
 
+      <div className="shadow-filters">
+        <div className="sh-seg" role="group" aria-label="סינון">
+          {([['open', 'מחכים לי'], ['done', 'ביצעתי'], ['all', 'הכול']] as const).map(([k, l]) => (
+            <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>
+          ))}
+        </div>
+        <input id="ch-q" className="sh-search" placeholder="חיפוש: לאמה, בוליביה, טנגו…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <span className="sh-count">{ch.rows.length} תיקים · {ch.rows.reduce((s, c) => s + c.points, 0)} נק׳ בסך הכול</span>
+      </div>
+
       <ul className="dossiers">
-        {ch.rows.map((c, i) => {
+        {ch.rows.map((c, i) => ({ c, i })).filter(({ c }) => {
+          const d = !!me && isDone(c.id, me.id);
+          if (me?.is_traveler && filter === 'open' && d) return false;
+          if (me?.is_traveler && filter === 'done' && !d) return false;
+          const t = q.trim();
+          return !t || c.title.includes(t) || (c.details || '').includes(t);
+        }).map(({ c, i }) => {
           const mine = !!me && isDone(c.id, me.id);
           return (
             <li key={c.id} className={'dossier' + (mine ? ' done' : '')}>

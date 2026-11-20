@@ -626,3 +626,10 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .ms-text small { font-family: ui-monospace, 'Courier New', monospace; font-size: .65rem; letter-spacing: .25em; color: #ff2d8a; font-weight: 400; text-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .more-shadow::after, .ms-eye { animation: none; } }
 .more-sheet a.more-admin { grid-column: 1 / -1; }
+
+.shadow-filters { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.sh-seg { display: inline-flex; border: 1px solid var(--sh-line); border-radius: 999px; overflow: hidden; }
+.sh-seg button { background: transparent; color: var(--sh-dim); border: 0; padding: .4rem .9rem; cursor: pointer; font-family: var(--font-body); }
+.sh-seg button.on { background: var(--sh-neon); color: #0b070d; font-weight: 600; }
+.shadow-page input.sh-search { flex: 1 1 180px; width: auto; background: #0b070d; color: var(--sh-ink); border: 1px solid var(--sh-line); border-radius: 999px; }
+.sh-count { font-family: ui-monospace, monospace; font-size: .75rem; color: var(--sh-dim); letter-spacing: .05em; }
