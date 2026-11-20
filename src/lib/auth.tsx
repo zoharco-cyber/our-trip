@@ -16,6 +16,7 @@ type AuthState = {
   colorOf: (id: string | null | undefined) => string;
   signIn: (slug: string, password: string) => Promise<string | null>;
   enterAsGuest: () => void;
+  signInGuest: (password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   reloadProfiles: () => Promise<void>;
 };
@@ -55,12 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [reloadProfiles]);
 
   const me = profiles.find((p) => p.id === session?.user.id) || null;
+  // אורח עם סיסמה (לפני ההשקה) מתחבר כמשתמש guest, ונחשב אורח לכל דבר
+  const guestSession = session?.user.email === `guest@${EMAIL_DOMAIN}`;
   const travelers = profiles.filter((p) => p.is_traveler);
 
   const value: AuthState = {
     ready,
     session,
-    guest: guest && !session,
+    guest: (guest && !session) || guestSession,
     me,
     profiles,
     travelers,
@@ -73,6 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try { localStorage.removeItem(GUEST_KEY); } catch { /* ignore */ }
       setGuest(false);
       reloadProfiles();
+      return null;
+    },
+    async signInGuest(password) {
+      const { error } = await supabase.auth.signInWithPassword({ email: `guest@${EMAIL_DOMAIN}`, password });
+      if (error) return error.message.includes('Invalid') ? 'הסיסמה לא נכונה' : 'אין חיבור כרגע. נסו שוב בעוד רגע.';
       return null;
     },
     enterAsGuest() {

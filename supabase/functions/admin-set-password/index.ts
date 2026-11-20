@@ -19,12 +19,21 @@ Deno.serve(async (req) => {
   const { data: me } = await admin.from('profiles').select('is_admin').eq('id', who.user.id).maybeSingle();
   if (!me?.is_admin) return reply({ error: 'not_admin' }, 403);
 
-  let body: { userId?: string; password?: string } = {};
+  let body: { userId?: string; password?: string; guest?: boolean } = {};
   try { body = await req.json(); } catch { /* ignore */ }
   const pw = (body.password || '').trim();
-  if (!body.userId || pw.length < 6) return reply({ error: 'bad_request' }, 400);
-  const { data: target } = await admin.from('profiles').select('id').eq('id', body.userId).maybeSingle();
-  if (!target) return reply({ error: 'no_such_user' }, 404);
+  if (pw.length < 6) return reply({ error: 'bad_request' }, 400);
+  // סיסמת האורחים (משתמש guest, בלי פרופיל)
+  if (body.guest) {
+    const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const g = list?.users.find((u) => u.email === 'guest@our-trip.app');
+    if (!g) return reply({ error: 'no_such_user' }, 404);
+    body.userId = g.id;
+  } else {
+    if (!body.userId) return reply({ error: 'bad_request' }, 400);
+    const { data: target } = await admin.from('profiles').select('id').eq('id', body.userId).maybeSingle();
+    if (!target) return reply({ error: 'no_such_user' }, 404);
+  }
 
   const { error } = await admin.auth.admin.updateUserById(body.userId, { password: pw });
   if (error) return reply({ error: 'failed' }, 500);

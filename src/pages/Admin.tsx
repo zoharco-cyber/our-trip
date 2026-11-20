@@ -40,6 +40,7 @@ export default function Admin() {
           })}
         </div>
       </section>
+      <LaunchAdmin />
       <TripEnd />
       <section className="card stack">
         <h2>ערכות עיצוב</h2>
@@ -135,6 +136,55 @@ function TripEnd() {
         <button className="btn btn-primary" disabled={val === (saved || '')} onClick={save}>שמירה</button>
       </div>
       {saved && <p className="ok small">נשמר: {new Date(saved + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
+    </section>
+  );
+}
+
+/** מועד ההשקה וסיסמת האורחים */
+function LaunchAdmin() {
+  const toLocal = (iso: string) => { const d = new Date(iso); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const [val, setVal] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+  const [gpw, setGpw] = useState('');
+  const [gState, setGState] = useState<'idle' | 'busy' | 'ok' | 'err'>('idle');
+  const [gSaved, setGSaved] = useState('');
+  useEffect(() => {
+    supabase.from('settings').select('value').eq('key', 'launch_at').maybeSingle().then(({ data }) => {
+      if (data?.value) { setVal(toLocal(data.value)); setSaved(data.value); }
+    });
+  }, []);
+  async function save(v: string | null) {
+    const value = v ? new Date(v).toISOString() : null;
+    const { error } = await supabase.from('settings').upsert({ key: 'launch_at', value });
+    if (!error) setSaved(value);
+  }
+  async function saveGuest() {
+    if (gpw.trim().length < 6) return;
+    setGState('busy');
+    const { data, error } = await supabase.functions.invoke('admin-set-password', { body: { guest: true, password: gpw.trim() } });
+    if (error || !data?.ok) { setGState('err'); return; }
+    setGSaved(gpw.trim()); setGpw(''); setGState('ok');
+  }
+  const launched = !saved || new Date(saved).getTime() <= Date.now();
+  return (
+    <section className="card stack">
+      <h2>🚀 ההשקה</h2>
+      <p className="muted small">עד המועד הזה, מסך הכניסה מציג ספירה לאחור, ואורחים נכנסים רק עם סיסמה. אחרי המועד, כניסת אורחים פתוחה.</p>
+      <p className={launched ? 'ok small' : 'small'}>{launched ? '✓ האתר הושק, אורחים נכנסים בלי סיסמה' : `🔒 נעול לאורחים עד ${new Date(saved!).toLocaleString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`}</p>
+      <div className="form-row">
+        <input id="launch-at" type="datetime-local" value={val} onChange={(e) => setVal(e.target.value)} />
+        <button className="btn btn-primary" disabled={!val} onClick={() => save(val)}>שמירה</button>
+        {!launched && <button className="btn" onClick={() => { const n = toLocal(new Date().toISOString()); setVal(n); save(n); }}>להשיק עכשיו</button>}
+      </div>
+      <div className="field"><span>סיסמת אורחים (עד ההשקה)</span>
+        <div className="row gap wrap">
+          <input id="guest-pw-admin" dir="ltr" placeholder="סיסמה חדשה" value={gpw} onChange={(e) => { setGpw(e.target.value); setGState('idle'); }} style={{ flex: '1 1 140px', width: 'auto' }} />
+          <button type="button" className="btn btn-small" onClick={() => { setGpw(randomPw()); setGState('idle'); }}>🎲 אקראית</button>
+          <button type="button" className="btn btn-small btn-primary" disabled={gpw.trim().length < 6 || gState === 'busy'} onClick={saveGuest}>{gState === 'busy' ? 'שומר…' : 'שמירה'}</button>
+        </div>
+        {gState === 'ok' && <p className="ok small">עודכן. סיסמת האורחים החדשה: <b dir="ltr">{gSaved}</b></p>}
+        {gState === 'err' && <p className="error">לא הצלחתי לעדכן. בדוק חיבור ונסה שוב.</p>}
+      </div>
     </section>
   );
 }
