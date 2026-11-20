@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { reducedMotion } from '../lib/fx';
 import { supabase } from '../lib/supabase';
+import { useTable } from '../lib/useTable';
+import { usePhotoUrls } from '../lib/photos';
+import type { Photo, Place } from '../lib/types';
 
-/** התמונות של דף הבית: תיקיית home בתוך האחסון (גלויה לכולם), לא הגלריה */
+/** התמונות הקבועות של דף הבית: תיקיית home בתוך האחסון (גלויה לכולם) */
 function useHomeSlides() {
   const [urls, setUrls] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('cache:home-slides') || '[]'); } catch { return []; }
@@ -32,9 +35,18 @@ const DREAMS = [
 ];
 
 export default function Slideshow() {
-  const ready = useHomeSlides();
+  const home = useHomeSlides();
+  // מהגלריה: רק תמונות שסומנו "גלוי לאורחים", מהחדשה לישנה
+  const pub = useTable<Photo>('photos', { order: 'created_at', ascending: false, filter: (q) => q.eq('is_public', true).limit(30) });
+  const places = useTable<Place>('places');
+  const pubUrls = usePhotoUrls(pub.rows);
+  const fromGallery = pub.rows.filter((p) => pubUrls[p.path]).map((p) => ({
+    key: p.id, img: pubUrls[p.path], title: places.rows.find((x) => x.id === p.place_id)?.name || '', sub: p.caption || '',
+  }));
+  const homeSlides = home.map((url, k) => ({ key: 'h' + k, img: url, title: '', sub: '' }));
+  const ready = [...fromGallery, ...homeSlides];
   const slides = ready.length
-    ? ready.map((url, k) => ({ key: 'h' + k, img: url, title: '', sub: '' }))
+    ? ready
     : DREAMS.map((d) => ({ key: d.title, img: '', title: d.title, sub: d.sub, art: d.art, bg: d.bg }));
   const [i, setI] = useState(0);
   const n = slides.length;
@@ -58,7 +70,8 @@ export default function Slideshow() {
           </div>}
         </div>
       ))}
-      {n > 1 && (
+      {n > 12 && <span className="slide-count tnum">{(i % n) + 1}/{n}</span>}
+      {n > 1 && n <= 12 && (
         <div className="slide-dots">
           {slides.map((s: any, k) => (
             <button key={s.key} aria-label={`תמונה ${k + 1}`} className={k === i % n ? 'on' : ''} onClick={() => setI(k)} />
