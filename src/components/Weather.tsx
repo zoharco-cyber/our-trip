@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react';
+import { placeName } from '../lib/geo';
 
 // תחזית חינמית מ-Open-Meteo (בלי מפתח). נשמרת בטלפון לשעה, ומוצגת גם בלי קליטה.
 type Day = { date: string; code: number; max: number; min: number; rain: number };
 
 const ICON = (c: number) =>
-  c === 0 ? '☀️' : c <= 2 ? '🌤️' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 57 ? '🌦️' : c <= 67 ? '🌧️' : c <= 77 ? '❄️' : c <= 82 ? '🌧️' : c <= 86 ? '🌨️' : '⛈️';
+  c === 0 ? '☀️' : c <= 2 ? '🌤️' : c === 3 ? '☁️' : c <= 48 ? '☁️' : c <= 57 ? '🌦️' : c <= 67 ? '🌧️' : c <= 77 ? '❄️' : c <= 82 ? '🌧️' : c <= 86 ? '🌨️' : '⛈️';
 const DESC = (c: number) =>
   c === 0 ? 'שמשי' : c <= 2 ? 'מעונן חלקית' : c === 3 ? 'מעונן' : c <= 48 ? 'ערפל' : c <= 57 ? 'טפטוף' : c <= 67 ? 'גשם' : c <= 77 ? 'שלג' : c <= 82 ? 'ממטרים' : c <= 86 ? 'שלג' : 'סופות רעמים';
 
-export default function Weather({ lat, lng, label }: { lat: number; lng: number; label?: string }) {
+export default function Weather({ lat, lng, label }: { lat: number; lng: number; label?: string | null }) {
+  const [name, setName] = useState<string | null>(label || null);
+  useEffect(() => {
+    if (label) { setName(label); return; }
+    let on = true;
+    placeName(lat, lng).then((n) => { if (on) setName(n); });
+    return () => { on = false; };
+  }, [lat, lng, label]);
   const key = `wx:${lat.toFixed(2)},${lng.toFixed(2)}`;
   const [days, setDays] = useState<Day[] | null>(() => {
     try { const c = JSON.parse(localStorage.getItem(key) || 'null'); return c?.days || null; } catch { return null; }
@@ -34,7 +42,7 @@ export default function Weather({ lat, lng, label }: { lat: number; lng: number;
       <div className="wx-now">
         <span className="wx-big">{ICON(today.code)}</span>
         <div>
-          {label && <span className="small muted">מזג האוויר ב{label}</span>}
+          <span className="small muted">{name ? <>מזג האוויר ב{name} 📍</> : 'מזג האוויר איפה שהבנות נמצאות'}</span>
           <b>{today.max}° / {today.min}°</b>
           <span className="small">{DESC(today.code)}{today.rain >= 30 && ` · ${today.rain}% גשם`}</span>
         </div>

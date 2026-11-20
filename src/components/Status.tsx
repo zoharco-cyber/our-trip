@@ -4,6 +4,7 @@ import { useTable } from '../lib/useTable';
 import { dbWrite, newId } from '../lib/offline';
 import type { StatusUpdate } from '../lib/types';
 import { confetti } from '../lib/fx';
+import { placeName } from '../lib/geo';
 
 const PRESETS = ['הגענו בשלום 💖', 'הכול טוב אצלנו 😊', 'בדרך, באוטובוס 🚌', 'בלי קליטה כמה ימים 📵', 'עייפות ומאושרות 😴', 'מתגעגעות! 🥹'];
 
@@ -57,8 +58,9 @@ export function SendStatus() {
         (p) => { lat = p.coords.latitude; lng = p.coords.longitude; res(); }, () => res(), { timeout: 10000, maximumAge: 300000 }));
     }
     const now = new Date().toISOString();
-    const r = await dbWrite({ table: 'status_updates', kind: 'insert', values: { id: newId(), message: text.trim(), place: place.trim() || null, lat, lng, created_by: me!.id, created_at: now } });
-    if (lat !== null && lng !== null) await dbWrite({ table: 'location_updates', kind: 'insert', values: { id: newId(), lat, lng, name: place.trim() || null, created_by: me!.id, created_at: now } });
+    const where = place.trim() || (lat !== null && lng !== null ? await placeName(lat, lng) : null);
+    const r = await dbWrite({ table: 'status_updates', kind: 'insert', values: { id: newId(), message: text.trim(), place: where, lat, lng, created_by: me!.id, created_at: now } });
+    if (lat !== null && lng !== null) await dbWrite({ table: 'location_updates', kind: 'insert', values: { id: newId(), lat, lng, name: where, created_by: me!.id, created_at: now } });
     setBusy(false);
     if (r === 'error') { setDone('לא נשלח. נסי שוב.'); return; }
     confetti(e?.clientX, e?.clientY, 40, ['💖', '✨']);

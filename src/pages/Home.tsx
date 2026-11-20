@@ -60,7 +60,7 @@ export default function Home() {
       <section className="hero-card">
         <Countdown />
       </section>
-      {here && <Weather lat={here.lat} lng={here.lng} label={here.name || 'איפה שהבנות נמצאות'} />}
+      {here && <Weather lat={here.lat} lng={here.lng} label={here.name} />}
       {!guest && <SendStatus />}
       {!guest && <NextBooking />}
 

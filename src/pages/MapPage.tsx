@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAuth } from '../lib/auth';
@@ -7,6 +7,7 @@ import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
 import type { LocationUpdate, Photo, Place, Story } from '../lib/types';
 import { fmtDateTime } from '../lib/util';
+import { placeName } from '../lib/geo';
 import { fmtDate } from '../lib/util';
 import PhotoGrid from '../components/PhotoGrid';
 import PhotoUpload from '../components/PhotoUpload';
@@ -37,12 +38,19 @@ export default function MapPage() {
   const [date, setDate] = useState('');
   const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
   const here = locs.rows[0];
+  const [hereName, setHereName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!here) return;
+    if (here.name) { setHereName(here.name); return; }
+    placeName(here.lat, here.lng).then(setHereName);
+  }, [here?.id]);
   const [locMode, setLocMode] = useState<null | 'menu' | 'pick'>(null);
   const [locName, setLocName] = useState('');
   const [locErr, setLocErr] = useState<string | null>(null);
 
   async function saveHere(lat: number, lng: number) {
-    await supabase.from('location_updates').insert({ lat, lng, name: locName.trim() || null });
+    const name = locName.trim() || (await placeName(lat, lng));
+    await supabase.from('location_updates').insert({ lat, lng, name });
     setLocMode(null); setLocName(''); locs.reload();
   }
   function useGps() {
@@ -90,7 +98,7 @@ export default function MapPage() {
         )}
       </div>
       {here && (
-        <p className="here-line">💖 עכשיו: <b>{here.name || 'מיקום עודכן'}</b> <span className="muted small">· {fmtDateTime(here.created_at)}</span></p>
+        <p className="here-line">💖 עכשיו: <b>{hereName || 'מיקום עודכן'}</b> <span className="muted small">· {fmtDateTime(here.created_at)}</span></p>
       )}
       {locMode && (
         <div className="card stack">
