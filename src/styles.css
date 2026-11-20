@@ -775,3 +775,28 @@ h2::before { color: #fff; }
 @media (prefers-reduced-motion: reduce) { .logo-ring::before, .logo-ring .spark, .login-wrap h1.login-title::after { animation: none; } }
 /* כותרת מסך הכניסה במרכז */
 .login-wrap h1.login-title { width: auto; justify-self: center; text-align: center; margin-inline: auto; }
+
+/* כסף: מי משלמת הבאה, תקציב יומי, קבלה */
+.next-payer { display: flex; gap: .8rem; align-items: center; border-inline-start: 6px solid var(--c); }
+.next-payer .grow { display: grid; gap: .1rem; }
+.next-payer b { font-size: 1.15rem; }
+.np-icon { font-size: 2rem; }
+.per-day { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem; background: var(--p-blush); border-radius: 12px; padding: .4rem .6rem; font-size: .9rem; }
+.per-day .money { flex-direction: row; gap: .3rem; align-items: baseline; }
+.per-day .money-usd { color: var(--p-deep); font-size: 1.1rem; }
+.receipt-btn { width: fit-content; }
+.receipt-open { font-size: 1.1rem; }
+
+/* שאלת היום */
+.dq { display: grid; gap: .5rem; background: linear-gradient(135deg, var(--p-blush), var(--surface)); }
+.dq-kicker { font-size: .8rem; color: var(--p-deep); letter-spacing: .03em; }
+.dq-q { font-family: var(--font-display); font-size: 1.2rem; color: var(--p-strong); }
+.dq-answers { display: grid; gap: .15rem; background: var(--surface-2); border-radius: 12px; padding: .5rem .8rem; }
+/* שירים ותרופות */
+.songs { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.song { display: flex; gap: .7rem; align-items: center; }
+.song .grow { display: grid; gap: .15rem; }
+.song-no { font-family: var(--font-display); font-size: 1.4rem; color: var(--p-mid); min-width: 2rem; text-align: center; }
+.song-note { font-style: italic; color: var(--muted); }
+.med-ico { font-size: 1.4rem; }
+.med-off { opacity: .55; }

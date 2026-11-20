@@ -5,7 +5,7 @@ export type Profile = {
 export type TripEvent = { id: string; title: string; starts_at: string; created_by: string | null };
 export type Expense = {
   id: string; description: string; amount_usd: number; orig_amount: number; orig_currency: string;
-  paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string;
+  paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string; receipt_path?: string | null;
 };
 export type Transfer = { id: string; from_id: string; to_id: string; amount_usd: number; created_at: string };
 export type ShoppingItem = { id: string; text: string; qty: string | null; done: boolean; week_of: string; created_by: string | null };
@@ -25,3 +25,6 @@ export type Contact = { id: string; label: string; phone: string; note: string |
 export type Challenge = { id: string; title: string; details: string | null; points: number; created_at: string };
 export type ChallengeDone = { challenge_id: string; user_id: string; note: string | null; created_at: string };
 export type StatusUpdate = { id: string; message: string; lat: number | null; lng: number | null; place: string | null; created_by: string | null; created_at: string };
+export type Song = { id: string; title: string; artist: string | null; url: string | null; note: string | null; created_by: string | null; created_at: string };
+export type DailyAnswer = { id: string; day: string; question: string; answer: string; created_by: string; created_at: string };
+export type Med = { id: string; user_id: string; name: string; times: string[]; tz: string; active: boolean; created_at: string };

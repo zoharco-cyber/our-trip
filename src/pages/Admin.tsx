@@ -40,6 +40,7 @@ export default function Admin() {
           })}
         </div>
       </section>
+      <TripEnd />
       <section className="card stack">
         <h2>ערכות עיצוב</h2>
         <p className="muted small">כל אחת רואה את האתר בערכה שלה. רק אתה יכול לשנות.</p>
@@ -110,5 +111,30 @@ function ThemeRow({ id, name, color, theme }: { id: string; name: string; color:
       </div>
       {err && <p className="error">לא נשמר. בדוק חיבור ונסה שוב.</p>}
     </li>
+  );
+}
+
+function TripEnd() {
+  const [val, setVal] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.from('settings').select('value').eq('key', 'trip_end').maybeSingle().then(({ data }) => {
+      if (data?.value) { setVal(data.value); setSaved(data.value); }
+    });
+  }, []);
+  async function save() {
+    const { error } = await supabase.from('settings').upsert({ key: 'trip_end', value: val || null });
+    if (!error) setSaved(val || null);
+  }
+  return (
+    <section className="card stack">
+      <h2>סוף הטיול</h2>
+      <p className="muted small">משמש לחישוב "כמה אפשר להוציא ליום" בעמוד הכסף. אפשר לשנות בכל רגע.</p>
+      <div className="form-row">
+        <input id="trip-end" type="date" value={val} onChange={(e) => setVal(e.target.value)} />
+        <button className="btn btn-primary" disabled={val === (saved || '')} onClick={save}>שמירה</button>
+      </div>
+      {saved && <p className="ok small">נשמר: {new Date(saved + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
+    </section>
   );
 }

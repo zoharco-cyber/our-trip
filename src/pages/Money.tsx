@@ -10,6 +10,9 @@ import { CURRENCIES } from '../data/currencies';
 import { fmtDate, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 import { paidStamp, reducedMotion } from '../lib/fx';
+import type { TripEvent } from '../lib/types';
+import { FIRST_FLIGHT } from '../config';
+import { safeFileName } from '../lib/util';
 
 type Debt = { from: string; to: string; amount: number };
 
@@ -51,7 +54,21 @@ export default function MoneyPage() {
   const exp = useTable<Expense>('expenses', { order: 'spent_on', ascending: false });
   const tr = useTable<Transfer>('transfers', { order: 'created_at', ascending: false });
   const ids = travelers.map((t) => t.id);
-  const { share, paid, debts } = useMemo(() => computeBalances(ids, exp.rows, tr.rows), [ids.join(), exp.rows, tr.rows]);
+  const { net, share, paid, debts } = useMemo(() => computeBalances(ids, exp.rows, tr.rows), [ids.join(), exp.rows, tr.rows]);
+  // מי משלמת הבאה: זו שהכי "בחובה" (המאזן הכי נמוך)
+  const nextPayer = travelers.length > 1 && exp.rows.length > 0
+    ? [...travelers].sort((a, b) => (net[a.id] || 0) - (net[b.id] || 0))[0] : null;
+  // תקציב יומי: מה שנשאר חלקי הימים שנותרו עד סוף הטיול
+  const settings = useTable<{ key: string; value: any }>('settings', { filter: (q) => q.eq('key', 'trip_end') });
+  const events = useTable<TripEvent>('events', { order: 'starts_at' });
+  const tripEnd: string | null = settings.rows[0]?.value || null;
+  const tripStart = new Date(events.rows[0]?.starts_at || FIRST_FLIGHT).toLocaleDateString('en-CA');
+  const daysLeft = (() => {
+    if (!tripEnd) return null;
+    const from = new Date(Math.max(Date.now(), new Date(tripStart + 'T00:00:00').getTime()));
+    from.setHours(0, 0, 0, 0);
+    return Math.max(1, Math.round((new Date(tripEnd + 'T00:00:00').getTime() - from.getTime()) / 864e5) + 1);
+  })();
 
   const [showForm, setShowForm] = useState(false);
   const [editBudget, setEditBudget] = useState(false);
@@ -82,6 +99,11 @@ export default function MoneyPage() {
   async function removeExpense(id: string) {
     await dbWrite({ table: 'expenses', kind: 'delete', match: { id } }); exp.reload();
   }
+  async function openReceipt(path: string) {
+    const w = window.open('', '_blank');
+    const { data } = await supabase.storage.from('photos').createSignedUrl(path, 600);
+    if (data?.signedUrl) { if (w) w.location.href = data.signedUrl; else location.href = data.signedUrl; } else w?.close();
+  }
   async function removeTransfer(id: string) {
     await supabase.from('transfers').delete().eq('id', id); tr.reload();
   }
@@ -99,13 +121,24 @@ export default function MoneyPage() {
         <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>{showForm ? 'סגירה' : 'הוצאה חדשה'}</button>
       </div>
 
-      {showForm && <ExpenseForm onDone={() => { setShowForm(false); exp.reload(); }} />}
+      {nextPayer && (
+        <div className="card next-payer" style={{ ['--c' as any]: nextPayer.color }}>
+          <span className="np-icon" aria-hidden="true">👛</span>
+          <div className="grow">
+            <span className="small muted">מי משלמת הבאה?</span>
+            <b><Who id={nextPayer.id} /></b>
+            <span className="small muted">{(net[nextPayer.id] || 0) < -0.5 ? 'היא הכי בחובה כרגע, אז התור שלה' : 'כולן כמעט מאוזנות, אבל התור שלה'}</span>
+          </div>
+        </div>
+      )}
+      {showForm && <ExpenseForm suggested={nextPayer?.id} onDone={() => { setShowForm(false); exp.reload(); }} />}
 
       <section className="stack">
         <h2>כמה נשאר לכל אחת</h2>
         <div className="grid-3">
           {travelers.map((t) => {
             const left = Number(t.initial_budget_usd) - share[t.id];
+            const perDay = daysLeft && Number(t.initial_budget_usd) > 0 ? Math.max(0, left) / daysLeft : null;
             const pct = t.initial_budget_usd > 0 ? Math.max(0, Math.min(100, (left / t.initial_budget_usd) * 100)) : 0;
             return (
               <div key={t.id} className="card budget-card" style={{ ['--c' as any]: t.color }}>
@@ -114,6 +147,7 @@ export default function MoneyPage() {
                 )}</div>
                 <div className="budget-left"><span className="muted small">נשאר</span><Money usd={left} big /></div>
                 <div className="bar"><i style={{ width: pct + '%' }} /></div>
+                {perDay !== null && <div className="per-day"><span>אפשר להוציא בערך</span><Money usd={perDay} /><span>ליום</span><span className="muted small">({daysLeft} ימים)</span></div>}
                 <dl className="kv">
                   <dt>סכום התחלתי</dt><dd><Money usd={Number(t.initial_budget_usd)} /></dd>
                   <dt>החלק שלה בהוצאות</dt><dd><Money usd={share[t.id]} /></dd>
@@ -195,6 +229,7 @@ export default function MoneyPage() {
                     {e.orig_currency !== 'USD' && <> · הוזן כ-{Number(e.orig_amount).toLocaleString('he-IL')} {CURRENCIES.find((c) => c.code === e.orig_currency)?.name || e.orig_currency}</>}
                   </div>
                 </div>
+                {(e as any).receipt_path && <button className="icon-btn receipt-open" aria-label="הצגת הקבלה" title="קבלה" onClick={() => openReceipt((e as any).receipt_path)}>🧾</button>}
                 <Money usd={Number(e.amount_usd)} />
                 <button className="icon-btn" aria-label="מחיקה" onClick={() => removeExpense(e.id)}>×</button>
               </li>
@@ -229,13 +264,14 @@ function CurrencyToggle({ value, onChange }: { value: 'USD' | 'ILS'; onChange: (
   );
 }
 
-function ExpenseForm({ onDone }: { onDone: () => void }) {
+function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: string }) {
   const { travelers, me } = useAuth();
   const { usd, ils, toUsd } = useMoney();
   const [description, setDesc] = useState('');
   const [amount, setAmount] = useState('');
   const [cur, setCur] = useState<string>(() => { try { return localStorage.getItem('trip:lastCur') || 'USD'; } catch { return 'USD'; } });
   const [paidBy, setPaidBy] = useState(me?.is_traveler ? me.id : travelers[0]?.id || '');
+  const [receipt, setReceipt] = useState<File | null>(null);
   const [among, setAmong] = useState<string[]>(travelers.map((t) => t.id));
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
   const [date, setDate] = useState(todayISO());
@@ -249,8 +285,15 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     if (!description || !(n > 0) || !among.length || !paidBy || conv === null) return;
     try { localStorage.setItem('trip:lastCur', cur); } catch { /* ignore */ }
+    // קבלה (לא חובה): עולה רק כשיש קליטה
+    let receipt_path: string | null = null;
+    if (receipt && navigator.onLine && me) {
+      const path = `receipts/${me.id}/${Date.now()}-${safeFileName(receipt.name)}`;
+      const up = await supabase.storage.from('photos').upload(path, receipt, { contentType: receipt.type || 'image/jpeg' });
+      if (!up.error) receipt_path = path;
+    }
     const r = await dbWrite({ table: 'expenses', kind: 'insert', values: {
-      id: newId(), description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
+      id: newId(), receipt_path, description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
       paid_by: paidBy, split_among: among, category, spent_on: date, created_at: new Date().toISOString(),
     } });
     if (r === 'error') setErr('ההוצאה לא נשמרה. נסי שוב.');
@@ -273,7 +316,7 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
         </label>
         <label className="field"><span>מי שילמה</span>
           <select id="exp-paid" value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
-            {travelers.map((t) => <option key={t.id} value={t.id}>{t.display_name}</option>)}
+            {travelers.map((t) => <option key={t.id} value={t.id}>{t.display_name}{t.id === suggested ? ' 👛 (התור שלה)' : ''}</option>)}
           </select>
         </label>
         <label className="field"><span>קטגוריה</span>
@@ -298,6 +341,11 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
       </div>
       {n > 0 && conv === null && <p className="error">אין עדיין שער למטבע הזה. צריך חיבור לאינטרנט פעם אחת כדי לטעון שערים.</p>}
       {n > 0 && conv !== null && <p className="muted small">{usd(amountUsd)} · {ils(amountUsd)} · {among.length ? `כל אחת: ${usd(amountUsd / among.length)} · ${ils(amountUsd / among.length)}` : 'בחרי לפחות אחת'}</p>}
+      <label className="btn btn-small upload-btn receipt-btn">
+        {receipt ? `🧾 קבלה נבחרה ✓` : '🧾 צילום קבלה (לא חובה)'}
+        <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
+      </label>
+      {receipt && !navigator.onLine && <p className="muted small">אין קליטה כרגע, אז הקבלה לא תישמר. ההוצאה עצמה כן תישמר.</p>}
       {err && <p className="error">{err}</p>}
       <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length || conv === null}>הוספה</button>
     </form>

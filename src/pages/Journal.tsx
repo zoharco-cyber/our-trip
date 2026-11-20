@@ -9,6 +9,8 @@ import { FIRST_FLIGHT } from '../config';
 import { addDays, fmtDate, safeFileName, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 import Reminder from '../components/Reminder';
+import { questionFor } from '../data/questions';
+import type { DailyAnswer } from '../lib/types';
 
 export const MOODS = ['🤩', '😍', '😂', '😌', '🥱', '🥶', '🤢', '😭', '😤', '🥳'];
 
@@ -31,6 +33,7 @@ export default function Journal() {
     id: `demo-${d}-${i}`, day: addDays(tripStart, d), content: day[i]?.content || '', mood: day[i]?.mood || null, photo_path: null, created_by: t.id, created_at: '',
   }))).reverse();
   const entries = demo ? { ...real, rows: demoRows } : real;
+  const answers = useTable<DailyAnswer>('daily_answers', { order: 'created_at' });
   const [day, setDay] = useState(todayISO());
   const mine = entries.rows.find((e) => e.day === day && e.created_by === me?.id);
   const [text, setText] = useState('');
@@ -86,6 +89,7 @@ export default function Journal() {
         </div>
       )}
       <Reminder />
+      {started && me?.is_traveler && !demo && <DailyQuestion day={todayISO()} mine={answers.rows.find((a) => a.day === todayISO() && a.created_by === me.id)} reload={answers.reload} />}
       {canWrite && (
         <section className="card stack">
           <div className="row-between">
@@ -117,6 +121,12 @@ export default function Journal() {
           {days.map((d) => (
             <li key={d} className="journal-day">
               <h3>{fmtDate(d)}</h3>
+              {answers.rows.some((a) => a.day === d) && (
+                <div className="dq-answers">
+                  <span className="small muted">❓ {answers.rows.find((a) => a.day === d)!.question}</span>
+                  {answers.rows.filter((a) => a.day === d).map((a) => <p key={a.id} className="small"><Who id={a.created_by} />: {a.answer}</p>)}
+                </div>
+              )}
               <div className="stack">
                 {travelers.map((t) => {
                   const e = entries.rows.find((x) => x.day === d && x.created_by === t.id);
@@ -135,5 +145,33 @@ export default function Journal() {
         </ol>
       )}
     </div>
+  );
+}
+
+/** שאלת היום: אותה שאלה לכולן, ולא חובה לענות */
+function DailyQuestion({ day, mine, reload }: { day: string; mine?: DailyAnswer; reload: () => void }) {
+  const { me } = useAuth();
+  const q = questionFor(day);
+  const [text, setText] = useState('');
+  const [editing, setEditing] = useState(false);
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    if (!me || !text.trim()) return;
+    await dbWrite({ table: 'daily_answers', kind: 'upsert', values: { day, question: q, answer: text.trim(), created_by: me.id }, onConflict: 'day,created_by' });
+    setEditing(false); reload();
+  }
+  return (
+    <section className="card dq">
+      <span className="dq-kicker">❓ שאלת היום · לא חובה לענות</span>
+      <b className="dq-q">{q}</b>
+      {mine && !editing ? (
+        <div className="row-between"><p>{mine.answer}</p><button className="link-btn" onClick={() => { setText(mine.answer); setEditing(true); }}>עריכה</button></div>
+      ) : (
+        <form className="form-row" onSubmit={save}>
+          <input id="dq-answer" className="grow" placeholder="התשובה שלך…" value={text} onChange={(e) => setText(e.target.value)} />
+          <button className="btn btn-primary" disabled={!text.trim()}>שמירה</button>
+        </form>
+      )}
+    </section>
   );
 }
