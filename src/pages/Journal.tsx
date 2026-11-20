@@ -14,9 +14,9 @@ export const MOODS = ['🤩', '😍', '😂', '😌', '🥱', '🥶', '🤢', '�
 
 // רשומות לדוגמה, רק לתצוגה של המנהל (לא נשמרות)
 const DEMO: { content: string; mood: string }[][] = [
-  [{ content: 'נחתנו בלימה! עייפות אבל מאושרות, וכבר אכלנו סביצ׳ה', mood: '🤩' }, { content: 'המזוודה שלי הגיעה אחרונה. כמעט בכיתי', mood: '😅' }, { content: 'האוקיינוס פה ענק, ישבנו על הצוק עד השקיעה', mood: '😍' }],
-  [{ content: 'הגענו לקוסקו. אין אוויר אבל יש קסם', mood: '🥶' }, { content: 'תה קוקה ונרדמתי בשמונה בערב', mood: '🥱' }, { content: 'מצאנו שוק מטורף וקניתי סוודר עם לאמות', mood: '😂' }],
-  [{ content: 'מאצ׳ו פיצ׳ו!!! אין מילים', mood: '😭' }, { content: 'קמנו בארבע בבוקר וזה היה שווה כל שנייה', mood: '🤩' }, { content: 'לאמה ליקקה לי את התיק. אתגר הושלם', mood: '🥳' }],
+  [{ content: 'נחתנו בלימה! עייפות אבל מאושרות, וכבר אכלנו סביצ׳ה', mood: '🤩' }, { content: 'המזוודה שלי הגיעה אחרונה. כמעט בכיתי', mood: '😅' }, { content: 'האוקיינוס פה ענק, ישבנו על הצוק עד השקיעה', mood: '😍' }, { content: 'גיליתי שאני מכורה לאינקה קולה', mood: '🥳' }],
+  [{ content: 'הגענו לקוסקו. אין אוויר אבל יש קסם', mood: '🥶' }, { content: 'תה קוקה ונרדמתי בשמונה בערב', mood: '🥱' }, { content: 'מצאנו שוק מטורף וקניתי סוודר עם לאמות', mood: '😂' }, { content: 'כאב לי הראש מהגובה, אבל הנוף שווה הכול', mood: '😌' }],
+  [{ content: 'מאצ׳ו פיצ׳ו!!! אין מילים', mood: '😭' }, { content: 'קמנו בארבע בבוקר וזה היה שווה כל שנייה', mood: '🤩' }, { content: 'לאמה ליקקה לי את התיק. אתגר הושלם', mood: '🥳' }, { content: 'צילמתי 400 תמונות. אחת מהן טובה', mood: '😂' }],
 ];
 
 export default function Journal() {
@@ -27,7 +27,7 @@ export default function Journal() {
   const started = todayISO() >= tripStart;
   const daysLeft = Math.ceil((new Date(tripStart + 'T00:00:00').getTime() - Date.now()) / 864e5);
   const [demo, setDemo] = useState(false);
-  const demoRows: JournalEntry[] = DEMO.flatMap((day, d) => travelers.slice(0, 3).map((t, i) => ({
+  const demoRows: JournalEntry[] = DEMO.flatMap((day, d) => travelers.slice(0, 4).map((t, i) => ({
     id: `demo-${d}-${i}`, day: addDays(tripStart, d), content: day[i]?.content || '', mood: day[i]?.mood || null, photo_path: null, created_by: t.id, created_at: '',
   }))).reverse();
   const entries = demo ? { ...real, rows: demoRows } : real;
