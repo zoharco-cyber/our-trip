@@ -596,3 +596,8 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .book-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
 .book-photos img { aspect-ratio: 1; object-fit: cover; border-radius: 12px; width: 100%; }
 .book-wishes { list-style: none; padding: 0; margin: 0; display: grid; gap: .35rem; font-size: 1.05rem; }
+
+/* תזכורת יומית */
+.reminder { display: grid; gap: .5rem; border-style: dashed; }
+.reminder.on { border-color: var(--ok); }
+.on-pill { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); font-weight: 600; }

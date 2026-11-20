@@ -6,6 +6,7 @@ import { usePhotoUrls } from '../lib/photos';
 import type { JournalEntry, Photo } from '../lib/types';
 import { fmtDate, safeFileName, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
+import Reminder from '../components/Reminder';
 
 export const MOODS = ['🤩', '😍', '😂', '😌', '🥱', '🥶', '🤢', '😭', '😤', '🥳'];
 
@@ -49,6 +50,7 @@ export default function Journal() {
         <h1>יומן מסע</h1>
         <p className="muted">משפט אחד ביום, מצב רוח, ואם בא לך: תמונת היום. בסוף הטיול יש יומן שלם.</p>
       </div>
+      <Reminder />
       {canWrite && (
         <section className="card stack">
           <div className="row-between">
