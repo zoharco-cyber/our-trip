@@ -10,6 +10,12 @@ const MESSAGES = [
   'עוד יום של הרפתקאות! לא לשכוח לכתוב ביומן 🦙',
 ];
 
+function prevDay(date: string) {
+  const d = new Date(date + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function localParts(tz: string) {
   const f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
   const p = Object.fromEntries(f.formatToParts(new Date()).map((x) => [x.type, x.value]));
@@ -26,6 +32,18 @@ Deno.serve(async (req) => {
   const { data: subs } = await db.from('push_subscriptions').select('*');
   const { data: start } = await db.rpc('trip_start');  // אין תזכורות לפני שהטיול התחיל
   let sent = 0, skipped = 0, removed = 0;
+  const { data: people } = await db.from('profiles').select('id, display_name, is_traveler');
+  const firstName = (id: string) => (people || []).find((p) => p.id === id)?.display_name.split(' ')[0] || '';
+  const yesterdayCache = new Map<string, string>();
+  async function yesterdayLine(date: string) {
+    const y = prevDay(date);
+    if (!yesterdayCache.has(y)) {
+      const { data } = await db.from('journal_entries').select('created_by, mood').eq('day', y);
+      const parts = (data || []).map((e) => `${firstName(e.created_by)} ${e.mood || '✍️'}`).filter((x) => x.trim());
+      yesterdayCache.set(y, parts.length ? `אתמול: ${parts.join(', ')}. ומה היה היום? ✨` : '');
+    }
+    return yesterdayCache.get(y)!;
+  }
 
   for (const s of subs || []) {
     let tz = s.tz;
@@ -34,9 +52,10 @@ Deno.serve(async (req) => {
     if (!test && (hour !== s.hour || s.last_sent === date || (start && date < start))) { skipped++; continue; }
     const { count } = await db.from('journal_entries').select('id', { count: 'exact', head: true }).eq('created_by', s.user_id).eq('day', date);
     if (!test && (count || 0) > 0) { skipped++; continue; }
+    const line = await yesterdayLine(date);
     const body = JSON.stringify({
       title: 'יומן המסע 📔',
-      body: MESSAGES[Math.floor(Math.random() * MESSAGES.length)],
+      body: line || MESSAGES[Math.floor(Math.random() * MESSAGES.length)],
       url: '#/journal',
     });
     try {
