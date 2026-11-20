@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import Countdown from '../components/Countdown';
 import { LOGO_URL } from '../config';
@@ -11,6 +11,10 @@ export default function Login() {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    document.documentElement.dataset.screen = 'login';
+    return () => { delete document.documentElement.dataset.screen; };
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -24,7 +28,10 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-hero">
-        <img className="login-logo" src={LOGO_URL} alt="הלוגו של הטיול" />
+        <div className="logo-ring">
+          <img className="login-logo" src={LOGO_URL} alt="הלוגו של הטיול" />
+          <span className="spark s1" aria-hidden="true">✦</span><span className="spark s2" aria-hidden="true">✦</span><span className="spark s3" aria-hidden="true">✦</span>
+        </div>
         <p className="eyebrow">{firstNames.join(' · ') || '\u00a0'}</p>
         <h1 className="login-title">הטיול שלנו</h1>
         <p className="login-sub">דרום אמריקה ומה שיבוא אחריה</p>
@@ -36,9 +43,9 @@ export default function Login() {
         <div className="who-grid">
           {accounts.length === 0 && <p className="muted small">טוען את רשימת המטיילות… (צריך חיבור לאינטרנט בכניסה הראשונה)</p>}
           {accounts.map((a) => (
-            <button type="button" key={a.slug} className={'who-btn' + (slug === a.slug ? ' on' : '')}
+            <button type="button" key={a.slug} className={'who-btn' + (slug === a.slug ? ' on' : '')} style={{ ['--c' as any]: a.is_admin ? '#1a1a1a' : a.color }}
               onClick={() => { setSlug(a.slug); setErr(null); }}>
-              {a.display_name}
+              <i className="dot" aria-hidden="true" />{a.display_name}
             </button>
           ))}
         </div>

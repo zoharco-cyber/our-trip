@@ -707,3 +707,69 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .theme-pick .sw { display: inline-flex; }
 .theme-pick .sw i { width: .9rem; height: .9rem; border-radius: 50%; border: 1.5px solid #fff; margin-inline-start: -.3rem; }
 .theme-pick .sw i:first-child { margin-inline-start: 0; }
+
+/* =====================================================================
+   נוכחות צבע חזקה לכל ערכה
+   ===================================================================== */
+:root { --bg: color-mix(in srgb, var(--p-mid) 30%, #fff); --surface-2: color-mix(in srgb, var(--p-soft) 60%, #fff); --line: var(--p-mid); }
+body { background-image: linear-gradient(180deg, color-mix(in srgb, var(--p-bright) 35%, transparent) 0, transparent 420px), var(--pattern); background-repeat: no-repeat, repeat; background-size: auto, 120px 120px; }
+.card, .tile, .timeline li, .checklist li, .list, .latest-status, .weather, .ranking li, .cat, .place-list { border-color: var(--p-mid); box-shadow: 0 5px 0 color-mix(in srgb, var(--p-strong) 45%, transparent); }
+h2 { background: linear-gradient(90deg, var(--p-strong), var(--p-bright)); color: #fff; padding: .25rem .9rem; border-radius: 999px; width: fit-content; box-shadow: 0 3px 0 var(--p-deep); }
+h2::before { color: #fff; }
+/* כותרות בתוך כרטיסים ובעמודים מיוחדים נשארות בלי גלולה */
+.card h2, .login-card h2, .place-panel h2, .dest h2, .shadow-page h2, .book-cover h2 { background: none; color: var(--brand); padding: 0; box-shadow: none; border-radius: 0; }
+.card h2::before { color: var(--rose); }
+.shadow-page h2 { color: var(--sh-ink); }
+.tile { background: linear-gradient(160deg, var(--p-blush), var(--surface) 70%); border-style: solid; border-width: 2px; border-inline-start-width: 8px; border-inline-start-color: var(--p-strong); }
+.tile b { color: var(--p-deep); }
+.bottomnav { background: linear-gradient(90deg, var(--p-strong), var(--p-bright)); border-top: 0; }
+.bottomnav a { color: rgba(255, 255, 255, .85); }
+.bottomnav a.active { background: rgba(255, 255, 255, .25); color: #fff; }
+.marquee { background: var(--p-strong); color: #fff; border-color: var(--p-blush); }
+.weather { background: linear-gradient(135deg, var(--p-blush), var(--surface)); }
+.latest-status { background: linear-gradient(135deg, var(--surface), var(--p-blush)); }
+:root[data-skin="midnight"] .tile b { color: var(--brand); }
+
+/* =====================================================================
+   מסך כניסה: לבן נקי עם קיק
+   ===================================================================== */
+:root[data-screen="login"] body { background: #fff; background-image: none; }
+:root[data-screen="login"] body::after { display: none; }
+.login-wrap { background: #fff; color: #1a1a1a; }
+.login-hero { color: #1a1a1a; }
+.login-hero .eyebrow { color: #b0306e; letter-spacing: .25em; font-size: .78rem; opacity: 1; }
+.login-wrap h1.login-title { font-family: 'Frank Ruhl Libre', serif; font-weight: 900; color: #1a1a1a; text-shadow: none; background: none; animation: none; filter: none; }
+.login-wrap h1.login-title::after { content: ""; display: block; width: 64px; height: 3px; border-radius: 3px; margin: .55rem auto 0;
+  background: linear-gradient(90deg, #e0157f, #a855f7, #ffc94d, #e0283a, #e0157f); background-size: 300% 100%; animation: glitter 4s linear infinite; }
+.login-sub { color: #6b6b6b; opacity: 1; }
+/* טבעת הולוגרפית סביב הלוגו */
+.logo-ring { position: relative; width: 136px; height: 136px; margin: 0 auto .6rem; display: grid; place-items: center; }
+.logo-ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff4fa8, #a855f7, #6fd6ff, #ffc94d, #e0283a, #ff4fa8); animation: spin 8s linear infinite; filter: saturate(1.2); }
+.logo-ring::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+.logo-ring img.login-logo { position: relative; z-index: 1; width: 116px; height: 116px; border-radius: 50%; border: 0; box-shadow: none; transform: none; margin: 0; }
+.logo-ring .spark { position: absolute; z-index: 2; color: #ffc94d; font-size: 1.1rem; animation: twinkleStar 2.4s ease-in-out infinite; }
+.logo-ring .spark.s1 { top: -4px; left: 8px; }
+.logo-ring .spark.s2 { bottom: 6px; right: -6px; animation-delay: .8s; color: #a855f7; }
+.logo-ring .spark.s3 { top: 18px; right: -10px; animation-delay: 1.6s; color: #ff4fa8; font-size: .8rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes twinkleStar { 0%, 100% { opacity: .2; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.15); } }
+.login-hero .countdown, .login-hero .countdown .muted { color: #1a1a1a; }
+.login-hero .cd-unit { background: #faf7f8; border: 1px solid #eee; }
+.login-hero .cd-unit b { color: #1a1a1a; }
+.login-hero .cd-unit span { color: #b0306e; }
+.login-card { border: 1px solid #eee; box-shadow: 0 12px 34px rgba(0, 0, 0, .07); border-radius: 22px; background: #fff; color: #1a1a1a; }
+.login-card h2 { color: #1a1a1a; font-family: 'Frank Ruhl Libre', serif; }
+.login-card h2::before { content: none; }
+.who-btn { border: 1.5px solid #e6e6e6; background: #fff; color: #1a1a1a; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; transition: background .2s, color .2s, border-color .2s; }
+.who-btn .dot { background: var(--c, #ccc); }
+.who-btn:hover { border-color: var(--c, #ccc); }
+.who-btn.on { background: var(--c, #1a1a1a); border-color: var(--c, #1a1a1a); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--c, #000) 35%, transparent); }
+.who-btn.on .dot { background: #fff; }
+.login-card .btn-primary { background: #1a1a1a; border-color: #1a1a1a; box-shadow: none; text-shadow: none; }
+.login-card .btn-ghost { border: 1.5px solid #e6e6e6; color: #1a1a1a; }
+.login-card .field > span { color: #6b6b6b; }
+.login-card input { background: #fff; color: #1a1a1a; border-color: #e6e6e6; }
+.login-card .divider { color: #9a9a9a; }
+.login-card .divider::before, .login-card .divider::after { background: #eee; }
+@media (prefers-reduced-motion: reduce) { .logo-ring::before, .logo-ring .spark, .login-wrap h1.login-title::after { animation: none; } }
