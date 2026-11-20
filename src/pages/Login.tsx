@@ -28,12 +28,21 @@ function LaunchCountdown({ at, onDone }: { at: number; onDone: () => void }) {
   const m = Math.floor(ms / 6e4); ms -= m * 6e4;
   const sec = Math.floor(ms / 1e3);
   const when = new Date(at).toLocaleString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
+  const left = at - now;
+  const mood = left <= 10_000 ? ' final' : left <= 3_600_000 ? ' close' : '';
+  const units: [number, string][] = [[d, 'ימים'], [h, 'שעות'], [m, 'דקות'], [sec, 'שניות']];
   return (
-    <section className="launch">
-      <span className="launch-kicker">🚀 ההשקה הגדולה</span>
-      <div className="launch-units">
-        {[[d, 'ימים'], [h, 'שעות'], [m, 'דקות'], [sec, 'שניות']].map(([n, l]) => (
-          <div key={l as string} className="launch-unit"><b className="tnum">{String(n).padStart(2, '0')}</b><span>{l}</span></div>
+    <section className={'launch' + mood} aria-label="ספירה לאחור להשקה">
+      <span className="launch-kicker">ההשקה הגדולה</span>
+      <div className="launch-units" dir="ltr">
+        {units.slice().reverse().map(([n, l], i) => (
+          <div key={l} className="launch-group">
+            {i > 0 && <span className="launch-sep" aria-hidden="true">:</span>}
+            <div className="launch-unit">
+              <b className="tnum" key={l === 'שניות' ? n : undefined}>{String(n).padStart(2, '0')}</b>
+              <span>{l}</span>
+            </div>
+          </div>
         ))}
       </div>
       <span className="launch-when">{when}</span>
