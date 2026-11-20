@@ -6,7 +6,7 @@ import type { Tip } from '../lib/types';
 import { fmtDate } from '../lib/util';
 import { Who } from '../components/Avatar';
 
-export default function Guide() {
+export default function Guide({ embedded }: { embedded?: boolean } = {}) {
   const [q, setQ] = useState('');
   const [active, setActive] = useState<string | null>(null); // slug או שם חופשי
   const tips = useTable<Tip>('destination_tips', { order: 'created_at' });
@@ -26,10 +26,12 @@ export default function Guide() {
 
   return (
     <div className="stack-lg">
-      <div>
-        <h1>מדריך יעדים</h1>
-        <p className="muted">כתבי מדינה, עיר או אתר ותקבלי דגשים: כניסה ואשרות, עונה, מה לא לפספס. אפשר גם להוסיף טיפים משלכן.</p>
-      </div>
+      {embedded ? <p className="muted">כתבי מדינה, עיר או אתר ותקבלי דגשים: כניסה ואשרות, עונה, מה לא לפספס. אפשר גם להוסיף טיפים משלכן.</p> : (
+        <div>
+          <h1>מדריך יעדים</h1>
+          <p className="muted">כתבי מדינה, עיר או אתר ותקבלי דגשים: כניסה ואשרות, עונה, מה לא לפספס. אפשר גם להוסיף טיפים משלכן.</p>
+        </div>
+      )}
       <form className="form-row" onSubmit={search}>
         <input id="guide-q" className="grow" placeholder="למשל: קוסקו, פטגוניה, בוליביה" value={q} onChange={(e) => setQ(e.target.value)} list="guide-list" />
         <datalist id="guide-list">{DESTINATIONS.map((d) => <option key={d.slug} value={d.name} />)}</datalist>

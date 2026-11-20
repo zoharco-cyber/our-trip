@@ -6,22 +6,29 @@ import type { Contact } from '../lib/types';
 import { CURRENCIES } from '../data/currencies';
 import { EMERGENCY, PHRASES } from '../data/help';
 import { fmtDate } from '../lib/util';
+import Guide from './Guide';
 
-type Tab = 'convert' | 'emergency' | 'spanish';
+type Tab = 'guide' | 'convert' | 'emergency' | 'spanish';
 
 export default function Help() {
-  const [tab, setTab] = useState<Tab>(() => (location.hash.includes('spanish') ? 'spanish' : 'convert'));
+  const [tab, setTab] = useState<Tab>(() => {
+    try { const t = sessionStorage.getItem('trip:helpTab') as Tab | null; if (t) return t; } catch { /* ignore */ }
+    return 'guide';
+  });
+  const pick = (t: Tab) => { setTab(t); try { sessionStorage.setItem('trip:helpTab', t); } catch { /* ignore */ } };
   return (
-    <div className="stack-lg narrow">
+    <div className={'stack-lg' + (tab === 'guide' ? '' : ' narrow')}>
       <div>
         <h1>עזרה בדרך</h1>
-        <p className="muted">הכול כאן עובד גם בלי אינטרנט, אחרי שפותחים את האתר פעם אחת עם חיבור.</p>
+        <p className="muted">יעדים, כסף, חירום וספרדית. הכול עובד גם בלי אינטרנט, אחרי שפותחים את האתר פעם אחת עם חיבור.</p>
       </div>
-      <div className="seg" role="tablist">
-        <button className={tab === 'convert' ? 'on' : ''} onClick={() => setTab('convert')}>המרת כסף</button>
-        <button className={tab === 'emergency' ? 'on' : ''} onClick={() => setTab('emergency')}>חירום</button>
-        <button className={tab === 'spanish' ? 'on' : ''} onClick={() => setTab('spanish')}>ספרדית</button>
+      <div className="seg help-tabs" role="tablist">
+        <button className={tab === 'guide' ? 'on' : ''} onClick={() => pick('guide')}>🧭 יעדים</button>
+        <button className={tab === 'convert' ? 'on' : ''} onClick={() => pick('convert')}>💱 כסף</button>
+        <button className={tab === 'emergency' ? 'on' : ''} onClick={() => pick('emergency')}>🚨 חירום</button>
+        <button className={tab === 'spanish' ? 'on' : ''} onClick={() => pick('spanish')}>🗣️ ספרדית</button>
       </div>
+      {tab === 'guide' && <Guide embedded />}
       {tab === 'convert' && <Converter />}
       {tab === 'emergency' && <Emergency />}
       {tab === 'spanish' && <Spanish />}

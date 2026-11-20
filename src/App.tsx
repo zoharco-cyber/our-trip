@@ -1,25 +1,26 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useAuth } from './lib/auth';
 import { isConfigured } from './lib/supabase';
 import Login from './pages/Login';
 import Home from './pages/Home';
-import MoneyPage from './pages/Money';
-import Shopping from './pages/Shopping';
-import Wishes from './pages/Wishes';
-import Documents from './pages/Documents';
-import Capsule from './pages/Capsule';
-import MapPage from './pages/MapPage';
-import Gallery from './pages/Gallery';
-import Gear from './pages/Gear';
-import Guide from './pages/Guide';
-import Admin from './pages/Admin';
-import Journal from './pages/Journal';
-import Bookings from './pages/Bookings';
-import Help from './pages/Help';
-import Challenges from './pages/Challenges';
-import Book from './pages/Book';
 import { LOGO_URL } from './config';
+
+// כל עמוד נטען רק כשנכנסים אליו
+const MoneyPage = lazy(() => import('./pages/Money'));
+const Shopping = lazy(() => import('./pages/Shopping'));
+const Wishes = lazy(() => import('./pages/Wishes'));
+const Documents = lazy(() => import('./pages/Documents'));
+const Capsule = lazy(() => import('./pages/Capsule'));
+const MapPage = lazy(() => import('./pages/MapPage'));
+const Gallery = lazy(() => import('./pages/Gallery'));
+const Gear = lazy(() => import('./pages/Gear'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Bookings = lazy(() => import('./pages/Bookings'));
+const Help = lazy(() => import('./pages/Help'));
+const Challenges = lazy(() => import('./pages/Challenges'));
+const Book = lazy(() => import('./pages/Book'));
 
 export const SECTIONS = [
   { to: '/', icon: '🏠', label: 'בית', short: 'בית', guest: true },
@@ -30,7 +31,6 @@ export const SECTIONS = [
   { to: '/gallery', icon: '📸', label: 'גלריה', short: 'גלריה', guest: true },
   { to: '/docs', icon: '📂', label: 'מסמכים', short: 'מסמכים' },
   { to: '/gear', icon: '🎒', label: 'ציוד', short: 'ציוד' },
-  { to: '/guide', icon: '🧭', label: 'מדריך יעדים', short: 'מדריך' },
   { to: '/journal', icon: '📔', label: 'יומן', short: 'יומן' },
   { to: '/bookings', icon: '🎫', label: 'הזמנות', short: 'הזמנות' },
   { to: '/help', icon: '🆘', label: 'עזרה בדרך', short: 'עזרה' },
@@ -81,6 +81,7 @@ export default function App() {
       </header>
       {!online && <div className="offline-bar">אין אינטרנט כרגע. מוצגים הנתונים האחרונים שנשמרו, והמסמכים זמינים בתיקיות.</div>}
       <main className="page">
+        <Suspense fallback={<div className="page-loading" aria-label="טוען">✨</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<MapPage />} />
@@ -91,7 +92,7 @@ export default function App() {
             <Route path="/wishes" element={<Wishes />} />
             <Route path="/docs" element={<Documents />} />
             <Route path="/gear" element={<Gear />} />
-            <Route path="/guide" element={<Guide />} />
+            <Route path="/guide" element={<Navigate to="/help" replace />} />
             <Route path="/capsule" element={<Capsule />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/bookings" element={<Bookings />} />
@@ -103,6 +104,7 @@ export default function App() {
           </>}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </main>
       <nav className="bottomnav" aria-label="ניווט מהיר">
         {primary.map((s) => (

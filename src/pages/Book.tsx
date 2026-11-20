@@ -1,3 +1,4 @@
+import 'leaflet/dist/leaflet.css';
 import { useMemo } from 'react';
 import { MapContainer, Polyline, TileLayer, CircleMarker } from 'react-leaflet';
 import { useAuth } from '../lib/auth';
