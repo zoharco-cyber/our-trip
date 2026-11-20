@@ -22,21 +22,21 @@ import Book from './pages/Book';
 import { LOGO_URL } from './config';
 
 export const SECTIONS = [
-  { to: '/', label: 'בית', short: 'בית', guest: true },
-  { to: '/money', label: 'כסף', short: 'כסף' },
-  { to: '/map', label: 'מפה', short: 'מפה', guest: true },
-  { to: '/shopping', label: 'קניות לשבוע', short: 'קניות' },
-  { to: '/wishes', label: 'חלומות', short: 'חלומות' },
-  { to: '/gallery', label: 'גלריה', short: 'גלריה', guest: true },
-  { to: '/docs', label: 'מסמכים', short: 'מסמכים' },
-  { to: '/gear', label: 'ציוד', short: 'ציוד' },
-  { to: '/guide', label: 'מדריך יעדים', short: 'מדריך' },
-  { to: '/journal', label: 'יומן', short: 'יומן' },
-  { to: '/bookings', label: 'הזמנות', short: 'הזמנות' },
-  { to: '/help', label: 'עזרה בדרך', short: 'עזרה' },
-  { to: '/challenges', label: 'האתגרים של זוהר', short: 'אתגרים' },
-  { to: '/capsule', label: 'קפסולת זמן', short: 'קפסולה' },
-  { to: '/book', label: 'ספר הטיול', short: 'ספר' },
+  { to: '/', icon: '🏠', label: 'בית', short: 'בית', guest: true },
+  { to: '/money', icon: '💸', label: 'כסף', short: 'כסף' },
+  { to: '/map', icon: '🗺️', label: 'מפה', short: 'מפה', guest: true },
+  { to: '/shopping', icon: '🛒', label: 'קניות לשבוע', short: 'קניות' },
+  { to: '/wishes', icon: '🌠', label: 'חלומות', short: 'חלומות' },
+  { to: '/gallery', icon: '📸', label: 'גלריה', short: 'גלריה', guest: true },
+  { to: '/docs', icon: '📂', label: 'מסמכים', short: 'מסמכים' },
+  { to: '/gear', icon: '🎒', label: 'ציוד', short: 'ציוד' },
+  { to: '/guide', icon: '🧭', label: 'מדריך יעדים', short: 'מדריך' },
+  { to: '/journal', icon: '📔', label: 'יומן', short: 'יומן' },
+  { to: '/bookings', icon: '🎫', label: 'הזמנות', short: 'הזמנות' },
+  { to: '/help', icon: '🆘', label: 'עזרה בדרך', short: 'עזרה' },
+  { to: '/challenges', icon: '🕵️', label: 'האתגרים של זוהר', short: 'אתגרים' },
+  { to: '/capsule', icon: '💌', label: 'קפסולת זמן', short: 'קפסולה' },
+  { to: '/book', icon: '📖', label: 'ספר הטיול', short: 'ספר' },
 ];
 
 function useOnline() {
@@ -119,8 +119,13 @@ function MoreSheet() {
   return (
     <div className="more-sheet">
       <div className="more-grid">
-        {SECTIONS.map((s) => <NavLink key={s.to} to={s.to}>{s.label}</NavLink>)}
-        {isAdmin && <NavLink to="/admin">ניהול</NavLink>}
+        {SECTIONS.map((s) => s.to === '/challenges' ? (
+          <NavLink key={s.to} to={s.to} className="more-shadow">
+            <span className="ms-man" aria-hidden="true"><svg viewBox="0 0 60 80"><path fill="#050307" d="M12 20 Q30 15 48 20 L45 22 Q30 20 15 22 Z M18 21 Q19 8 30 8 Q41 8 42 21 Z M22 22 Q30 25 38 22 Q38 33 30 35 Q22 33 22 22 Z M30 34 L17 39 Q8 48 10 66 L12 80 L48 80 L50 66 Q52 48 43 39 Z" /><circle className="ms-eye" cx="27" cy="28" r="1" fill="#ff2d8a" /><circle className="ms-eye" cx="33" cy="28" r="1" fill="#ff2d8a" /></svg></span>
+            <span className="ms-text"><small>תיק מסווג</small>{s.label}</span>
+          </NavLink>
+        ) : <NavLink key={s.to} to={s.to}><span className="more-ico" aria-hidden="true">{s.icon}</span>{s.label}</NavLink>)}
+        {isAdmin && <NavLink to="/admin" className="more-admin"><span className="more-ico" aria-hidden="true">⚙️</span>ניהול</NavLink>}
       </div>
     </div>
   );

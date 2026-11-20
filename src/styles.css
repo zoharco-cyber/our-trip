@@ -603,3 +603,26 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .on-pill { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); font-weight: 600; }
 
 .journal-locked { display: grid; gap: .3rem; text-align: center; border-style: dashed; background: linear-gradient(135deg, color-mix(in srgb, var(--sun) 25%, var(--surface)), var(--surface)); }
+
+/* תפריט "עוד": אמוג׳י לכל כפתור */
+.more-sheet a { display: flex; align-items: center; gap: .6rem; border: 2px solid var(--line); border-radius: 20px; transition: transform .15s; }
+.more-sheet a:active { transform: scale(.97); }
+.more-sheet a.active { border-color: var(--brand); }
+.more-ico { font-size: 1.5rem; width: 2.2rem; height: 2.2rem; display: grid; place-items: center; background: var(--surface-2); border-radius: 12px; flex: none; }
+/* כפתור האתגרים: כרטיס של צללים */
+.more-sheet a.more-shadow {
+  grid-column: 1 / -1; position: relative; overflow: hidden; min-height: 5.2rem; padding-block: .6rem;
+  background: radial-gradient(ellipse at 15% 50%, #3a0f2c, #0b070d 70%); color: #f3e6ee; border: 1px solid #ff2d8a;
+  box-shadow: 0 0 0 1px #2a1424, 0 0 18px rgba(255, 45, 138, .35), inset 0 0 30px rgba(255, 45, 138, .12);
+  font-family: 'Frank Ruhl Libre', serif; font-weight: 900; font-size: 1.25rem;
+}
+.more-shadow::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 45, 138, .18) 50%, transparent 70%); transform: translateX(100%); animation: sweep 4.5s ease-in-out infinite; }
+@keyframes sweep { 0%, 60% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.ms-man { width: 3.2rem; height: 4.2rem; flex: none; filter: drop-shadow(0 0 8px rgba(255, 45, 138, .6)); }
+.ms-man svg { width: 100%; height: 100%; }
+.ms-eye { animation: blink 4s infinite; }
+@keyframes blink { 0%, 92%, 100% { opacity: 1 } 95% { opacity: 0 } }
+.ms-text { display: grid; text-shadow: 0 0 10px rgba(255, 45, 138, .7); }
+.ms-text small { font-family: ui-monospace, 'Courier New', monospace; font-size: .65rem; letter-spacing: .25em; color: #ff2d8a; font-weight: 400; text-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .more-shadow::after, .ms-eye { animation: none; } }
+.more-sheet a.more-admin { grid-column: 1 / -1; }
