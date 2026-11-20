@@ -62,12 +62,12 @@ export default function App() {
   const [queued, setQueued] = useState(() => readQueue().length);
   useEffect(() => startQueueSync(), []);
   // ערכת העיצוב של מי שמחוברת (המנהל קובע). מסך הכניסה ואורחים: ורוד
-  const skin = session && me?.theme ? me.theme : 'pink';
+  const skin = guest ? 'guest-sky' : session && me?.theme ? me.theme : 'pink';
   useEffect(() => {
     if (skin === 'pink') delete document.documentElement.dataset.skin;
     else document.documentElement.dataset.skin = skin;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', ({ pink: '#e0157f', red: '#d61f3a', purple: '#7b2ff7', midnight: '#0b1026' } as Record<string, string>)[skin] || '#e0157f');
+    if (meta) meta.setAttribute('content', ({ pink: '#e0157f', red: '#d61f3a', purple: '#7b2ff7', midnight: '#0b1026', 'guest-sky': '#1f7fb8' } as Record<string, string>)[skin] || '#e0157f');
   }, [skin]);
   useEffect(() => onQueueChange(() => setQueued(readQueue().length)), []);
 

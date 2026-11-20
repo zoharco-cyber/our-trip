@@ -833,3 +833,24 @@ h2::before { color: #fff; }
 .wf-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .wf-row .muted { min-width: 3rem; }
 .wf-row code { flex: 1 1 8rem; font-size: 1rem; background: var(--surface-2); padding: .3rem .6rem; border-radius: 8px; overflow-wrap: anywhere; }
+
+/* =====================================================================
+   אורחים: גלויה, תכלת שמיים וחול
+   ===================================================================== */
+:root[data-skin="guest-sky"] {
+  --p-strong: #1f7fb8; --p-bright: #3fa7dc; --p-mid: #9fd3ef; --p-soft: #cfe9f7; --p-blush: #eaf6fc; --p-accent: #e8a24a; --p-deep: #0f4c75;
+  --bg: #f3f9fc; --surface: #ffffff; --surface-2: #e8f3f9; --line: #bfe0f1; --ink: #12324a; --muted: #5d7a8f; --brand: #1f7fb8; --brand-ink: #fff; --sun: #f4c46b; --rose: #e8a24a;
+  --glitter: linear-gradient(100deg, #1f7fb8 0%, #6fc3ea 22%, #f4c46b 38%, #ffffff 46%, #6fc3ea 56%, #e8a24a 78%, #1f7fb8 100%);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%239fd3ef' stroke-width='1.5' opacity='.6'%3E%3Cpath d='M10 40 q10 -8 20 0 t20 0'/%3E%3Cpath d='M80 100 q10 -8 20 0 t20 0'/%3E%3C/g%3E%3Cpath d='M100 30 l4 1 6 -6 2 1 -4 7 6 2 2 -2 2 1 -2 3 1 4 -2 0 -2 -3 -6 1 -2 8 -2 0 0 -9 -4 -1z' fill='%23bfe0f1'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+:root[data-skin="guest-sky"] .topbar { background: linear-gradient(90deg, #1f7fb8, #3fa7dc 60%, #6fc3ea); }
+:root[data-skin="guest-sky"] .hero-card { background: linear-gradient(135deg, #3fa7dc, #1f7fb8 55%, #0f4c75); }
+:root[data-skin="guest-sky"] .latest-status { border-style: dashed; }
+
+/* חיפוש במפה */
+.map-search { display: grid; gap: .4rem; position: relative; }
+.map-hits { list-style: none; margin: 0; padding: .3rem; display: grid; gap: 2px; background: var(--surface); border: 2px solid var(--p-mid); border-radius: 16px; box-shadow: 0 8px 22px rgba(0, 0, 0, .12); }
+.map-hits .link-like { width: 100%; padding: .5rem .7rem; border-radius: 10px; display: grid; gap: .05rem; }
+.map-hits .link-like:hover { background: var(--surface-2); }
+.found-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }

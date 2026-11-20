@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
@@ -22,6 +22,62 @@ const pin = (color: string, active: boolean) =>
   });
 
 const hereIcon = L.divIcon({ className: 'pin-wrap', html: '<span class="here-pin"><i></i>💖</span>', iconSize: [44, 44], iconAnchor: [22, 22] });
+
+/** מזיז את המפה למקום שנבחר בחיפוש */
+function FlyTo({ target }: { target: { lat: number; lng: number; zoom: number; n: number } | null }) {
+  const map = useMap();
+  useEffect(() => { if (target) map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 }); }, [target?.n]);
+  return null;
+}
+
+type Hit = { kind: 'place' | 'world'; name: string; sub?: string; lat: number; lng: number; id?: string };
+
+/** חיפוש מקום: קודם בנקודות שלנו, ואז בעולם (OpenStreetMap) */
+function MapSearch({ places, onPick }: { places: Place[]; onPick: (h: Hit) => void }) {
+  const [q, setQ] = useState('');
+  const [hits, setHits] = useState<Hit[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  async function search(e: FormEvent) {
+    e.preventDefault();
+    const t = q.trim();
+    if (!t) return;
+    setBusy(true); setMsg(null);
+    const ours: Hit[] = places.filter((p) => p.name.includes(t)).slice(0, 3).map((p) => ({ kind: 'place', name: p.name, sub: 'נקודה שלנו במפה', lat: p.lat, lng: p.lng, id: p.id }));
+    let world: Hit[] = [];
+    if (navigator.onLine) {
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=he&q=${encodeURIComponent(t)}`);
+        const j = await r.json();
+        world = (j || []).map((x: any) => {
+          const parts = String(x.display_name || '').split(',').map((y: string) => y.trim());
+          return { kind: 'world', name: x.name || parts[0], sub: parts.slice(1, 3).join(', '), lat: Number(x.lat), lng: Number(x.lon) } as Hit;
+        });
+      } catch { /* ignore */ }
+    }
+    const all = [...ours, ...world];
+    setHits(all); setBusy(false);
+    if (!all.length) setMsg(navigator.onLine ? 'לא נמצא. נסי לכתוב באנגלית או בספרדית.' : 'בלי קליטה אפשר לחפש רק בנקודות שלנו.');
+  }
+  return (
+    <div className="map-search">
+      <form className="form-row" onSubmit={search}>
+        <input id="map-q" className="grow" placeholder="🔍 חיפוש מקום: קוסקו, Machu Picchu, Salar de Uyuni…" value={q} onChange={(e) => { setQ(e.target.value); if (!e.target.value) setHits([]); }} />
+        <button className="btn btn-primary" disabled={busy || !q.trim()}>{busy ? 'מחפשת…' : 'חיפוש'}</button>
+      </form>
+      {msg && <p className="muted small">{msg}</p>}
+      {hits.length > 0 && (
+        <ul className="map-hits">
+          {hits.map((h, i) => (
+            <li key={i}><button className="link-like" onClick={() => { onPick(h); setHits([]); }}>
+              <b>{h.kind === 'place' ? '📍' : '🌎'} {h.name}</b>{h.sub && <span className="muted small">{h.sub}</span>}
+            </button></li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function ClickCatcher({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({ click: (e) => onPick(e.latlng.lat, e.latlng.lng) });
@@ -62,6 +118,12 @@ export default function MapPage() {
       { enableHighAccuracy: false, timeout: 15000 },
     );
   }
+  const [fly, setFly] = useState<{ lat: number; lng: number; zoom: number; n: number } | null>(null);
+  const [found, setFound] = useState<Hit | null>(null);
+  function pickHit(h: Hit) {
+    setFly({ lat: h.lat, lng: h.lng, zoom: h.kind === 'place' ? 10 : 11, n: Date.now() });
+    if (h.kind === 'place' && h.id) { setSelected(h.id); setFound(null); } else setFound(h);
+  }
   const route = [...places.rows].filter((p) => p.visited_on).sort((a, b) => a.visited_on!.localeCompare(b.visited_on!) || a.created_at.localeCompare(b.created_at));
 
   async function save(e: FormEvent) {
@@ -97,6 +159,16 @@ export default function MapPage() {
           </div>
         )}
       </div>
+      <MapSearch places={places.rows} onPick={pickHit} />
+      {found && (
+        <div className="card found-card">
+          <span>🌎 <b>{found.name}</b>{found.sub && <span className="muted small"> · {found.sub}</span>}</span>
+          <div className="row gap wrap">
+            {!guest && <button className="btn btn-primary btn-small" onClick={() => { setDraft({ lat: found.lat, lng: found.lng }); setName(found.name); setFound(null); setAdding(true); }}>הוספת נקודה כאן</button>}
+            <button className="btn btn-small" onClick={() => setFound(null)}>סגירה</button>
+          </div>
+        </div>
+      )}
       {here && (
         <p className="here-line">💖 עכשיו: <b>{hereName || 'מיקום עודכן'}</b> <span className="muted small">· {fmtDateTime(here.created_at)}</span></p>
       )}
@@ -128,6 +200,8 @@ export default function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <FlyTo target={fly} />
+            {found && <Marker position={[found.lat, found.lng]} icon={pin('#1f7fb8', true)} />}
             {adding && <ClickCatcher onPick={(lat, lng) => setDraft({ lat, lng })} />}
             {locMode === 'pick' && <ClickCatcher onPick={(lat, lng) => saveHere(lat, lng)} />}
             {route.length > 1 && <>
