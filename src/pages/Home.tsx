@@ -30,6 +30,8 @@ const BLURB: Record<string, string> = {
   '/book': 'כל הטיול בדף אחד',
 };
 
+const greet = () => { const h = new Date().getHours(); return h < 5 ? 'לילה טוב' : h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 21 ? 'ערב טוב' : 'לילה טוב'; };
+
 export default function Home() {
   const { guest, me } = useAuth();
   const { rows, reload } = useTable<TripEvent>('events', { order: 'starts_at' });
@@ -53,7 +55,7 @@ export default function Home() {
   return (
     <div className="stack-lg">
       <div className="marquee" aria-hidden="true"><div>
-        {[0, 1].map((k) => <span key={k}>✨ {me ? `היי ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
+        {[0, 1].map((k) => <span key={k}>✨ {me ? `${greet()} ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
       </div></div>
       <LatestStatus />
       <Slideshow />

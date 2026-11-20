@@ -41,6 +41,11 @@ export default function Admin() {
         </div>
       </section>
       <section className="card stack">
+        <h2>ערכות עיצוב</h2>
+        <p className="muted small">כל אחת רואה את האתר בערכה שלה. רק אתה יכול לשנות.</p>
+        <ul className="pw-list">{profiles.map((t) => <ThemeRow key={t.id} id={t.id} name={t.display_name} color={t.color} theme={t.theme || 'pink'} />)}</ul>
+      </section>
+      <section className="card stack">
         <h2>מטיילות</h2>
         <p className="muted small">שינוי סיסמה: כותבים סיסמה חדשה (לפחות 6 תווים) ולוחצים שמירה. הסיסמה הישנה מפסיקה לעבוד מיד.</p>
         <ul className="pw-list">{profiles.map((t) => <PasswordRow key={t.id} id={t.id} name={t.display_name} color={t.color} />)}</ul>
@@ -73,6 +78,37 @@ function PasswordRow({ id, name, color }: { id: string; name: string; color: str
       </div>
       {state === 'ok' && <p className="ok small">הסיסמה עודכנה. הסיסמה החדשה: <b dir="ltr">{saved}</b> (שלח לה אותה)</p>}
       {state === 'err' && <p className="error">לא הצלחתי לעדכן. בדוק חיבור לאינטרנט ונסה שוב.</p>}
+    </li>
+  );
+}
+
+const THEMES: { id: string; name: string; sw: string[] }[] = [
+  { id: 'pink', name: 'ורוד נצנצים', sw: ['#ff4fa8', '#e0157f', '#a855f7'] },
+  { id: 'red', name: 'אדום', sw: ['#ff4d5e', '#d61f3a', '#ff9f1c'] },
+  { id: 'purple', name: 'סגול', sw: ['#9d5cff', '#7b2ff7', '#e05cff'] },
+  { id: 'midnight', name: 'חצות', sw: ['#0b1026', '#4b63d8', '#ffd36b'] },
+];
+
+function ThemeRow({ id, name, color, theme }: { id: string; name: string; color: string; theme: string }) {
+  const { reloadProfiles } = useAuth();
+  const [cur, setCur] = useState(theme);
+  const [err, setErr] = useState(false);
+  async function pick(t: string) {
+    setCur(t); setErr(false);
+    const { error } = await supabase.from('profiles').update({ theme: t }).eq('id', id);
+    if (error) { setErr(true); setCur(theme); } else reloadProfiles();
+  }
+  return (
+    <li className="pw-row">
+      <span className="pw-name"><i className="dot" style={{ ['--c' as any]: color }} /> {name}</span>
+      <div className="theme-picks">
+        {THEMES.map((t) => (
+          <button key={t.id} type="button" className={'theme-pick' + (cur === t.id ? ' on' : '')} onClick={() => pick(t.id)} aria-pressed={cur === t.id}>
+            <span className="sw">{t.sw.map((c) => <i key={c} style={{ background: c }} />)}</span>{t.name}
+          </button>
+        ))}
+      </div>
+      {err && <p className="error">לא נשמר. בדוק חיבור ונסה שוב.</p>}
     </li>
   );
 }

@@ -1,6 +1,6 @@
 export type Profile = {
   id: string; slug: string; display_name: string; color: string;
-  is_admin: boolean; is_traveler: boolean; initial_budget_usd: number;
+  is_admin: boolean; is_traveler: boolean; initial_budget_usd: number; theme?: string;
 };
 export type TripEvent = { id: string; title: string; starts_at: string; created_by: string | null };
 export type Expense = {

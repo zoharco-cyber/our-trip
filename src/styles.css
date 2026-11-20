@@ -18,6 +18,9 @@
   --font-display: 'Fredoka', 'Varela Round', Arial, sans-serif;
   --glitter: linear-gradient(100deg, #e0157f 0%, #ff7cc4 22%, #ffd36b 38%, #ffffff 46%, #ff7cc4 56%, #a855f7 78%, #e0157f 100%);
   --r: 20px;
+  /* צבעי הערכה (ברירת מחדל: ורוד נצנצים) */
+  --p-strong: #e0157f; --p-bright: #ff4fa8; --p-mid: #ff7cc4; --p-soft: #ffc2e0; --p-blush: #ffe1f0; --p-accent: #a855f7; --p-deep: #a50d5c;
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23ff7cc4' fill-opacity='.35'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M86 58l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Ccircle cx='60' cy='20' r='1.5'/%3E%3Ccircle cx='100' cy='100' r='2'/%3E%3Ccircle cx='30' cy='90' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -342,7 +345,7 @@ details summary { cursor: pointer; color: var(--muted); margin-bottom: .5rem; }
 body {
   background-color: var(--bg);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23ff7cc4' fill-opacity='.35'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M86 58l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Ccircle cx='60' cy='20' r='1.5'/%3E%3Ccircle cx='100' cy='100' r='2'/%3E%3Ccircle cx='30' cy='90' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+    var(--pattern, none);
   background-size: 120px 120px;
 }
 /* שכבת כוכבים מנצנצים */
@@ -371,11 +374,11 @@ h2::before { content: "♡ "; color: var(--rose); }
 .place-panel h2::before, .dest h2::before, .login-card h2::before { content: none; }
 
 /* סרגל עליון מנצנץ */
-.topbar { background: linear-gradient(90deg, #e0157f, #ff5fb0 55%, #b55cf0); box-shadow: 0 3px 0 #ffc2e0; }
+.topbar { background: linear-gradient(90deg, var(--p-strong), var(--p-bright) 55%, var(--p-accent)); box-shadow: 0 3px 0 var(--p-soft); }
 .brand { font-family: var(--font-display); font-weight: 700; text-shadow: 0 0 10px rgba(255, 255, 255, .7); }
 .brand { display: inline-flex; align-items: center; gap: .5rem; }
-.brand-logo { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #ffc2e0; object-fit: cover; flex: none; }
-.login-logo { width: 132px; height: 132px; border-radius: 34px; border: 4px solid #fff; box-shadow: 0 0 0 4px #ff7cc4, 0 10px 28px rgba(120, 0, 60, .35); margin: 0 auto .5rem; object-fit: cover; transform: rotate(-4deg); }
+.brand-logo { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px var(--p-soft); object-fit: cover; flex: none; }
+.login-logo { width: 132px; height: 132px; border-radius: 34px; border: 4px solid #fff; box-shadow: 0 0 0 4px var(--p-mid), 0 10px 28px rgba(120, 0, 60, .35); margin: 0 auto .5rem; object-fit: cover; transform: rotate(-4deg); }
 
 /* כרטיסים: מסגרת ורודה מנוקדת כמו פעם */
 .card, .tile, .checklist li, .timeline li, .ranking li, .list, .cat, .place-list {
@@ -390,18 +393,18 @@ h2::before { content: "♡ "; color: var(--rose); }
 
 .btn { border-radius: 999px; border-width: 2px; }
 .btn-primary {
-  background: linear-gradient(180deg, #ff5fb0, var(--brand)); border-color: var(--brand);
-  box-shadow: 0 3px 0 #a50d5c, inset 0 1px 0 rgba(255, 255, 255, .5);
+  background: linear-gradient(180deg, var(--p-bright), var(--brand)); border-color: var(--brand);
+  box-shadow: 0 3px 0 var(--p-deep), inset 0 1px 0 rgba(255, 255, 255, .5);
   text-shadow: 0 1px 0 rgba(0, 0, 0, .15);
 }
-.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #a50d5c; }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--p-deep); }
 input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius: 14px; }
 .check input { accent-color: var(--brand); }
 
 .hero-card, .login-wrap { position: relative; }
 .hero-card {
-  background: linear-gradient(135deg, #ff4fa8, #e0157f 45%, #a855f7);
-  box-shadow: 0 6px 0 #ffc2e0, var(--shadow);
+  background: linear-gradient(135deg, var(--p-bright), var(--p-strong) 45%, var(--p-accent));
+  box-shadow: 0 6px 0 var(--p-soft), var(--shadow);
   color: #fff;
 }
 .hero-card .muted { color: #fff; }
@@ -409,7 +412,7 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .cd-unit b { font-weight: 700; }
 
 /* פס טקסט רץ */
-.marquee { overflow: hidden; background: #fff; border: 2px dashed var(--brand); border-radius: 999px; padding: .35rem 0; color: var(--brand); font-family: var(--font-display); font-weight: 600; }
+.marquee { overflow: hidden; background: var(--surface); border: 2px dashed var(--brand); border-radius: 999px; padding: .35rem 0; color: var(--brand); font-family: var(--font-display); font-weight: 600; }
 .marquee > div { display: flex; width: max-content; animation: marquee 22s linear infinite; }
 .marquee span { white-space: nowrap; padding-inline-end: 2rem; }
 @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(50%) } }
@@ -452,11 +455,11 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .fx-seal { background: rgba(60, 10, 40, .45); backdrop-filter: blur(2px); }
 .seal-stage { position: relative; display: grid; justify-items: center; gap: 1rem; }
 .envelope { position: relative; width: 220px; height: 140px; animation: envIn .5s ease-out both; }
-.env-body { position: absolute; inset: 0; background: #fff6fb; border: 3px solid #ffc2e0; border-radius: 10px; }
-.env-flap { position: absolute; top: 0; left: 0; right: 0; height: 90px; z-index: 1; background: #ffe1f0; clip-path: polygon(0 0, 100% 0, 50% 100%); border-radius: 10px 10px 0 0; transform-origin: top; animation: flap .5s .3s ease-in both; }
+.env-body { position: absolute; inset: 0; background: #fff6fb; border: 3px solid var(--p-soft); border-radius: 10px; }
+.env-flap { position: absolute; top: 0; left: 0; right: 0; height: 90px; z-index: 1; background: var(--p-blush); clip-path: polygon(0 0, 100% 0, 50% 100%); border-radius: 10px 10px 0 0; transform-origin: top; animation: flap .5s .3s ease-in both; }
 .wax { position: absolute; top: 48px; width: 86px; height: 86px; z-index: 2; animation: stamp .55s .75s cubic-bezier(.2, 1.6, .4, 1) both; }
 .wax svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .3)); }
-.wax path { fill: #c8105f; }
+.wax path { fill: var(--p-strong); }
 .wax text { fill: #ffb3d6; font-size: 40px; font-weight: 700; }
 .seal-text { color: #fff; font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; animation: envIn .4s 1.2s both; text-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
 @keyframes envIn { from { opacity: 0; transform: translateY(30px) scale(.9) } }
@@ -464,20 +467,20 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 @keyframes stamp { from { opacity: 0; transform: scale(3) rotate(-30deg) } }
 .paid-stamp {
   font-family: var(--font-display); font-weight: 700; font-size: clamp(2.5rem, 12vw, 5rem);
-  color: #e0157f; border: 6px solid #e0157f; border-radius: 18px; padding: .2rem 1.2rem;
+  color: var(--p-strong); border: 6px solid var(--p-strong); border-radius: 18px; padding: .2rem 1.2rem;
   background: rgba(255, 255, 255, .85); transform: rotate(-12deg);
   animation: stamp .45s cubic-bezier(.2, 1.6, .4, 1) both; box-shadow: 0 10px 30px rgba(224, 21, 127, .35);
 }
 
 /* דף כניסה */
-.login-wrap { background: linear-gradient(170deg, #ff4fa8 0%, #e0157f 40%, #b55cf0 62%, var(--bg) 62%); }
-.login-title { color: #fff; background: none; animation: none; filter: none; text-shadow: 0 0 18px rgba(255, 255, 255, .8), 0 3px 0 #a50d5c; }
+.login-wrap { background: linear-gradient(170deg, var(--p-bright) 0%, var(--p-strong) 40%, var(--p-accent) 62%, var(--bg) 62%); }
+.login-title { color: #fff; background: none; animation: none; filter: none; text-shadow: 0 0 18px rgba(255, 255, 255, .8), 0 3px 0 var(--p-deep); }
 .login-title::after { content: " 💖"; }
 .login-card { border: 3px dashed var(--brand); }
 .who-btn { border-radius: 999px; border-width: 2px; }
-.who-btn.on { background: linear-gradient(180deg, #ffe1f0, #ffc2e0); border-color: var(--brand); color: #8a0b4c; }
+.who-btn.on { background: linear-gradient(180deg, var(--p-blush), var(--p-soft)); border-color: var(--brand); color: var(--p-deep); }
 
-.capsule-head { background: linear-gradient(160deg, #6b1a5a, #b0287f 55%, #ff7cc4); }
+.capsule-head { background: linear-gradient(160deg, #6b1a5a, #b0287f 55%, var(--p-mid)); }
 .wish { border-inline-start-width: 6px; }
 .wish.done { background: linear-gradient(90deg, color-mix(in srgb, var(--sun) 18%, var(--surface)), var(--surface)); }
 .wish.done .wish-text::after { content: " 🌟"; }
@@ -544,7 +547,7 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 /* יומן */
 .moods { display: flex; flex-wrap: wrap; gap: .3rem; }
 .mood-btn { font-size: 1.5rem; background: var(--surface-2); border: 2px solid transparent; border-radius: 12px; padding: .15rem .35rem; cursor: pointer; }
-.mood-btn.on { border-color: var(--brand); background: #fff; transform: scale(1.12); }
+.mood-btn.on { border-color: var(--brand); background: var(--surface); transform: scale(1.12); }
 .mood.big { font-size: 1.6rem; }
 .journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2rem; }
 .journal-day { display: grid; gap: .5rem; }
@@ -669,3 +672,38 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .row.wrap { flex-wrap: wrap; }
 
 .slide-count { position: absolute; top: .6rem; inset-inline-end: .7rem; background: rgba(0, 0, 0, .45); color: #fff; font-size: .8rem; padding: .1rem .5rem; border-radius: 999px; }
+
+/* =====================================================================
+   ערכות עיצוב אישיות (המנהל קובע לכל אחת)
+   ===================================================================== */
+:root[data-skin="red"] {
+  --p-strong: #d61f3a; --p-bright: #ff4d5e; --p-mid: #ff8a95; --p-soft: #ffc4ca; --p-blush: #ffe3e6; --p-accent: #ff9f1c; --p-deep: #9e0f22;
+  --bg: #fff0f1; --surface-2: #ffe6e8; --line: #ffc4ca; --ink: #3b0a12; --muted: #8a4d55; --brand: #d61f3a; --sun: #ffc94d; --rose: #ff9f1c;
+  --glitter: linear-gradient(100deg, #d61f3a 0%, #ff6b6b 22%, #ffd36b 38%, #ffffff 46%, #ff6b6b 56%, #ff9f1c 78%, #d61f3a 100%);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23ff8a95' fill-opacity='.35'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M86 58l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Ccircle cx='60' cy='20' r='1.5'/%3E%3Ccircle cx='100' cy='100' r='2'/%3E%3Ccircle cx='30' cy='90' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-skin="purple"] {
+  --p-strong: #7b2ff7; --p-bright: #9d5cff; --p-mid: #c39bff; --p-soft: #dcc8ff; --p-blush: #efe6ff; --p-accent: #e05cff; --p-deep: #4c1aa3;
+  --bg: #f5efff; --surface-2: #ece2ff; --line: #dcc8ff; --ink: #24103f; --muted: #6e5a8c; --brand: #7b2ff7; --sun: #c9d4ff; --rose: #e05cff;
+  --glitter: linear-gradient(100deg, #7b2ff7 0%, #b88cff 22%, #e6e9ff 38%, #ffffff 46%, #b88cff 56%, #e05cff 78%, #7b2ff7 100%);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23c39bff' fill-opacity='.35'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M86 58l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Ccircle cx='60' cy='20' r='1.5'/%3E%3Ccircle cx='100' cy='100' r='2'/%3E%3Ccircle cx='30' cy='90' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-skin="midnight"] {
+  --p-strong: #2b3a8f; --p-bright: #4b63d8; --p-mid: #8fa2ff; --p-soft: #33406e; --p-blush: #1e2650; --p-accent: #c9a227; --p-deep: #0e1440;
+  --bg: #0b1026; --surface: #141b3a; --surface-2: #1d2650; --line: #2e3a70; --ink: #eef1ff; --muted: #a3acd6;
+  --brand: #8fa2ff; --brand-ink: #0b1026; --sun: #ffd36b; --rose: #c9a227; color-scheme: dark;
+  --glitter: linear-gradient(100deg, #8fa2ff 0%, #e6e9ff 22%, #ffd36b 38%, #ffffff 46%, #e6e9ff 56%, #c9a227 78%, #8fa2ff 100%);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23ffd36b' fill-opacity='.35'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M86 58l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Ccircle cx='60' cy='20' r='1.5'/%3E%3Ccircle cx='100' cy='100' r='2'/%3E%3Ccircle cx='30' cy='90' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-skin="midnight"] body::after { opacity: 1; }
+@media (prefers-color-scheme: dark) {
+  :root[data-skin="red"]:not([data-theme="light"]) { --bg: #1f0a0e; --surface: #2c1016; --surface-2: #3a161e; --line: #5a2430; --ink: #ffecef; --muted: #d9a0a8; --brand: #ff4d5e; --brand-ink: #2b0008; }
+  :root[data-skin="purple"]:not([data-theme="light"]) { --bg: #140b24; --surface: #1f1236; --surface-2: #2a1a48; --line: #43306e; --ink: #f2ecff; --muted: #b8a6d9; --brand: #b88cff; --brand-ink: #1a0b33; }
+}
+
+.theme-picks { display: flex; flex-wrap: wrap; gap: .4rem; }
+.theme-pick { display: inline-flex; align-items: center; gap: .4rem; border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: .25rem .7rem .25rem .4rem; cursor: pointer; font-size: .9rem; color: var(--ink); }
+.theme-pick.on { border-color: var(--brand); box-shadow: 0 0 0 2px var(--p-soft); font-weight: 600; }
+.theme-pick .sw { display: inline-flex; }
+.theme-pick .sw i { width: .9rem; height: .9rem; border-radius: 50%; border: 1.5px solid #fff; margin-inline-start: -.3rem; }
+.theme-pick .sw i:first-child { margin-inline-start: 0; }
