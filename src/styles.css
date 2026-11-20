@@ -800,3 +800,15 @@ h2::before { color: #fff; }
 .song-note { font-style: italic; color: var(--muted); }
 .med-ico { font-size: 1.4rem; }
 .med-off { opacity: .55; }
+
+/* התיקים שלי */
+.gear-tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+.bag-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.bag-tab { display: grid; justify-items: center; gap: .1rem; padding: .8rem; border-radius: 20px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; color: var(--ink); }
+.bag-tab.on { border-color: var(--p-strong); background: linear-gradient(160deg, var(--p-blush), var(--surface)); box-shadow: 0 4px 0 color-mix(in srgb, var(--p-strong) 45%, transparent); }
+.bag-ico { font-size: 2rem; }
+.check-btn { width: 100%; font-size: 1.05rem; padding-block: .8rem; }
+.bag-count { font-family: var(--font-display); font-size: 1.3rem; color: var(--p-strong); }
+.bag-done { text-align: center; font-family: var(--font-display); font-size: 1.3rem; color: var(--ok); }
+.big-checks li { padding-block: .8rem; }
+.big-checks .check input { width: 1.6rem; height: 1.6rem; }

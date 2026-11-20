@@ -6,8 +6,9 @@ import { dbWrite } from '../lib/offline';
 import type { GearCheck, GearItem } from '../lib/types';
 import { GEAR_CATEGORIES } from '../config';
 import { Empty } from '../components/Avatar';
+import Bags from '../components/Bags';
 
-export default function Gear() {
+function GearList() {
   const { me, travelers, colorOf, nameOf } = useAuth();
   const items = useTable<GearItem>('gear_items', { order: 'created_at' });
   const checks = useTable<GearCheck>('gear_checks');
@@ -91,6 +92,28 @@ export default function Gear() {
           </section>
         );
       })}
+    </div>
+  );
+}
+
+export default function Gear() {
+  const [tab, setTab] = useState<'list' | 'bags'>(() => { try { return (sessionStorage.getItem('trip:gearTab') as 'list' | 'bags') || 'list'; } catch { return 'list'; } });
+  const pick = (t: 'list' | 'bags') => { setTab(t); try { sessionStorage.setItem('trip:gearTab', t); } catch { /* ignore */ } };
+  return (
+    <div className="stack-lg">
+      <div className="seg gear-tabs" role="tablist">
+        <button className={tab === 'list' ? 'on' : ''} onClick={() => pick('list')}>📋 רשימת ציוד</button>
+        <button className={tab === 'bags' ? 'on' : ''} onClick={() => pick('bags')}>🎒 התיקים שלי</button>
+      </div>
+      {tab === 'list' ? <GearList /> : (
+        <div className="stack-lg">
+          <div>
+            <h1>התיקים שלי</h1>
+            <p className="muted">מה יש בכל תיק, ובדיקה מהירה לפני כל מעבר. רק את רואה את הרשימה שלך.</p>
+          </div>
+          <Bags />
+        </div>
+      )}
     </div>
   );
 }

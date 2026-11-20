@@ -28,3 +28,4 @@ export type StatusUpdate = { id: string; message: string; lat: number | null; ln
 export type Song = { id: string; title: string; artist: string | null; url: string | null; note: string | null; created_by: string | null; created_at: string };
 export type DailyAnswer = { id: string; day: string; question: string; answer: string; created_by: string; created_at: string };
 export type Med = { id: string; user_id: string; name: string; times: string[]; tz: string; active: boolean; created_at: string };
+export type BagItem = { id: string; user_id: string; bag: 'big' | 'small'; text: string; checked_at: string | null; created_at: string };
