@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import Countdown from '../components/Countdown';
+import { LOGO_URL } from '../config';
 
 export default function Login() {
   const { signIn, enterAsGuest, profiles } = useAuth();
@@ -23,6 +24,7 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-hero">
+        <img className="login-logo" src={LOGO_URL} alt="הלוגו של הטיול" />
         <p className="eyebrow">{firstNames.join(' · ') || '\u00a0'}</p>
         <h1 className="login-title">הטיול שלנו</h1>
         <p className="login-sub">דרום אמריקה ומה שיבוא אחריה</p>

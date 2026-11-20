@@ -14,6 +14,7 @@ import Gallery from './pages/Gallery';
 import Gear from './pages/Gear';
 import Guide from './pages/Guide';
 import Admin from './pages/Admin';
+import { LOGO_URL } from './config';
 
 export const SECTIONS = [
   { to: '/', label: 'בית', short: 'בית', guest: true },
@@ -53,7 +54,7 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <NavLink to="/" className="brand">הטיול שלנו</NavLink>
+          <NavLink to="/" className="brand"><img className="brand-logo" src={LOGO_URL} alt="" />הטיול שלנו</NavLink>
           <nav className="topnav" aria-label="ניווט ראשי">
             {sections.map((s) => (
               <NavLink key={s.to} to={s.to} end={s.to === '/'}>{s.label}</NavLink>

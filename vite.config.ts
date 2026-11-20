@@ -9,7 +9,6 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'הטיול שלנו',
         short_name: 'הטיול',
@@ -21,9 +20,10 @@ export default defineConfig({
         background_color: '#fbf0f4',
         theme_color: '#c2185b',
         icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          // הלוגו שמור באחסון של Supabase (תיקיית brand), לא בקוד
+          { src: 'https://mwcbuicwdksyhjjyscil.supabase.co/storage/v1/object/public/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'https://mwcbuicwdksyhjjyscil.supabase.co/storage/v1/object/public/brand/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'https://mwcbuicwdksyhjjyscil.supabase.co/storage/v1/object/public/brand/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
@@ -33,6 +33,11 @@ export default defineConfig({
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,
             handler: 'CacheFirst',
             options: { cacheName: 'fonts', expiration: { maxEntries: 30 } },
+          },
+          {
+            urlPattern: /\/storage\/v1\/object\/public\/brand\//,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'brand' },
           },
           {
             urlPattern: /^https:\/\/[abc]?\.?tile\.openstreetmap\.org\//,

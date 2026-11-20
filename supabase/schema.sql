@@ -248,7 +248,8 @@ drop policy if exists capsule_delete on public.capsule_entries;
 -- ---------- אחסון קבצים ----------
 insert into storage.buckets (id, name, public) values
   ('documents', 'documents', false),
-  ('photos', 'photos', false)
+  ('photos', 'photos', false),
+  ('brand', 'brand', true)  -- הלוגו והאייקונים, גלויים לכולם
 on conflict (id) do nothing;
 
 drop policy if exists docs_read on storage.objects;

@@ -376,7 +376,9 @@ h2::before { content: "♡ "; color: var(--rose); }
 /* סרגל עליון מנצנץ */
 .topbar { background: linear-gradient(90deg, #e0157f, #ff5fb0, #b55cf0, #e0157f); background-size: 300% 100%; animation: glitter 12s linear infinite; box-shadow: 0 3px 0 #ffc2e0; }
 .brand { font-family: var(--font-display); font-weight: 700; text-shadow: 0 0 10px rgba(255, 255, 255, .7); }
-.brand::before { content: "♥ "; }
+.brand { display: inline-flex; align-items: center; gap: .5rem; }
+.brand-logo { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #ffc2e0; object-fit: cover; flex: none; }
+.login-logo { width: 132px; height: 132px; border-radius: 34px; border: 4px solid #fff; box-shadow: 0 0 0 4px #ff7cc4, 0 10px 28px rgba(120, 0, 60, .35); margin: 0 auto .5rem; object-fit: cover; transform: rotate(-4deg); }
 
 /* כרטיסים: מסגרת ורודה מנוקדת כמו פעם */
 .card, .tile, .checklist li, .timeline li, .ranking li, .list, .cat, .place-list {
