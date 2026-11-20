@@ -633,3 +633,8 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .sh-seg button.on { background: var(--sh-neon); color: #0b070d; font-weight: 600; }
 .shadow-page input.sh-search { flex: 1 1 180px; width: auto; background: #0b070d; color: var(--sh-ink); border: 1px solid var(--sh-line); border-radius: 999px; }
 .sh-count { font-family: ui-monospace, monospace; font-size: .75rem; color: var(--sh-dim); letter-spacing: .05em; }
+
+.pw-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.pw-row { display: grid; gap: .4rem; padding: .7rem .8rem; background: var(--surface-2); border-radius: 14px; }
+.pw-name { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
+.pw-row input { flex: 1 1 140px; width: auto; }

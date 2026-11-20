@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { OpenButton, useCapsuleOpen } from './Capsule';
 
 export default function Admin() {
-  const { travelers } = useAuth();
+  const { profiles, travelers } = useAuth();
   const { open, reload } = useCapsuleOpen();
   const [meta, setMeta] = useState<{ created_by: string; created_at: string }[]>([]);
   useEffect(() => {
@@ -40,9 +40,37 @@ export default function Admin() {
       </section>
       <section className="card stack">
         <h2>מטיילות</h2>
-        <ul className="list">{travelers.map((t) => <li key={t.id} className="list-item"><i className="dot" style={{ ['--c' as any]: t.color }} />{t.display_name}</li>)}</ul>
-        <p className="muted small">שינוי סיסמה: ב-Supabase, בתפריט Authentication ואז Users.</p>
+        <p className="muted small">שינוי סיסמה: כותבים סיסמה חדשה (לפחות 6 תווים) ולוחצים שמירה. הסיסמה הישנה מפסיקה לעבוד מיד.</p>
+        <ul className="pw-list">{profiles.map((t) => <PasswordRow key={t.id} id={t.id} name={t.display_name} color={t.color} />)}</ul>
       </section>
     </div>
+  );
+}
+
+const WORDS = ['lama', 'condor', 'andes', 'tango', 'salsa', 'cusco', 'inca', 'sol', 'mango', 'luna', 'playa', 'cafe'];
+const randomPw = () => WORDS[Math.floor(Math.random() * WORDS.length)] + String(1000 + Math.floor(Math.random() * 9000));
+
+function PasswordRow({ id, name, color }: { id: string; name: string; color: string }) {
+  const [pw, setPw] = useState('');
+  const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'err'>('idle');
+  const [saved, setSaved] = useState('');
+  async function save() {
+    if (pw.trim().length < 6) return;
+    setState('busy');
+    const { data, error } = await supabase.functions.invoke('admin-set-password', { body: { userId: id, password: pw.trim() } });
+    if (error || !data?.ok) { setState('err'); return; }
+    setSaved(pw.trim()); setPw(''); setState('ok');
+  }
+  return (
+    <li className="pw-row">
+      <span className="pw-name"><i className="dot" style={{ ['--c' as any]: color }} /> {name}</span>
+      <div className="row gap wrap">
+        <input id={`pw-${id}`} dir="ltr" placeholder="סיסמה חדשה" value={pw} onChange={(e) => { setPw(e.target.value); setState('idle'); }} />
+        <button type="button" className="btn btn-small" onClick={() => { setPw(randomPw()); setState('idle'); }}>🎲 אקראית</button>
+        <button type="button" className="btn btn-small btn-primary" disabled={pw.trim().length < 6 || state === 'busy'} onClick={save}>{state === 'busy' ? 'שומר…' : 'שמירה'}</button>
+      </div>
+      {state === 'ok' && <p className="ok small">הסיסמה עודכנה. הסיסמה החדשה: <b dir="ltr">{saved}</b> (שלח לה אותה)</p>}
+      {state === 'err' && <p className="error">לא הצלחתי לעדכן. בדוק חיבור לאינטרנט ונסה שוב.</p>}
+    </li>
   );
 }
