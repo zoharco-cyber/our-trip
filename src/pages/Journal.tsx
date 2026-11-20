@@ -3,16 +3,33 @@ import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
 import { usePhotoUrls } from '../lib/photos';
-import type { JournalEntry, Photo } from '../lib/types';
-import { fmtDate, safeFileName, todayISO } from '../lib/util';
+import type { JournalEntry, Photo, TripEvent } from '../lib/types';
+import { FIRST_FLIGHT } from '../config';
+import { addDays, fmtDate, safeFileName, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 import Reminder from '../components/Reminder';
 
 export const MOODS = ['🤩', '😍', '😂', '😌', '🥱', '🥶', '🤢', '😭', '😤', '🥳'];
 
+// רשומות לדוגמה, רק לתצוגה של המנהל (לא נשמרות)
+const DEMO: { content: string; mood: string }[][] = [
+  [{ content: 'נחתנו בלימה! עייפות אבל מאושרות, וכבר אכלנו סביצ׳ה', mood: '🤩' }, { content: 'המזוודה שלי הגיעה אחרונה. כמעט בכיתי', mood: '😅' }, { content: 'האוקיינוס פה ענק, ישבנו על הצוק עד השקיעה', mood: '😍' }],
+  [{ content: 'הגענו לקוסקו. אין אוויר אבל יש קסם', mood: '🥶' }, { content: 'תה קוקה ונרדמתי בשמונה בערב', mood: '🥱' }, { content: 'מצאנו שוק מטורף וקניתי סוודר עם לאמות', mood: '😂' }],
+  [{ content: 'מאצ׳ו פיצ׳ו!!! אין מילים', mood: '😭' }, { content: 'קמנו בארבע בבוקר וזה היה שווה כל שנייה', mood: '🤩' }, { content: 'לאמה ליקקה לי את התיק. אתגר הושלם', mood: '🥳' }],
+];
+
 export default function Journal() {
-  const { me, travelers } = useAuth();
-  const entries = useTable<JournalEntry>('journal_entries', { order: 'day', ascending: false });
+  const { me, travelers, isAdmin } = useAuth();
+  const real = useTable<JournalEntry>('journal_entries', { order: 'day', ascending: false });
+  const events = useTable<TripEvent>('events', { order: 'starts_at' });
+  const tripStart = new Date(events.rows[0]?.starts_at || FIRST_FLIGHT).toLocaleDateString('en-CA');
+  const started = todayISO() >= tripStart;
+  const daysLeft = Math.ceil((new Date(tripStart + 'T00:00:00').getTime() - Date.now()) / 864e5);
+  const [demo, setDemo] = useState(false);
+  const demoRows: JournalEntry[] = DEMO.flatMap((day, d) => travelers.slice(0, 3).map((t, i) => ({
+    id: `demo-${d}-${i}`, day: addDays(tripStart, d), content: day[i]?.content || '', mood: day[i]?.mood || null, photo_path: null, created_by: t.id, created_at: '',
+  }))).reverse();
+  const entries = demo ? { ...real, rows: demoRows } : real;
   const [day, setDay] = useState(todayISO());
   const mine = entries.rows.find((e) => e.day === day && e.created_by === me?.id);
   const [text, setText] = useState('');
@@ -42,7 +59,7 @@ export default function Journal() {
   }
 
   const days = [...new Set(entries.rows.map((e) => e.day))];
-  const canWrite = !!me?.is_traveler;
+  const canWrite = !!me?.is_traveler && started && !demo;
 
   return (
     <div className="stack-lg narrow">
@@ -50,12 +67,24 @@ export default function Journal() {
         <h1>יומן מסע</h1>
         <p className="muted">משפט אחד ביום, מצב רוח, ואם בא לך: תמונת היום. בסוף הטיול יש יומן שלם.</p>
       </div>
+      {!started && (
+        <div className="card journal-locked">
+          <b>📔 היומן נפתח ביום הראשון של הטיול</b>
+          <p>{fmtDate(tripStart)}{daysLeft > 0 && <> · עוד {daysLeft} ימים</>}</p>
+        </div>
+      )}
+      {isAdmin && (
+        <div className="row gap wrap">
+          <button className={'btn btn-small' + (demo ? ' btn-primary' : '')} onClick={() => setDemo((v) => !v)}>{demo ? 'חזרה ליומן האמיתי' : '👀 איך זה ייראה כשהבנות ימלאו'}</button>
+          {demo && <span className="muted small">תצוגה לדוגמה. רק אתה רואה אותה, ושום דבר לא נשמר.</span>}
+        </div>
+      )}
       <Reminder />
       {canWrite && (
         <section className="card stack">
           <div className="row-between">
             <b>{day === todayISO() ? 'היום' : fmtDate(day)}</b>
-            <input id="j-day" type="date" value={day} max={todayISO()} onChange={(e) => { setDay(e.target.value); setEditing(false); }} style={{ width: 'auto' }} />
+            <input id="j-day" type="date" value={day} min={tripStart} max={todayISO()} onChange={(e) => { setDay(e.target.value); setEditing(false); }} style={{ width: 'auto' }} />
           </div>
           {mine && !editing ? (
             <div className="stack">

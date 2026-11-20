@@ -24,13 +24,14 @@ Deno.serve(async (req) => {
   webpush.setVapidDetails('mailto:trip@our-trip.app', Deno.env.get('VAPID_PUBLIC_KEY')!, Deno.env.get('VAPID_PRIVATE_KEY')!);
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const { data: subs } = await db.from('push_subscriptions').select('*');
+  const { data: start } = await db.rpc('trip_start');  // אין תזכורות לפני שהטיול התחיל
   let sent = 0, skipped = 0, removed = 0;
 
   for (const s of subs || []) {
     let tz = s.tz;
     try { localParts(tz); } catch { tz = 'America/Lima'; }
     const { date, hour } = localParts(tz);
-    if (!test && (hour !== s.hour || s.last_sent === date)) { skipped++; continue; }
+    if (!test && (hour !== s.hour || s.last_sent === date || (start && date < start))) { skipped++; continue; }
     const { count } = await db.from('journal_entries').select('id', { count: 'exact', head: true }).eq('created_by', s.user_id).eq('day', date);
     if (!test && (count || 0) > 0) { skipped++; continue; }
     const body = JSON.stringify({

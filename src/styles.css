@@ -601,3 +601,5 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .reminder { display: grid; gap: .5rem; border-style: dashed; }
 .reminder.on { border-color: var(--ok); }
 .on-pill { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); font-weight: 600; }
+
+.journal-locked { display: grid; gap: .3rem; text-align: center; border-style: dashed; background: linear-gradient(135deg, color-mix(in srgb, var(--sun) 25%, var(--surface)), var(--surface)); }
