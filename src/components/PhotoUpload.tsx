@@ -14,9 +14,9 @@ export default function PhotoUpload({ placeId, onDone }: { placeId?: string | nu
     e.target.value = '';
     if (!files.length) return;
     setBusy(true); setMsg(null);
-    const failed = await uploadPhotos(files, { placeId, isPublic, userId: me!.id });
+    const { failed, linked } = await uploadPhotos(files, { placeId, isPublic, userId: me!.id });
     setBusy(false);
-    setMsg(failed ? `${failed} תמונות לא הועלו. בדקי את החיבור ונסי שוב.` : null);
+    setMsg(failed ? `${failed} תמונות לא הועלו. בדקי את החיבור ונסי שוב.` : linked ? `📍 ${linked} ${linked === 1 ? 'תמונה שויכה' : 'תמונות שויכו'} לבד לנקודה במפה לפי המיקום שלהן` : null);
     onDone();
   }
   return (
@@ -26,7 +26,7 @@ export default function PhotoUpload({ placeId, onDone }: { placeId?: string | nu
         <input type="file" accept="image/*" multiple hidden onChange={pick} disabled={busy} />
       </label>
       <label className="check small"><input type="checkbox" checked={isPublic} onChange={(e) => setPublic(e.target.checked)} /><span>להציג גם לאורחים</span></label>
-      {msg && <p className="error">{msg}</p>}
+      {msg && <p className={msg.startsWith('📍') ? 'ok small' : 'error'}>{msg}</p>}
     </div>
   );
 }

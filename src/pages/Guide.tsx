@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import type { Tip } from '../lib/types';
 import { fmtDate } from '../lib/util';
 import { Who } from '../components/Avatar';
+import Weather from '../components/Weather';
 
 export default function Guide({ embedded }: { embedded?: boolean } = {}) {
   const [q, setQ] = useState('');
@@ -49,6 +50,7 @@ export default function Guide({ embedded }: { embedded?: boolean } = {}) {
       {dest && (
         <article className="card dest stack">
           <h2>{dest.name}</h2>
+          {dest.city && <Weather lat={dest.city.lat} lng={dest.city.lng} label={dest.city.name} />}
           <div className="dest-entry">
             <b>כניסה עם דרכון ישראלי</b>
             <p>{dest.entry}</p>

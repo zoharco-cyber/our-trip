@@ -51,7 +51,7 @@ export default function Reminder() {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Lima';
       const { error } = await supabase.from('push_subscriptions').upsert({ endpoint: sub.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, tz, hour, user_id: me.id }, { onConflict: 'endpoint' });
       if (error) throw error;
-      await reg.showNotification('התזכורת הופעלה 💖', { body: `כל ערב ב-${hour}:00 תקבלי תזכורת, אם עוד לא כתבת ביומן.`, dir: 'rtl', lang: 'he', tag: 'journal' });
+      await reg.showNotification('ההתראות הופעלו 💖', { body: me.is_traveler ? `תזכורת ליומן כל ערב ב-${hour}:00, ועדכונים מהבנות.` : 'תקבל הודעה כשהבנות שולחות עדכון.', dir: 'rtl', lang: 'he', tag: 'journal' });
       setState('on');
     } catch {
       setErr('לא הצלחתי להפעיל. בדקי חיבור לאינטרנט ונסי שוב.');
@@ -75,11 +75,12 @@ export default function Reminder() {
     if (sub) await supabase.from('push_subscriptions').update({ hour: h, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }).eq('endpoint', sub.endpoint);
   }
 
-  if (state === 'loading' || !me?.is_traveler) return null;
+  if (state === 'loading' || !me) return null;
+  const traveler = me.is_traveler;
   return (
     <section className={'card reminder' + (state === 'on' ? ' on' : '')}>
       <div className="row-between">
-        <b>🔔 תזכורת יומית</b>
+        <b>🔔 התראות</b>
         {state === 'on' && <span className="pill on-pill">פעילה</span>}
       </div>
       {state === 'ios-install' && <p className="small">באייפון, התראות עובדות רק כשהאתר מותקן: בספארי לוחצים על כפתור השיתוף ⬆️, בוחרים "הוספה למסך הבית", ופותחים את האתר מהאייקון. ואז חוזרים לכאן.</p>}
@@ -87,16 +88,16 @@ export default function Reminder() {
       {state === 'denied' && <p className="small muted">ההתראות חסומות לאתר הזה. אפשר לאפשר אותן בהגדרות הטלפון, תחת ההגדרות של האתר או הדפדפן.</p>}
       {(state === 'off' || state === 'on') && (
         <>
-          <div className="row gap wrap small">
-            <span>כל ערב בשעה</span>
+          <p className="small">{traveler ? 'תזכורת ליומן, ועדכונים כשמישהי משלימה אתגר, מוסיפה הוצאה עלייך, מגשימה חלום או שולחת עדכון הביתה.' : 'עדכונים כשהבנות שולחות "עדכון לבית", משלימות אתגר או מגשימות חלום.'}</p>
+          {traveler && <div className="row gap wrap small">
+            <span>תזכורת ליומן כל ערב בשעה</span>
             <select id="rem-hour" value={hour} onChange={(e) => changeHour(Number(e.target.value))}>
               {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>)}
             </select>
-            <span className="muted">(לפי השעון של הטלפון)</span>
-          </div>
-          <p className="muted small">רק אם עוד לא כתבת באותו יום.</p>
+            <span className="muted">(רק אם עוד לא כתבת)</span>
+          </div>}
           {state === 'off'
-            ? <button className="btn btn-primary" disabled={busy} onClick={enable}>{busy ? 'מפעילה…' : 'הפעלת תזכורת'}</button>
+            ? <button className="btn btn-primary" disabled={busy} onClick={enable}>{busy ? 'מפעילה…' : 'הפעלת התראות'}</button>
             : <button className="btn btn-small" disabled={busy} onClick={disable}>כיבוי</button>}
         </>
       )}

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
+import { dbWrite } from '../lib/offline';
 import type { GearCheck, GearItem } from '../lib/types';
 import { GEAR_CATEGORIES } from '../config';
 import { Empty } from '../components/Avatar';
@@ -20,10 +21,10 @@ export default function Gear() {
     if (!me) return;
     if (has(itemId, me.id)) {
       checks.setRows((r) => r.filter((c) => !(c.item_id === itemId && c.user_id === me.id)));
-      await supabase.from('gear_checks').delete().eq('item_id', itemId).eq('user_id', me.id);
+      await dbWrite({ table: 'gear_checks', kind: 'delete', match: { item_id: itemId, user_id: me.id } });
     } else {
       checks.setRows((r) => [...r, { item_id: itemId, user_id: me.id }]);
-      await supabase.from('gear_checks').insert({ item_id: itemId });
+      await dbWrite({ table: 'gear_checks', kind: 'upsert', values: { item_id: itemId, user_id: me.id }, onConflict: 'item_id,user_id' });
     }
   }
   async function add(e: FormEvent) {

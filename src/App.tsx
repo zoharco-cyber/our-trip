@@ -5,6 +5,7 @@ import { isConfigured } from './lib/supabase';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import { LOGO_URL } from './config';
+import { onQueueChange, readQueue, startQueueSync } from './lib/offline';
 
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
@@ -52,6 +53,9 @@ function useOnline() {
 export default function App() {
   const { ready, session, guest, me, isAdmin, signOut } = useAuth();
   const online = useOnline();
+  const [queued, setQueued] = useState(() => readQueue().length);
+  useEffect(() => startQueueSync(), []);
+  useEffect(() => onQueueChange(() => setQueued(readQueue().length)), []);
 
   if (!isConfigured) return <SetupNeeded />;
   if (!ready) return <div className="splash">רגע…</div>;
@@ -79,7 +83,8 @@ export default function App() {
           </div>
         </div>
       </header>
-      {!online && <div className="offline-bar">אין אינטרנט כרגע. מוצגים הנתונים האחרונים שנשמרו, והמסמכים זמינים בתיקיות.</div>}
+      {!online && <div className="offline-bar">אין קליטה כרגע. אפשר להמשיך להוסיף הוצאות, קניות, יומן ועוד. הכול יישלח לבד כשהקליטה תחזור.</div>}
+      {queued > 0 && <div className="queue-bar">⏳ {queued} {queued === 1 ? 'שינוי מחכה' : 'שינויים מחכים'} לשליחה{online ? '… שולחת עכשיו' : ' עד שתחזור קליטה'}</div>}
       <main className="page">
         <Suspense fallback={<div className="page-loading" aria-label="טוען">✨</div>}>
         <Routes>

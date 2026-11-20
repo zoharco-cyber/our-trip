@@ -8,6 +8,7 @@ export type Destination = {
   highlights: string[];
   tips: string[];
   health?: string;
+  city?: { name: string; lat: number; lng: number }; // לתחזית
 };
 
 export const GENERAL_TIPS: { title: string; text: string }[] = [
@@ -23,7 +24,7 @@ export const GENERAL_TIPS: { title: string; text: string }[] = [
 
 export const DESTINATIONS: Destination[] = [
   {
-    slug: 'peru', name: 'פרו',
+    slug: 'peru', city: { name: 'קוסקו', lat: -13.53, lng: -71.97 }, name: 'פרו',
     aliases: ['פרו', 'peru', 'לימה', 'lima', 'קוסקו', 'cusco', 'cuzco', 'מאצ׳ו פיצ׳ו', 'מאצו פיצו', 'machu picchu', 'העמק הקדוש', 'ארקיפה', 'arequipa', 'פונו', 'puno', 'טיטיקקה', 'titicaca', 'הואקצ׳ינה', 'huacachina', 'איקיטוס', 'iquitos', 'הואראז', 'huaraz'],
     entry: 'אין צורך באשרה לתיירות. בדרך כלל מקבלים עד 90 יום בכניסה (אפשר לבקש יותר). לשמור את מסמך הכניסה.',
     season: 'דצמבר עד מרץ: עונת הגשמים בהרים. שביל האינקה סגור בפברואר. בחוף (לימה, פראקס) זה קיץ.',
@@ -32,7 +33,7 @@ export const DESTINATIONS: Destination[] = [
     health: 'גובה: להתאקלם בהדרגה. לאמזונס: חיסון לקדחת צהובה והגנה מיתושים.',
   },
   {
-    slug: 'bolivia', name: 'בוליביה',
+    slug: 'bolivia', city: { name: 'לה פאס', lat: -16.5, lng: -68.15 }, name: 'בוליביה',
     aliases: ['בוליביה', 'bolivia', 'לה פאס', 'la paz', 'אויוני', 'uyuni', 'סלאר', 'salar', 'סוקרה', 'sucre', 'פוטוסי', 'potosi', 'קופקבנה', 'copacabana', 'רורנבקה', 'rurrenabaque', 'דרך המוות', 'death road'],
     entry: 'דרישות האשרה לישראלים השתנו כמה פעמים בשנים האחרונות. חובה לבדוק מול משרד החוץ ושגרירות בוליביה מה המצב העדכני לפני שמתכננות את הכניסה.',
     season: 'דצמבר עד מרץ עונת גשמים: בסלאר דה אויוני נוצרת מראת המים המפורסמת, אבל חלק מהמסלולים עלולים להיחסם.',
@@ -41,7 +42,7 @@ export const DESTINATIONS: Destination[] = [
     health: 'לה פאס בגובה כ-3,600 מ׳. לג׳ונגל עשויים לבקש הוכחת חיסון לקדחת צהובה.',
   },
   {
-    slug: 'chile', name: 'צ׳ילה',
+    slug: 'chile', city: { name: 'סנטיאגו', lat: -33.45, lng: -70.67 }, name: 'צ׳ילה',
     aliases: ['צ׳ילה', 'צילה', 'chile', 'סנטיאגו', 'santiago', 'אטקמה', 'atacama', 'סן פדרו', 'san pedro', 'טורס דל פיינה', 'torres del paine', 'פוארטו נטאלס', 'puerto natales', 'פוקון', 'pucon', 'ולפראיסו', 'valparaiso', 'פטגוניה', 'patagonia', 'קרטרה אוסטרל', 'carretera austral'],
     entry: 'אין צורך באשרה לתיירות, עד 90 יום. במעבר הגבול בודקים בקפדנות מזון: לא להכניס פירות, ירקות או מוצרים מן החי, ולהצהיר על כל אוכל.',
     season: 'דצמבר עד פברואר: הזמן הכי טוב לפטגוניה (קיץ, אבל רוחות חזקות). אטקמה טובה כל השנה.',
@@ -49,7 +50,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['בטורס דל פיינה חובה להזמין קמפינג או רפוחיו מראש. בעונה הם מתמלאים חודשים קודם.', 'צ׳ילה יקרה יחסית לשכנות, כדאי לתכנן תקציב בהתאם.'],
   },
   {
-    slug: 'argentina', name: 'ארגנטינה',
+    slug: 'argentina', city: { name: 'בואנוס איירס', lat: -34.6, lng: -58.38 }, name: 'ארגנטינה',
     aliases: ['ארגנטינה', 'argentina', 'בואנוס איירס', 'buenos aires', 'אל צ׳לטן', 'אל צלטן', 'el chalten', 'אל קלפטה', 'el calafate', 'פריטו מורנו', 'perito moreno', 'בריצ׳ה', 'bariloche', 'אושואיה', 'ushuaia', 'סלטה', 'salta', 'מנדוסה', 'mendoza', 'איגואסו', 'iguazu'],
     entry: 'אין צורך באשרה לתיירות, עד 90 יום.',
     season: 'דצמבר עד פברואר: קיץ, אידיאלי לפטגוניה (אל צ׳לטן, אל קלפטה, אושואיה). בואנוס איירס חמה ולחה.',
@@ -57,7 +58,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['המצב הכלכלי והשערים משתנים מהר. לבדוק לפני הנחיתה אם עדיף לשלם בכרטיס או להחליף מזומן.', 'מרחקים עצומים: לשקול טיסות פנים במקום 30 שעות אוטובוס.', 'ארוחת ערב מתחילה מאוחר, בסביבות 21:00 ואחר כך.'],
   },
   {
-    slug: 'brazil', name: 'ברזיל',
+    slug: 'brazil', city: { name: 'ריו', lat: -22.91, lng: -43.17 }, name: 'ברזיל',
     aliases: ['ברזיל', 'brazil', 'brasil', 'ריו', 'rio', 'ריו דה ז׳נרו', 'rio de janeiro', 'סאו פאולו', 'sao paulo', 'פוז דו איגואסו', 'foz do iguacu', 'איליה גרנדה', 'ilha grande', 'פאראטי', 'paraty', 'סלבדור', 'salvador', 'פלוריאנופוליס', 'florianopolis'],
     entry: 'אין צורך באשרה לתיירות, עד 90 יום.',
     season: 'דצמבר עד מרץ: קיץ חם ולח. ראש השנה האזרחית בריו וקרנבל (פברואר או מרץ) עמוסים ויקרים, צריך להזמין מוקדם.',
@@ -66,7 +67,7 @@ export const DESTINATIONS: Destination[] = [
     health: 'מומלץ חיסון לקדחת צהובה. להתגונן מיתושים (דנגי).',
   },
   {
-    slug: 'colombia', name: 'קולומביה',
+    slug: 'colombia', city: { name: 'מדיין', lat: 6.24, lng: -75.58 }, name: 'קולומביה',
     aliases: ['קולומביה', 'colombia', 'בוגוטה', 'bogota', 'מדיין', 'medellin', 'קרטחנה', 'cartagena', 'טאיירונה', 'tayrona', 'סלנטו', 'salento', 'גואטפה', 'guatape', 'סנטה מרטה', 'santa marta', 'העיר האבודה', 'ciudad perdida', 'מינקה', 'minca'],
     entry: 'עד לאחרונה לא נדרשה אשרה לתיירות. היחסים הדיפלומטיים בין המדינות השתנו, אז חובה לבדוק את הדרישות העדכניות לפני הטיסה.',
     season: 'דצמבר עד מרץ: עונה יבשה ברוב המדינה, זמן מצוין.',
@@ -75,7 +76,7 @@ export const DESTINATIONS: Destination[] = [
     health: 'לטאיירונה ולאזורי ג׳ונגל: חיסון לקדחת צהובה מומלץ ולפעמים נבדק.',
   },
   {
-    slug: 'ecuador', name: 'אקוודור',
+    slug: 'ecuador', city: { name: 'קיטו', lat: -0.18, lng: -78.47 }, name: 'אקוודור',
     aliases: ['אקוודור', 'ecuador', 'קיטו', 'quito', 'גלפגוס', 'galapagos', 'בניוס', 'banos', 'קוטופקסי', 'cotopaxi', 'קילוטואה', 'quilotoa', 'מונטניטה', 'montanita', 'קואנקה', 'cuenca'],
     entry: 'אין צורך באשרה לתיירות, עד 90 יום. המטבע הוא דולר אמריקאי.',
     season: 'אפשר לבקר כל השנה. בגלפגוס דצמבר עד מאי חם, והים רגוע יותר.',
@@ -83,7 +84,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['לגלפגוס משלמים דמי כניסה לפארק (גבוהים, מאות דולרים) וכרטיס מעבר לפני הטיסה. לבדוק סכום עדכני.', 'קיטו בגובה 2,850 מ׳.'],
   },
   {
-    slug: 'mexico', name: 'מקסיקו',
+    slug: 'mexico', city: { name: 'מקסיקו סיטי', lat: 19.43, lng: -99.13 }, name: 'מקסיקו',
     aliases: ['מקסיקו', 'mexico', 'מקסיקו סיטי', 'cdmx', 'טולום', 'tulum', 'קנקון', 'cancun', 'פלאיה דל כרמן', 'playa del carmen', 'אואחקה', 'oaxaca', 'סן כריסטובל', 'san cristobal', 'בקלאר', 'bacalar', 'יוקטן', 'yucatan', 'מרידה', 'merida'],
     entry: 'אין צורך באשרה לתיירות. בביקורת הגבולות מחמירים לפעמים: כדאי להחזיק כרטיס יציאה, הזמנות לינה והוכחת אמצעים, ולענות בבירור על שאלות.',
     season: 'דצמבר עד אפריל: עונה יבשה ונעימה. החגים בסוף דצמבר עמוסים במיוחד ביוקטן.',
@@ -91,7 +92,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['במים בסנוטים: קרם הגנה ידידותי לסביבה, ולפעמים מבקשים להתקלח לפני.', 'לא לשתות מי ברז.'],
   },
   {
-    slug: 'guatemala', name: 'גואטמלה',
+    slug: 'guatemala', city: { name: 'אנטיגואה', lat: 14.56, lng: -90.73 }, name: 'גואטמלה',
     aliases: ['גואטמלה', 'guatemala', 'אנטיגואה', 'antigua', 'אטיטלן', 'atitlan', 'טיקאל', 'tikal', 'פלורס', 'flores', 'סמוק שמפיי', 'semuc champey', 'אקטננגו', 'acatenango'],
     entry: 'אין צורך באשרה לתיירות. היא חלק מהסכם CA-4 עם הונדורס, אל סלבדור וניקרגואה: 90 יום משותפים לכל הארבע.',
     season: 'נובמבר עד אפריל: עונה יבשה.',
@@ -99,7 +100,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['באקטננגו קר מאוד בלילה, ולטפס עם מדריך.'],
   },
   {
-    slug: 'costa-rica', name: 'קוסטה ריקה',
+    slug: 'costa-rica', city: { name: 'סן חוזה', lat: 9.93, lng: -84.08 }, name: 'קוסטה ריקה',
     aliases: ['קוסטה ריקה', 'costa rica', 'סן חוזה', 'san jose', 'לה פורטונה', 'la fortuna', 'ארנל', 'arenal', 'מונטוורדה', 'monteverde', 'מנואל אנטוניו', 'manuel antonio', 'פוארטו ויחו', 'puerto viejo'],
     entry: 'אין צורך באשרה לתיירות. בדרך כלל דורשים כרטיס יציאה מהמדינה.',
     season: 'דצמבר עד אפריל: עונה יבשה, הכי מבוקשת והכי יקרה.',
@@ -107,7 +108,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['יקרה יחסית למרכז אמריקה.', 'שכירת רכב נוחה, אבל לבדוק ביטוח.'],
   },
   {
-    slug: 'uruguay', name: 'אורוגוואי',
+    slug: 'uruguay', city: { name: 'מונטווידאו', lat: -34.9, lng: -56.16 }, name: 'אורוגוואי',
     aliases: ['אורוגוואי', 'uruguay', 'מונטווידאו', 'montevideo', 'פונטה דל אסטה', 'punta del este', 'קולוניה', 'colonia', 'קאבו פולוניו', 'cabo polonio'],
     entry: 'אין צורך באשרה לתיירות, עד 90 יום.',
     season: 'דצמבר עד פברואר: קיץ ועונת חופים.',
@@ -115,7 +116,7 @@ export const DESTINATIONS: Destination[] = [
     tips: ['יקרה יחסית לאזור.'],
   },
   {
-    slug: 'usa', name: 'ארצות הברית',
+    slug: 'usa', city: { name: 'ניו יורק', lat: 40.71, lng: -74.0 }, name: 'ארצות הברית',
     aliases: ['ארצות הברית', 'ארה"ב', 'ארהב', 'אמריקה', 'usa', 'us', 'united states', 'ניו יורק', 'new york', 'מיאמי', 'miami', 'לוס אנג׳לס', 'los angeles', 'סן פרנסיסקו', 'san francisco', 'לאס וגאס', 'las vegas'],
     entry: 'בעלות דרכון ישראלי צריכות אישור ESTA (גם לקונקשן). מגישים רק באתר הרשמי esta.cbp.dhs.gov, לפחות 72 שעות לפני. ההגשה בתשלום. לשהייה מעל 90 יום או לעבודה צריך אשרה.',
     season: 'דצמבר: חורף בצפון, נעים בפלורידה ובדרום-מערב.',

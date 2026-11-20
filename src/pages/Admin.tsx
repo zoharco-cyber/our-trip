@@ -3,6 +3,7 @@ import { useAuth } from '../lib/auth';
 import { fmtDateTime } from '../lib/util';
 import { supabase } from '../lib/supabase';
 import { OpenButton, useCapsuleOpen } from './Capsule';
+import Reminder from '../components/Reminder';
 
 export default function Admin() {
   const { profiles, travelers } = useAuth();
@@ -18,6 +19,7 @@ export default function Admin() {
   return (
     <div className="stack-lg narrow">
       <h1>ניהול</h1>
+      <Reminder />
       <section className="card stack">
         <h2>קפסולת הזמן</h2>
         <p>{open ? 'הקפסולה פתוחה, וכל המטיילות רואות את כל המכתבים.' : 'הקפסולה סגורה. אף אחת לא יכולה לקרוא את המכתבים, גם לא את שלה.'}</p>

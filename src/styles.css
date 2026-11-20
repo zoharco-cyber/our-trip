@@ -639,3 +639,31 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 .help-tabs button { padding-inline: .3rem; white-space: nowrap; font-size: .92rem; }
 
 .page-loading { display: grid; place-items: center; min-height: 40vh; font-size: 2rem; opacity: .6; }
+
+/* שינויים שמחכים לשליחה */
+.queue-bar { background: color-mix(in srgb, var(--rose) 18%, var(--surface)); color: var(--ink); text-align: center; padding: .35rem 1rem; font-size: .9rem; }
+.is-pending { opacity: .75; }
+.is-pending::after { content: "⏳"; font-size: .8rem; margin-inline-start: .3rem; }
+
+/* עדכון לבית */
+.latest-status { display: flex; gap: .8rem; align-items: center; background: var(--surface); border: 3px solid var(--brand); border-radius: 22px; padding: .8rem 1rem; box-shadow: 0 4px 0 var(--line); }
+.latest-status .grow { display: grid; gap: .1rem; }
+.latest-status b { font-family: var(--font-display); font-size: 1.25rem; color: var(--brand); }
+.ls-heart { font-size: 2rem; animation: floaty 3s ease-in-out 3; }
+.send-status { display: grid; gap: .6rem; }
+.send-status .chip { background: var(--surface-2); }
+
+/* מזג אוויר */
+.weather { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; justify-content: space-between; background: linear-gradient(135deg, color-mix(in srgb, #6fd6ff 22%, var(--surface)), var(--surface)); border: 2px solid var(--line); border-radius: 20px; padding: .8rem 1rem; }
+.wx-now { display: flex; gap: .7rem; align-items: center; }
+.wx-now > div { display: grid; }
+.wx-now b { font-family: var(--font-display); font-size: 1.4rem; }
+.wx-big { font-size: 2.6rem; line-height: 1; }
+.wx-days { list-style: none; margin: 0; padding: 0; display: flex; gap: .6rem; }
+.wx-days li { display: grid; justify-items: center; gap: .1rem; min-width: 2.8rem; }
+.wx-ico { font-size: 1.3rem; }
+
+/* תוכן אף פעם לא רחב מהמסך */
+.stack, .stack-lg { grid-template-columns: minmax(0, 1fr); }
+.stack > *, .stack-lg > * { min-width: 0; }
+.row.wrap { flex-wrap: wrap; }

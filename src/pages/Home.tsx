@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import Countdown from '../components/Countdown';
 import Slideshow from '../components/Slideshow';
 import { NextBooking } from './Bookings';
+import { LatestStatus, SendStatus } from '../components/Status';
+import Weather from '../components/Weather';
+import type { LocationUpdate } from '../lib/types';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
@@ -44,16 +47,21 @@ export default function Home() {
     await supabase.from('events').delete().eq('id', id); reload();
   }
 
+  const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
+  const here = locs.rows[0];
   const now = Date.now();
   return (
     <div className="stack-lg">
       <div className="marquee" aria-hidden="true"><div>
         {[0, 1].map((k) => <span key={k}>✨ {me ? `היי ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
       </div></div>
+      <LatestStatus />
       <Slideshow />
       <section className="hero-card">
         <Countdown />
       </section>
+      {here && <Weather lat={here.lat} lng={here.lng} label={here.name || 'איפה שהבנות נמצאות'} />}
+      {!guest && <SendStatus />}
       {!guest && <NextBooking />}
 
       <section className="stack">

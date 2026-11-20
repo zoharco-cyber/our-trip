@@ -1,12 +1,15 @@
 import { FormEvent, useState } from 'react';
 import { useTable } from '../lib/useTable';
+import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { dbWrite, newId } from '../lib/offline';
 import type { Wish } from '../lib/types';
 import { fmtDate } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 import { confetti } from '../lib/fx';
 
 export default function Wishes() {
+  const { me } = useAuth();
   const { rows, reload, setRows } = useTable<Wish>('wishes', { order: 'created_at', ascending: false });
   const [text, setText] = useState('');
   const [place, setPlace] = useState('');
@@ -15,18 +18,18 @@ export default function Wishes() {
   async function add(e: FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    await supabase.from('wishes').insert({ text: text.trim(), place: place.trim() || null });
+    await dbWrite({ table: 'wishes', kind: 'insert', values: { id: newId(), text: text.trim(), place: place.trim() || null, done: false, created_by: me?.id, created_at: new Date().toISOString() } });
     setText(''); setPlace(''); reload();
   }
   async function toggle(w: Wish, e?: React.MouseEvent) {
     const done = !w.done;
     if (done) confetti(e?.clientX, e?.clientY, 160);
     setRows((r) => r.map((x) => x.id === w.id ? { ...x, done } : x));
-    await supabase.from('wishes').update({ done, done_at: done ? new Date().toISOString() : null }).eq('id', w.id);
+    await dbWrite({ table: 'wishes', kind: 'update', values: { done, done_at: done ? new Date().toISOString() : null }, match: { id: w.id } });
   }
   async function remove(id: string) {
     setRows((r) => r.filter((x) => x.id !== id));
-    await supabase.from('wishes').delete().eq('id', id);
+    await dbWrite({ table: 'wishes', kind: 'delete', match: { id } });
   }
 
   const open = rows.filter((w) => !w.done), done = rows.filter((w) => w.done);

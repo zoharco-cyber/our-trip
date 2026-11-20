@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import type { Photo } from './types';
 import { safeFileName } from './util';
+import { distanceKm, readGps } from './exif';
+import type { Place } from './types';
 
 /** כתובות זמניות לתמונות (התיקייה פרטית) */
 export function usePhotoUrls(photos: Photo[]) {
@@ -37,15 +39,29 @@ async function shrink(file: File, max = 2000): Promise<Blob> {
 }
 
 export async function uploadPhotos(files: File[], opts: { placeId?: string | null; isPublic: boolean; userId: string }) {
-  let failed = 0;
+  let failed = 0, linked = 0;
+  // בלי נקודה שנבחרה: מנסים לשייך כל תמונה לנקודה הקרובה במפה לפי המיקום שבקובץ
+  let places: Place[] = [];
+  if (!opts.placeId) {
+    const { data } = await supabase.from('places').select('*');
+    places = (data || []) as Place[];
+  }
   for (const f of files) {
+    let placeId = opts.placeId || null;
+    if (!placeId && places.length) {
+      const gps = await readGps(f);
+      if (gps) {
+        const near = places.map((p) => ({ p, d: distanceKm(gps, p) })).sort((a, b) => a.d - b.d)[0];
+        if (near && near.d <= 30) { placeId = near.p.id; linked++; }
+      }
+    }
     const blob = await shrink(f);
     const path = `${opts.userId}/${Date.now()}-${safeFileName(f.name.replace(/\.\w+$/, '.jpg'))}`;
     const up = await supabase.storage.from('photos').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
     if (up.error) { failed++; continue; }
-    await supabase.from('photos').insert({ path, place_id: opts.placeId || null, is_public: opts.isPublic });
+    await supabase.from('photos').insert({ path, place_id: placeId, is_public: opts.isPublic });
   }
-  return failed;
+  return { failed, linked };
 }
 
 export async function deletePhoto(p: Photo) {

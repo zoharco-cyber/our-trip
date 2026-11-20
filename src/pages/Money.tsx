@@ -3,6 +3,7 @@ import { useAuth } from '../lib/auth';
 import { Money, useMoney } from '../lib/money';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
+import { dbWrite, newId } from '../lib/offline';
 import type { Expense, Transfer } from '../lib/types';
 import { EXPENSE_CATEGORIES } from '../config';
 import { CURRENCIES } from '../data/currencies';
@@ -74,12 +75,12 @@ export default function MoneyPage() {
     setEditBudget(false); setBudget(''); reloadProfiles();
   }
   async function settle(d: Debt, e: React.MouseEvent) {
-    const { error } = await supabase.from('transfers').insert({ from_id: d.from, to_id: d.to, amount_usd: d.amount });
-    if (!error) paidStamp(e.clientX, e.clientY);
+    const r = await dbWrite({ table: 'transfers', kind: 'insert', values: { id: newId(), from_id: d.from, to_id: d.to, amount_usd: d.amount, created_at: new Date().toISOString() } });
+    if (r !== 'error') paidStamp(e.clientX, e.clientY);
     tr.reload();
   }
   async function removeExpense(id: string) {
-    await supabase.from('expenses').delete().eq('id', id); exp.reload();
+    await dbWrite({ table: 'expenses', kind: 'delete', match: { id } }); exp.reload();
   }
   async function removeTransfer(id: string) {
     await supabase.from('transfers').delete().eq('id', id); tr.reload();
@@ -189,7 +190,7 @@ export default function MoneyPage() {
             {list.map((e) => (
               <li key={e.id} className="list-item">
                 <div className="grow">
-                  <b>{e.description}</b>
+                  <b className={(e as any).__pending ? 'is-pending' : ''}>{e.description}</b>
                   <div className="muted small">{fmtDate(e.spent_on)} · {e.category} · שילמה <Who id={e.paid_by} /> · מתחלק בין {e.split_among.length}
                     {e.orig_currency !== 'USD' && <> · הוזן כ-{Number(e.orig_amount).toLocaleString('he-IL')} {CURRENCIES.find((c) => c.code === e.orig_currency)?.name || e.orig_currency}</>}
                   </div>
@@ -248,11 +249,11 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     if (!description || !(n > 0) || !among.length || !paidBy || conv === null) return;
     try { localStorage.setItem('trip:lastCur', cur); } catch { /* ignore */ }
-    const { error } = await supabase.from('expenses').insert({
-      description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
-      paid_by: paidBy, split_among: among, category, spent_on: date,
-    });
-    if (error) setErr('ההוצאה לא נשמרה. בדקי את החיבור לאינטרנט ונסי שוב.');
+    const r = await dbWrite({ table: 'expenses', kind: 'insert', values: {
+      id: newId(), description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
+      paid_by: paidBy, split_among: among, category, spent_on: date, created_at: new Date().toISOString(),
+    } });
+    if (r === 'error') setErr('ההוצאה לא נשמרה. נסי שוב.');
     else onDone();
   }
 

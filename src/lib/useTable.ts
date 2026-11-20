@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { applyPending, onQueueChange, readQueue } from './offline';
 import { supabase } from './supabase';
 
-type Opts = { order?: string; ascending?: boolean; filter?: (q: any) => any; enabled?: boolean };
+type Opts = { order?: string; ascending?: boolean; filter?: (q: any) => any; enabled?: boolean; pendingAccept?: (row: any) => boolean };
 
 const cacheKey = (k: string) => `cache:${k}`;
 
 /** טוען טבלה, מתעדכן בזמן אמת, ושומר עותק אחרון לשימוש בלי אינטרנט */
 export function useTable<T>(table: string, opts: Opts = {}, deps: unknown[] = []) {
   const key = table + JSON.stringify(deps);
-  const [rows, setRows] = useState<T[]>(() => {
+  const [raw, setRows] = useState<T[]>(() => {
     try { return JSON.parse(localStorage.getItem(cacheKey(key)) || '[]'); } catch { return []; }
   });
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,19 @@ export function useTable<T>(table: string, opts: Opts = {}, deps: unknown[] = []
       window.removeEventListener('online', onFocus);
     };
   }, [load, table]);
+
+  // שינויים שנעשו בלי קליטה ועוד מחכים לשליחה, מוצגים כבר עכשיו
+  const [qTick, setQTick] = useState(0);
+  const pendingCount = useRef(readQueue().length);
+  useEffect(() => onQueueChange(() => {
+    const n = readQueue().length;
+    if (n < pendingCount.current) load();  // משהו נשלח: טוענים מחדש מהשרת
+    pendingCount.current = n;
+    setQTick((t) => t + 1);
+  }), [load]);
+  const rows = useMemo(() => applyPending(table, raw as any[], optsRef.current.pendingAccept) as T[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [raw, qTick, table]);
 
   return { rows, setRows, loading, offline, reload: load };
 }

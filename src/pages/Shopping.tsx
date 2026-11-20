@@ -1,33 +1,37 @@
 import { FormEvent, useState } from 'react';
 import { useTable } from '../lib/useTable';
+import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { dbWrite, newId } from '../lib/offline';
 import type { ShoppingItem } from '../lib/types';
 import { addDays, fmtDate, weekStart } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 
 export default function Shopping() {
+  const { me } = useAuth();
   const [week, setWeek] = useState(weekStart());
   const { rows, reload, setRows } = useTable<ShoppingItem>('shopping_items',
-    { order: 'created_at', filter: (q) => q.eq('week_of', week) }, [week]);
+    { order: 'created_at', filter: (q) => q.eq('week_of', week), pendingAccept: (r) => r.week_of === week }, [week]);
   const [text, setText] = useState('');
   const [qty, setQty] = useState('');
 
   async function add(e: FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    await supabase.from('shopping_items').insert({ text: text.trim(), qty: qty.trim() || null, week_of: week });
+    await dbWrite({ table: 'shopping_items', kind: 'insert', values: { id: newId(), text: text.trim(), qty: qty.trim() || null, week_of: week, done: false, created_by: me?.id, created_at: new Date().toISOString() } });
     setText(''); setQty(''); reload();
   }
   async function toggle(it: ShoppingItem) {
     setRows((r) => r.map((x) => x.id === it.id ? { ...x, done: !x.done } : x));
-    await supabase.from('shopping_items').update({ done: !it.done }).eq('id', it.id);
+    await dbWrite({ table: 'shopping_items', kind: 'update', values: { done: !it.done }, match: { id: it.id } });
   }
   async function remove(id: string) {
     setRows((r) => r.filter((x) => x.id !== id));
-    await supabase.from('shopping_items').delete().eq('id', id);
+    await dbWrite({ table: 'shopping_items', kind: 'delete', match: { id } });
   }
   async function clearDone() {
-    await supabase.from('shopping_items').delete().eq('week_of', week).eq('done', true); reload();
+    for (const it of rows.filter((r) => r.done)) await dbWrite({ table: 'shopping_items', kind: 'delete', match: { id: it.id } });
+    reload();
   }
   async function copyOpenToNext() {
     const open = rows.filter((r) => !r.done);
@@ -60,7 +64,7 @@ export default function Shopping() {
             <li key={it.id} className={it.done ? 'done' : ''}>
               <label className="check">
                 <input type="checkbox" checked={it.done} onChange={() => toggle(it)} />
-                <span>{it.text}{it.qty && <span className="muted"> · {it.qty}</span>}</span>
+                <span className={(it as any).__pending ? 'is-pending' : ''}>{it.text}{it.qty && <span className="muted"> · {it.qty}</span>}</span>
               </label>
               <Who id={it.created_by} />
               <button className="icon-btn" aria-label="מחיקה" onClick={() => remove(it.id)}>×</button>
@@ -68,7 +72,7 @@ export default function Shopping() {
           ))}
         </ul>
       )}
-      <div className="row gap">
+      <div className="row gap wrap">
         {done.length > 0 && <button className="btn btn-small" onClick={clearDone}>ניקוי מה שנקנה ({done.length})</button>}
         {open.length > 0 && <button className="btn btn-small" onClick={copyOpenToNext}>העברת מה שלא נקנה לשבוע הבא</button>}
       </div>

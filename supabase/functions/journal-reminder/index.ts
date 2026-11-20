@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
   }
 
   for (const s of subs || []) {
+    if (!(people || []).find((p) => p.id === s.user_id)?.is_traveler) { skipped++; continue; }
     let tz = s.tz;
     try { localParts(tz); } catch { tz = 'America/Lima'; }
     const { date, hour } = localParts(tz);

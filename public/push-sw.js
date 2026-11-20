@@ -7,7 +7,7 @@ self.addEventListener('push', (event) => {
     body: data.body || '',
     icon: 'https://mwcbuicwdksyhjjyscil.supabase.co/storage/v1/object/public/brand/icon-192.png',
     badge: 'https://mwcbuicwdksyhjjyscil.supabase.co/storage/v1/object/public/brand/favicon-64.png',
-    dir: 'rtl', lang: 'he', tag: 'journal',
+    dir: 'rtl', lang: 'he', tag: data.tag || 'journal',
     data: { url: base + (data.url || '') },
   }));
 });

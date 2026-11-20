@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
+import { dbWrite, newId } from '../lib/offline';
 import { usePhotoUrls } from '../lib/photos';
 import type { JournalEntry, Photo, TripEvent } from '../lib/types';
 import { FIRST_FLIGHT } from '../config';
@@ -37,6 +38,7 @@ export default function Journal() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
   const photoRows = entries.rows.filter((e) => e.photo_path).map((e) => ({ path: e.photo_path! } as Photo));
   const urls = usePhotoUrls(photoRows);
@@ -49,13 +51,17 @@ export default function Journal() {
     if (!me || !text.trim()) return;
     setBusy(true);
     let photo_path = mine?.photo_path || null;
-    if (file) {
+    let photoSkipped = false;
+    if (file && !navigator.onLine) photoSkipped = true;
+    else if (file) {
       const path = `journal/${me.id}/${day}-${Date.now()}-${safeFileName(file.name)}`;
       const up = await supabase.storage.from('photos').upload(path, file, { contentType: file.type || 'image/jpeg' });
       if (!up.error) photo_path = path;
     }
-    await supabase.from('journal_entries').upsert({ day, content: text.trim(), mood, photo_path, created_by: me.id }, { onConflict: 'day,created_by' });
+    const r = await dbWrite({ table: 'journal_entries', kind: 'upsert', values: { day, content: text.trim(), mood, photo_path, created_by: me.id }, onConflict: 'day,created_by' });
     setBusy(false); setEditing(false); entries.reload();
+    if (r === 'queued') setNote(photoSkipped ? 'נשמר בטלפון ויישלח כשתחזור קליטה. את התמונה צריך להוסיף שוב כשיש חיבור.' : 'נשמר בטלפון ויישלח כשתחזור קליטה.');
+    else setNote(null);
   }
 
   const days = [...new Set(entries.rows.map((e) => e.day))];
@@ -86,6 +92,7 @@ export default function Journal() {
             <b>{day === todayISO() ? 'היום' : fmtDate(day)}</b>
             <input id="j-day" type="date" value={day} min={tripStart} max={todayISO()} onChange={(e) => { setDay(e.target.value); setEditing(false); }} style={{ width: 'auto' }} />
           </div>
+          {note && <p className="small ok">{note}</p>}
           {mine && !editing ? (
             <div className="stack">
               <p className="journal-text"><span className="mood">{mine.mood}</span> {mine.content}</p>

@@ -24,3 +24,4 @@ export type Booking = { id: string; kind: string; title: string; starts_at: stri
 export type Contact = { id: string; label: string; phone: string; note: string | null; created_by: string | null };
 export type Challenge = { id: string; title: string; details: string | null; points: number; created_at: string };
 export type ChallengeDone = { challenge_id: string; user_id: string; note: string | null; created_at: string };
+export type StatusUpdate = { id: string; message: string; lat: number | null; lng: number | null; place: string | null; created_by: string | null; created_at: string };
