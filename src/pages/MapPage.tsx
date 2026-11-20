@@ -1,10 +1,11 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
-import type { Photo, Place, Story } from '../lib/types';
+import type { LocationUpdate, Photo, Place, Story } from '../lib/types';
+import { fmtDateTime } from '../lib/util';
 import { fmtDate } from '../lib/util';
 import PhotoGrid from '../components/PhotoGrid';
 import PhotoUpload from '../components/PhotoUpload';
@@ -17,6 +18,8 @@ const pin = (color: string, active: boolean) =>
     iconSize: [28, 36],
     iconAnchor: [14, 34],
   });
+
+const hereIcon = L.divIcon({ className: 'pin-wrap', html: '<span class="here-pin"><i></i>💖</span>', iconSize: [44, 44], iconAnchor: [22, 22] });
 
 function ClickCatcher({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({ click: (e) => onPick(e.latlng.lat, e.latlng.lng) });
@@ -31,6 +34,26 @@ export default function MapPage() {
   const [draft, setDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
+  const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
+  const here = locs.rows[0];
+  const [locMode, setLocMode] = useState<null | 'menu' | 'pick'>(null);
+  const [locName, setLocName] = useState('');
+  const [locErr, setLocErr] = useState<string | null>(null);
+
+  async function saveHere(lat: number, lng: number) {
+    await supabase.from('location_updates').insert({ lat, lng, name: locName.trim() || null });
+    setLocMode(null); setLocName(''); locs.reload();
+  }
+  function useGps() {
+    setLocErr(null);
+    if (!navigator.geolocation) { setLocErr('המכשיר לא תומך במיקום. אפשר לבחור על המפה.'); return; }
+    navigator.geolocation.getCurrentPosition(
+      (p) => saveHere(p.coords.latitude, p.coords.longitude),
+      () => setLocErr('לא הצלחתי לקבל מיקום. צריך לאשר גישה למיקום, או לבחור על המפה.'),
+      { enableHighAccuracy: false, timeout: 15000 },
+    );
+  }
+  const route = [...places.rows].filter((p) => p.visited_on).sort((a, b) => a.visited_on!.localeCompare(b.visited_on!) || a.created_at.localeCompare(b.created_at));
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -54,14 +77,33 @@ export default function MapPage() {
       <div className="row-between wrap map-head">
         <div>
           <h1>המפה שלנו</h1>
-          <p className="muted small">{places.rows.length} נקודות · לוחצים על נקודה כדי לראות תמונות וסיפורים</p>
+          <p className="muted small">{places.rows.length} נקודות{route.length > 1 ? ' · הקו המנוקד הוא המסלול לפי התאריכים' : ''} · לוחצים על נקודה לתמונות וסיפורים</p>
         </div>
         {!guest && (
-          <button className={'btn' + (adding ? '' : ' btn-primary')} onClick={() => { setAdding((v) => !v); setDraft(null); }}>
-            {adding ? 'ביטול' : 'הוספת נקודה'}
-          </button>
+          <div className="row gap wrap">
+            <button className="btn" onClick={() => setLocMode(locMode ? null : 'menu')}>{locMode ? 'ביטול' : '📍 אנחנו כאן'}</button>
+            <button className={'btn' + (adding ? '' : ' btn-primary')} onClick={() => { setAdding((v) => !v); setDraft(null); }}>
+              {adding ? 'ביטול' : 'הוספת נקודה'}
+            </button>
+          </div>
         )}
       </div>
+      {here && (
+        <p className="here-line">💖 עכשיו: <b>{here.name || 'מיקום עודכן'}</b> <span className="muted small">· {fmtDateTime(here.created_at)}</span></p>
+      )}
+      {locMode && (
+        <div className="card stack">
+          <b>עדכון "איפה אנחנו עכשיו"</b>
+          <p className="muted small">גם אורחים יראו את המיקום הזה. הוא מתעדכן רק כשלוחצים כאן.</p>
+          <input id="loc-name" placeholder="איפה? למשל: קוסקו (לא חובה)" value={locName} onChange={(e) => setLocName(e.target.value)} />
+          <div className="row gap wrap">
+            <button className="btn btn-primary" onClick={useGps}>לפי המיקום של הטלפון</button>
+            <button className="btn" onClick={() => setLocMode('pick')}>בחירה על המפה</button>
+          </div>
+          {locMode === 'pick' && <p className="hint">לחצי על המפה במקום שבו אתן</p>}
+          {locErr && <p className="error">{locErr}</p>}
+        </div>
+      )}
       {adding && !draft && <p className="hint">לחצי על המקום במפה</p>}
       {draft && (
         <form className="card form-row" onSubmit={save}>
@@ -78,6 +120,12 @@ export default function MapPage() {
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {adding && <ClickCatcher onPick={(lat, lng) => setDraft({ lat, lng })} />}
+            {locMode === 'pick' && <ClickCatcher onPick={(lat, lng) => saveHere(lat, lng)} />}
+            {route.length > 1 && <>
+              <Polyline positions={route.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ color: '#ffffff', weight: 7, opacity: .9 }} />
+              <Polyline positions={route.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ color: '#e0157f', weight: 3.5, dashArray: '2 9', lineCap: 'round' }} />
+            </>}
+            {here && <Marker position={[here.lat, here.lng]} icon={hereIcon} zIndexOffset={1000}><Tooltip direction="top" offset={[0, -18]} permanent>אנחנו כאן</Tooltip></Marker>}
             {draft && <Marker position={[draft.lat, draft.lng]} icon={pin('#111', true)} />}
             {places.rows.map((p) => (
               <Marker key={p.id} position={[p.lat, p.lng]} icon={iconFor(p)}

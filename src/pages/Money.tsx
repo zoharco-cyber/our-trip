@@ -5,6 +5,7 @@ import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
 import type { Expense, Transfer } from '../lib/types';
 import { EXPENSE_CATEGORIES } from '../config';
+import { CURRENCIES } from '../data/currencies';
 import { fmtDate, todayISO } from '../lib/util';
 import { Who, Empty } from '../components/Avatar';
 import { paidStamp, reducedMotion } from '../lib/fx';
@@ -190,7 +191,7 @@ export default function MoneyPage() {
                 <div className="grow">
                   <b>{e.description}</b>
                   <div className="muted small">{fmtDate(e.spent_on)} · {e.category} · שילמה <Who id={e.paid_by} /> · מתחלק בין {e.split_among.length}
-                    {e.orig_currency === 'ILS' && <> · הוזן כ-₪{Number(e.orig_amount).toLocaleString('he-IL')}</>}
+                    {e.orig_currency !== 'USD' && <> · הוזן כ-{Number(e.orig_amount).toLocaleString('he-IL')} {CURRENCIES.find((c) => c.code === e.orig_currency)?.name || e.orig_currency}</>}
                   </div>
                 </div>
                 <Money usd={Number(e.amount_usd)} />
@@ -229,10 +230,10 @@ function CurrencyToggle({ value, onChange }: { value: 'USD' | 'ILS'; onChange: (
 
 function ExpenseForm({ onDone }: { onDone: () => void }) {
   const { travelers, me } = useAuth();
-  const { rate, usd, ils } = useMoney();
+  const { usd, ils, toUsd } = useMoney();
   const [description, setDesc] = useState('');
   const [amount, setAmount] = useState('');
-  const [cur, setCur] = useState<'USD' | 'ILS'>('USD');
+  const [cur, setCur] = useState<string>(() => { try { return localStorage.getItem('trip:lastCur') || 'USD'; } catch { return 'USD'; } });
   const [paidBy, setPaidBy] = useState(me?.is_traveler ? me.id : travelers[0]?.id || '');
   const [among, setAmong] = useState<string[]>(travelers.map((t) => t.id));
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
@@ -240,11 +241,13 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
   const [err, setErr] = useState<string | null>(null);
 
   const n = Number(amount);
-  const amountUsd = cur === 'USD' ? n : n / rate;
+  const conv = toUsd(n, cur);
+  const amountUsd = conv ?? 0;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!description || !(n > 0) || !among.length || !paidBy) return;
+    if (!description || !(n > 0) || !among.length || !paidBy || conv === null) return;
+    try { localStorage.setItem('trip:lastCur', cur); } catch { /* ignore */ }
     const { error } = await supabase.from('expenses').insert({
       description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
       paid_by: paidBy, split_among: among, category, spent_on: date,
@@ -262,7 +265,11 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
         <label className="field"><span>סכום</span>
           <input id="exp-amount" type="number" inputMode="decimal" min="0" step="any" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
-        <div className="field"><span>מטבע</span><CurrencyToggle value={cur} onChange={setCur} /></div>
+        <label className="field"><span>מטבע</span>
+          <select id="exp-cur" value={cur} onChange={(e) => setCur(e.target.value)}>
+            {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.symbol} {c.name} ({c.code})</option>)}
+          </select>
+        </label>
         <label className="field"><span>מי שילמה</span>
           <select id="exp-paid" value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
             {travelers.map((t) => <option key={t.id} value={t.id}>{t.display_name}</option>)}
@@ -288,9 +295,10 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
           ))}
         </div>
       </div>
-      {n > 0 && <p className="muted small">{usd(amountUsd)} · {ils(amountUsd)} · {among.length ? `כל אחת: ${usd(amountUsd / among.length)} · ${ils(amountUsd / among.length)}` : 'בחרי לפחות אחת'}</p>}
+      {n > 0 && conv === null && <p className="error">אין עדיין שער למטבע הזה. צריך חיבור לאינטרנט פעם אחת כדי לטעון שערים.</p>}
+      {n > 0 && conv !== null && <p className="muted small">{usd(amountUsd)} · {ils(amountUsd)} · {among.length ? `כל אחת: ${usd(amountUsd / among.length)} · ${ils(amountUsd / among.length)}` : 'בחרי לפחות אחת'}</p>}
       {err && <p className="error">{err}</p>}
-      <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length}>הוספה</button>
+      <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length || conv === null}>הוספה</button>
     </form>
   );
 }

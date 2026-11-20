@@ -488,3 +488,111 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
 @media (prefers-reduced-motion: reduce) {
   h1, .topbar, .marquee > div, body::after, .slide.on .slide-img, .slide.on .slide-art { animation: none !important; }
 }
+
+/* =====================================================================
+   🕵️ האתגרים של זוהר: עולם של צללים, עשן וניאון ורוד
+   ===================================================================== */
+.shadow-page {
+  --sh-bg: #0b070d; --sh-card: #150d18; --sh-line: #3a2133; --sh-ink: #e9dfe7; --sh-dim: #9b8796; --sh-neon: #ff2d8a;
+  position: relative; overflow: hidden; color: var(--sh-ink); background: radial-gradient(ellipse at 50% -10%, #2a0f22 0%, var(--sh-bg) 60%);
+  border-radius: 24px; padding: 1.5rem clamp(1rem, 3vw, 2rem) 2rem; display: grid; gap: 1.5rem; isolation: isolate;
+  box-shadow: 0 0 0 2px #2a1424, 0 20px 50px rgba(0, 0, 0, .45); font-family: 'Frank Ruhl Libre', 'David', serif;
+}
+.shadow-page .fog { position: absolute; inset: -20%; z-index: -1; pointer-events: none; opacity: .5;
+  background: radial-gradient(ellipse 40% 20% at 20% 80%, rgba(255, 255, 255, .07), transparent), radial-gradient(ellipse 50% 25% at 80% 60%, rgba(255, 45, 138, .08), transparent);
+  animation: fog 18s ease-in-out infinite alternate; }
+@keyframes fog { to { transform: translateX(8%) translateY(-3%); } }
+.shadow-head { display: grid; grid-template-columns: 130px 1fr; gap: 1rem; align-items: center; }
+.shadow-man { width: 130px; height: 210px; filter: drop-shadow(0 0 18px rgba(255, 45, 138, .25)); }
+.shadow-kicker { font-family: ui-monospace, 'Courier New', monospace; letter-spacing: .12em; font-size: .75rem; color: var(--sh-neon); text-transform: uppercase; }
+.shadow-page h1.shadow-title { font-family: 'Frank Ruhl Libre', serif; font-weight: 900; font-size: clamp(2rem, 7vw, 3rem); background: none; color: var(--sh-ink); animation: none; filter: none;
+  text-shadow: 0 0 1px #fff, 0 0 14px rgba(255, 45, 138, .55); width: auto; }
+.shadow-page h1.shadow-title::after { content: none; }
+.shadow-sub { color: var(--sh-dim); font-style: italic; }
+.shadow-page h2 { color: var(--sh-ink); font-family: 'Frank Ruhl Libre', serif; font-weight: 700; letter-spacing: .02em; }
+.shadow-page h2::before { content: "✦ "; color: var(--sh-neon); }
+.shadow-board ol { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.shadow-board li { display: grid; grid-template-columns: 2rem 1fr auto; align-items: center; gap: .6rem; padding: .55rem .8rem; background: var(--sh-card); border: 1px solid var(--sh-line); border-radius: 10px; }
+.shadow-board li:first-child { border-color: var(--sh-neon); box-shadow: 0 0 16px rgba(255, 45, 138, .3); }
+.sb-rank { font-family: ui-monospace, monospace; color: var(--sh-neon); font-size: 1.2rem; text-align: center; }
+.sb-name { color: var(--c); font-weight: 700; font-family: var(--font-body); }
+.sb-pts { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.dossiers { list-style: none; margin: 0; padding: 0; display: grid; gap: .8rem; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.dossier { position: relative; background: linear-gradient(170deg, #1d1220, var(--sh-card)); border: 1px solid var(--sh-line); border-radius: 6px 16px 16px 16px; padding: .9rem 1rem; display: grid; gap: .45rem; overflow: hidden; }
+.dossier::before { content: ""; position: absolute; top: 0; inset-inline-start: 0; width: 40%; height: 3px; background: var(--sh-neon); opacity: .6; }
+.dossier.done { border-color: #5c2a48; }
+.dos-top { display: flex; justify-content: space-between; font-family: ui-monospace, monospace; font-size: .75rem; color: var(--sh-dim); letter-spacing: .06em; }
+.dos-pts { color: var(--sh-neon); }
+.dos-title { font-size: 1.1rem; }
+.dos-details { color: var(--sh-dim); font-size: .9rem; }
+.dos-foot { display: flex; align-items: center; gap: .5rem; margin-top: .2rem; }
+.dos-who { display: inline-flex; gap: 4px; margin-inline-end: auto; }
+.dos-who .dot.off { box-shadow: inset 0 0 0 1.5px var(--sh-line); }
+.dos-btn { background: transparent; color: var(--sh-ink); border: 1px solid var(--sh-neon); border-radius: 999px; padding: .3rem .9rem; cursor: pointer; font-family: var(--font-body); }
+.dos-btn:hover { background: var(--sh-neon); color: #0b070d; box-shadow: 0 0 14px rgba(255, 45, 138, .5); }
+.dos-btn:disabled { opacity: .4; }
+.dos-del { background: none; border: 0; color: var(--sh-dim); font-size: 1.2rem; cursor: pointer; }
+.dos-stamp { position: absolute; top: 38%; inset-inline-end: 8%; transform: rotate(-14deg); border: 3px solid var(--sh-neon); color: var(--sh-neon); padding: .1rem .7rem; font-family: ui-monospace, monospace; font-weight: 700; font-size: 1.3rem; letter-spacing: .2em; opacity: .85; pointer-events: none; text-shadow: 0 0 8px rgba(255, 45, 138, .6); }
+.shadow-form { display: grid; gap: .6rem; background: var(--sh-card); border: 1px dashed var(--sh-line); border-radius: 14px; padding: 1rem; }
+.shadow-form input { background: #0b070d; color: var(--sh-ink); border-color: var(--sh-line); }
+@media (max-width: 520px) { .shadow-head { grid-template-columns: 90px 1fr; } .shadow-man { width: 90px; height: 150px; } }
+@media (prefers-reduced-motion: reduce) { .shadow-page .fog { animation: none; } }
+
+/* מפה: "אנחנו כאן" ומסלול */
+.here-pin { position: relative; display: grid; place-items: center; width: 44px; height: 44px; font-size: 22px; }
+.here-pin i { position: absolute; inset: 6px; border-radius: 50%; background: rgba(224, 21, 127, .35); animation: ping 1.8s ease-out infinite; }
+@keyframes ping { from { transform: scale(.6); opacity: 1 } to { transform: scale(1.9); opacity: 0 } }
+.here-line { background: var(--surface); border: 2px dashed var(--brand); border-radius: 999px; padding: .35rem .9rem; width: fit-content; }
+.leaflet-tooltip { font-family: var(--font-display); font-weight: 600; color: #e0157f; border: 2px solid #ffc2e0; border-radius: 999px; }
+
+/* יומן */
+.moods { display: flex; flex-wrap: wrap; gap: .3rem; }
+.mood-btn { font-size: 1.5rem; background: var(--surface-2); border: 2px solid transparent; border-radius: 12px; padding: .15rem .35rem; cursor: pointer; }
+.mood-btn.on { border-color: var(--brand); background: #fff; transform: scale(1.12); }
+.mood.big { font-size: 1.6rem; }
+.journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2rem; }
+.journal-day { display: grid; gap: .5rem; }
+.journal-day h3 { color: var(--brand); font-family: var(--font-display); }
+.journal-entry { background: var(--surface); border: 2px solid var(--line); border-inline-start: 6px solid var(--c); border-radius: 16px; padding: .7rem .9rem; display: grid; gap: .35rem; }
+.journal-photo { border-radius: 12px; max-height: 320px; width: 100%; object-fit: cover; }
+.journal-text { font-size: 1.05rem; }
+
+/* הזמנות */
+.bookings { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.bookings.past { opacity: .6; }
+.booking { display: flex; gap: .8rem; align-items: flex-start; }
+.b-icon { font-size: 1.8rem; line-height: 1; }
+.ref { background: var(--surface-2); border: 1px dashed var(--brand); border-radius: 8px; padding: .15rem .5rem; width: fit-content; cursor: pointer; font-size: .85rem; }
+.next-booking { display: flex; gap: .8rem; align-items: center; text-decoration: none; color: var(--ink); }
+.next-booking .grow { display: grid; }
+
+/* עזרה בדרך */
+.conv-row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; }
+.conv-row input { font-size: 1.6rem; font-family: var(--font-display); }
+.conv-out { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.conv-out > div { background: var(--surface-2); border-radius: 14px; padding: .7rem .9rem; display: grid; }
+.conv-out b { font-family: var(--font-display); font-size: 1.6rem; color: var(--brand); }
+.emergency { display: grid; gap: .5rem; }
+.em-nums { display: flex; flex-wrap: wrap; gap: .4rem; }
+.em-num { display: grid; text-align: center; text-decoration: none; color: var(--ink); background: var(--surface-2); border-radius: 12px; padding: .35rem .7rem; min-width: 4.5rem; }
+.em-num b { font-size: 1.3rem; color: var(--danger); font-family: var(--font-display); }
+.em-num span { font-size: .75rem; color: var(--muted); }
+.phone { font-weight: 600; color: var(--brand); text-decoration: none; }
+.phrases { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.phrase { display: flex; align-items: center; gap: .6rem; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: .55rem .8rem; }
+.phrase .grow { display: grid; gap: .1rem; }
+.phrase .es { font-size: 1.1rem; color: var(--brand); font-weight: 600; text-align: right; }
+
+/* ספר הטיול */
+.book-cover { text-align: center; display: grid; justify-items: center; gap: .3rem; background: linear-gradient(135deg, #ff4fa8, #e0157f 50%, #a855f7); color: #fff; border-radius: 28px; padding: 2rem 1rem; box-shadow: 0 6px 0 #ffc2e0; }
+.book-logo { width: 120px; height: 120px; border-radius: 30px; border: 4px solid #fff; object-fit: cover; transform: rotate(-4deg); }
+.book-cover h1.book-title { color: #fff; background: none; animation: none; filter: none; font-size: clamp(2.4rem, 8vw, 3.4rem); text-shadow: 0 3px 0 #a50d5c; width: auto; }
+.book-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; }
+.book-stat { background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: .8rem; text-align: center; display: grid; }
+.book-stat b { font-family: var(--font-display); font-size: 2rem; color: var(--brand); }
+.book-stat span { font-size: .85rem; color: var(--muted); }
+.book-map { height: 340px; border-radius: 20px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 0 0 3px var(--brand); }
+.book-route { font-family: var(--font-display); color: var(--brand); line-height: 1.8; }
+.book-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.book-photos img { aspect-ratio: 1; object-fit: cover; border-radius: 12px; width: 100%; }
+.book-wishes { list-style: none; padding: 0; margin: 0; display: grid; gap: .35rem; font-size: 1.05rem; }

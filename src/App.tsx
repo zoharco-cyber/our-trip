@@ -14,6 +14,11 @@ import Gallery from './pages/Gallery';
 import Gear from './pages/Gear';
 import Guide from './pages/Guide';
 import Admin from './pages/Admin';
+import Journal from './pages/Journal';
+import Bookings from './pages/Bookings';
+import Help from './pages/Help';
+import Challenges from './pages/Challenges';
+import Book from './pages/Book';
 import { LOGO_URL } from './config';
 
 export const SECTIONS = [
@@ -26,7 +31,12 @@ export const SECTIONS = [
   { to: '/docs', label: 'מסמכים', short: 'מסמכים' },
   { to: '/gear', label: 'ציוד', short: 'ציוד' },
   { to: '/guide', label: 'מדריך יעדים', short: 'מדריך' },
+  { to: '/journal', label: 'יומן', short: 'יומן' },
+  { to: '/bookings', label: 'הזמנות', short: 'הזמנות' },
+  { to: '/help', label: 'עזרה בדרך', short: 'עזרה' },
+  { to: '/challenges', label: 'האתגרים של זוהר', short: 'אתגרים' },
   { to: '/capsule', label: 'קפסולת זמן', short: 'קפסולה' },
+  { to: '/book', label: 'ספר הטיול', short: 'ספר' },
 ];
 
 function useOnline() {
@@ -83,6 +93,11 @@ export default function App() {
             <Route path="/gear" element={<Gear />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/capsule" element={<Capsule />} />
+            <Route path="/journal" element={<Journal />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/challenges" element={<Challenges />} />
+            <Route path="/book" element={<Book />} />
             <Route path="/more" element={<MoreSheet />} />
             {isAdmin && <Route path="/admin" element={<Admin />} />}
           </>}

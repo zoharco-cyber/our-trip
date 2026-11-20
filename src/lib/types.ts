@@ -4,7 +4,7 @@ export type Profile = {
 };
 export type TripEvent = { id: string; title: string; starts_at: string; created_by: string | null };
 export type Expense = {
-  id: string; description: string; amount_usd: number; orig_amount: number; orig_currency: 'USD' | 'ILS';
+  id: string; description: string; amount_usd: number; orig_amount: number; orig_currency: string;
   paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string;
 };
 export type Transfer = { id: string; from_id: string; to_id: string; amount_usd: number; created_at: string };
@@ -18,3 +18,9 @@ export type Photo = { id: string; place_id: string | null; path: string; caption
 export type GearItem = { id: string; text: string; category: string };
 export type GearCheck = { item_id: string; user_id: string };
 export type Tip = { id: string; destination: string; content: string; created_by: string | null; created_at: string };
+export type LocationUpdate = { id: string; name: string | null; lat: number; lng: number; created_by: string | null; created_at: string };
+export type JournalEntry = { id: string; day: string; content: string; mood: string | null; photo_path: string | null; created_by: string; created_at: string };
+export type Booking = { id: string; kind: string; title: string; starts_at: string; ends_at: string | null; ref_code: string | null; notes: string | null; created_by: string | null };
+export type Contact = { id: string; label: string; phone: string; note: string | null; created_by: string | null };
+export type Challenge = { id: string; title: string; details: string | null; points: number; created_at: string };
+export type ChallengeDone = { challenge_id: string; user_id: string; note: string | null; created_at: string };

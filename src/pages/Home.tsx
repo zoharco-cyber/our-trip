@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Countdown from '../components/Countdown';
 import Slideshow from '../components/Slideshow';
+import { NextBooking } from './Bookings';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,11 @@ const BLURB: Record<string, string> = {
   '/gear': 'רשימת ציוד שכל אחת מסמנת לעצמה',
   '/guide': 'דגשים, אשרות וטיפים לכל יעד',
   '/capsule': 'מכתבים שייפתחו רק בסוף הטיול',
+  '/journal': 'משפט ומצב רוח לכל יום',
+  '/bookings': 'טיסות, אוטובוסים ולינות במקום אחד',
+  '/help': 'המרת כסף, מספרי חירום וספרדית',
+  '/challenges': 'משימות מהצללים 🕵️',
+  '/book': 'כל הטיול בדף אחד',
 };
 
 export default function Home() {
@@ -49,6 +55,7 @@ export default function Home() {
       <section className="hero-card">
         <Countdown />
       </section>
+      {!guest && <NextBooking />}
 
       <section className="stack">
         <div className="row-between">

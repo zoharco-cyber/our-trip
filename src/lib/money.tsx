@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-type MoneyState = { rate: number; rateSource: 'live' | 'saved'; rateAt: string | null; usd: (n: number) => string; ils: (n: number) => string };
+type MoneyState = { rate: number; rates: Record<string, number>; toUsd: (amount: number, cur: string) => number | null; rateSource: 'live' | 'saved'; rateAt: string | null; usd: (n: number) => string; ils: (n: number) => string };
 const Ctx = createContext<MoneyState>(null as any);
 export const useMoney = () => useContext(Ctx);
 
@@ -13,6 +13,7 @@ const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } ca
 /** שער דולר-שקל עדכני מהאינטרנט (שירות חינמי). בלי חיבור: השער האחרון שנשמר במכשיר */
 export function MoneyProvider({ children }: { children: ReactNode }) {
   const [rate, setRate] = useState<number>(() => Number(read('trip:rate')) || 3.6);
+  const [rates, setRates] = useState<Record<string, number>>(() => { try { return JSON.parse(read('trip:rates') || '{}'); } catch { return {}; } });
   const [rateAt, setRateAt] = useState<string | null>(() => read('trip:rateAt'));
   const [rateSource, setSource] = useState<'live' | 'saved'>('saved');
 
@@ -25,8 +26,8 @@ export function MoneyProvider({ children }: { children: ReactNode }) {
         const v = Number(j?.rates?.ILS);
         if (!cancelled && v > 0) {
           const at = new Date().toISOString();
-          setRate(v); setSource('live'); setRateAt(at);
-          write('trip:rate', String(v)); write('trip:rateAt', at);
+          setRate(v); setSource('live'); setRateAt(at); setRates(j.rates);
+          write('trip:rate', String(v)); write('trip:rateAt', at); write('trip:rates', JSON.stringify(j.rates));
         }
       } catch { /* בלי חיבור: נשאר השער האחרון שנשמר */ }
     })();
@@ -34,7 +35,7 @@ export function MoneyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ rate, rateSource, rateAt, usd: (n) => fmtUsd.format(n), ils: (n) => fmtIls.format(n * rate) }}>
+    <Ctx.Provider value={{ rate, rates: { ...rates, USD: 1, ILS: rate }, toUsd: (a, c) => { const r = c === 'USD' ? 1 : c === 'ILS' ? rate : rates[c]; return r ? a / r : null; }, rateSource, rateAt, usd: (n) => fmtUsd.format(n), ils: (n) => fmtIls.format(n * rate) }}>
       {children}
     </Ctx.Provider>
   );
