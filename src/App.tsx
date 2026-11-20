@@ -24,6 +24,7 @@ const Challenges = lazy(() => import('./pages/Challenges'));
 const Book = lazy(() => import('./pages/Book'));
 const Songs = lazy(() => import('./pages/Songs'));
 const Meds = lazy(() => import('./pages/Meds'));
+const Wifi = lazy(() => import('./pages/Wifi'));
 
 export const SECTIONS = [
   { to: '/', icon: '🏠', label: 'בית', short: 'בית', guest: true },
@@ -39,6 +40,7 @@ export const SECTIONS = [
   { to: '/help', icon: '🆘', label: 'עזרה בדרך', short: 'עזרה' },
   { to: '/challenges', icon: '🕵️', label: 'האתגרים של זוהר', short: 'אתגרים' },
   { to: '/songs', icon: '🎵', label: 'שירי הטיול', short: 'שירים' },
+  { to: '/wifi', icon: '🔐', label: 'סיסמאות', short: 'סיסמאות' },
   { to: '/meds', icon: '💊', label: 'תרופות', short: 'תרופות' },
   { to: '/capsule', icon: '💌', label: 'קפסולת זמן', short: 'קפסולה' },
   { to: '/book', icon: '📖', label: 'ספר הטיול', short: 'ספר' },
@@ -118,6 +120,7 @@ export default function App() {
             <Route path="/book" element={<Book />} />
             <Route path="/songs" element={<Songs />} />
             <Route path="/meds" element={<Meds />} />
+            <Route path="/wifi" element={<Wifi />} />
             <Route path="/more" element={<MoreSheet />} />
             {isAdmin && <Route path="/admin" element={<Admin />} />}
           </>}

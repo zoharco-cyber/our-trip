@@ -26,8 +26,12 @@ export function computeBalances(ids: string[], expenses: Expense[], transfers: T
     const among = e.split_among.filter((id) => id in net);
     if (!among.length) continue;
     const part = Number(e.amount_usd) / among.length;
+    const custom = e.split_amounts && Object.keys(e.split_amounts).length ? e.split_amounts : null;
     if (e.paid_by in net) { net[e.paid_by] += Number(e.amount_usd); paid[e.paid_by] += Number(e.amount_usd); }
-    among.forEach((id) => { net[id] -= part; share[id] += part; });
+    if (custom) {
+      // חלוקה לא שווה: כל אחת משלמת את הסכום שנקבע לה
+      for (const [id, v] of Object.entries(custom)) if (id in net) { net[id] -= Number(v); share[id] += Number(v); }
+    } else among.forEach((id) => { net[id] -= part; share[id] += part; });
   }
   for (const t of transfers) {
     if (t.from_id in net) net[t.from_id] += Number(t.amount_usd);
@@ -225,7 +229,7 @@ export default function MoneyPage() {
               <li key={e.id} className="list-item">
                 <div className="grow">
                   <b className={(e as any).__pending ? 'is-pending' : ''}>{e.description}</b>
-                  <div className="muted small">{fmtDate(e.spent_on)} · {e.category} · שילמה <Who id={e.paid_by} /> · מתחלק בין {e.split_among.length}
+                  <div className="muted small">{fmtDate(e.spent_on)} · {e.category} · שילמה <Who id={e.paid_by} /> · {e.split_amounts && Object.keys(e.split_amounts).length ? '⚖️ חלוקה לא שווה' : `מתחלק בין ${e.split_among.length}`}
                     {e.orig_currency !== 'USD' && <> · הוזן כ-{Number(e.orig_amount).toLocaleString('he-IL')} {CURRENCIES.find((c) => c.code === e.orig_currency)?.name || e.orig_currency}</>}
                   </div>
                 </div>
@@ -272,6 +276,8 @@ function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: st
   const [cur, setCur] = useState<string>(() => { try { return localStorage.getItem('trip:lastCur') || 'USD'; } catch { return 'USD'; } });
   const [paidBy, setPaidBy] = useState(me?.is_traveler ? me.id : travelers[0]?.id || '');
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [uneven, setUneven] = useState(false);
+  const [parts, setParts] = useState<Record<string, string>>({});
   const [among, setAmong] = useState<string[]>(travelers.map((t) => t.id));
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
   const [date, setDate] = useState(todayISO());
@@ -280,10 +286,26 @@ function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: st
   const n = Number(amount);
   const conv = toUsd(n, cur);
   const amountUsd = conv ?? 0;
+  // חלוקה לא שווה: הסכומים מוזנים במטבע של ההוצאה וחייבים להסתכם בסכום הכולל
+  const partsSum = among.reduce((s, id) => s + (Number(parts[id]) || 0), 0);
+  const partsLeft = Math.round((n - partsSum) * 100) / 100;
+  const unevenOk = !uneven || (n > 0 && Math.abs(partsLeft) < 0.01);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!description || !(n > 0) || !among.length || !paidBy || conv === null) return;
+    if (!description || !(n > 0) || !among.length || !paidBy || conv === null || !unevenOk) return;
+    // המרה לדולר; האחרונה מקבלת את השארית כדי שהסכום יהיה מדויק עד הסנט
+    let split_amounts: Record<string, number> | null = null;
+    if (uneven) {
+      const total = Math.round(amountUsd * 100) / 100;
+      const out: Record<string, number> = {};
+      let acc = 0;
+      among.forEach((id, i) => {
+        const v = i === among.length - 1 ? Math.round((total - acc) * 100) / 100 : Math.round(((Number(parts[id]) || 0) / n) * total * 100) / 100;
+        out[id] = v; acc += v;
+      });
+      split_amounts = out;
+    }
     try { localStorage.setItem('trip:lastCur', cur); } catch { /* ignore */ }
     // קבלה (לא חובה): עולה רק כשיש קליטה
     let receipt_path: string | null = null;
@@ -293,7 +315,7 @@ function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: st
       if (!up.error) receipt_path = path;
     }
     const r = await dbWrite({ table: 'expenses', kind: 'insert', values: {
-      id: newId(), receipt_path, description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
+      id: newId(), receipt_path, split_amounts, description, amount_usd: Math.round(amountUsd * 100) / 100, orig_amount: n, orig_currency: cur,
       paid_by: paidBy, split_among: among, category, spent_on: date, created_at: new Date().toISOString(),
     } });
     if (r === 'error') setErr('ההוצאה לא נשמרה. נסי שוב.');
@@ -339,15 +361,36 @@ function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: st
           ))}
         </div>
       </div>
+      <label className="check small"><input type="checkbox" checked={uneven} onChange={(e) => setUneven(e.target.checked)} /><span>⚖️ חלוקה לא שווה (למשל מישהי אכלה מנה כפולה)</span></label>
+      {uneven && (
+        <div className="uneven card">
+          {travelers.filter((t) => among.includes(t.id)).map((t) => (
+            <label key={t.id} className="uneven-row" style={{ ['--c' as any]: t.color }}>
+              <span><i className="dot" /> {t.display_name.split(' ')[0]}</span>
+              <input id={`part-${t.id}`} type="number" inputMode="decimal" min="0" step="any" value={parts[t.id] || ''} onChange={(e) => setParts((p) => ({ ...p, [t.id]: e.target.value }))} placeholder="0" />
+              <span className="muted small">{cur}</span>
+            </label>
+          ))}
+          <div className="row gap wrap small">
+            <span className={Math.abs(partsLeft) < 0.01 ? 'ok' : 'error'}>{Math.abs(partsLeft) < 0.01 ? '✓ הסכומים מתאימים לסך הכול' : partsLeft > 0 ? `נשאר לחלק: ${partsLeft} ${cur}` : `עברתן את הסכום ב-${-partsLeft} ${cur}`}</span>
+            {partsLeft > 0.009 && <button type="button" className="link-btn" onClick={() => {
+              const empty = among.filter((id) => !(Number(parts[id]) > 0));
+              if (!empty.length) return;
+              const each = Math.floor((partsLeft / empty.length) * 100) / 100;
+              setParts((p) => { const q = { ...p }; empty.forEach((id, i) => { q[id] = String(i === empty.length - 1 ? Math.round((partsLeft - each * (empty.length - 1)) * 100) / 100 : each); }); return q; });
+            }}>לחלק את השאר שווה בין מי שלא מילאה</button>}
+          </div>
+        </div>
+      )}
       {n > 0 && conv === null && <p className="error">אין עדיין שער למטבע הזה. צריך חיבור לאינטרנט פעם אחת כדי לטעון שערים.</p>}
-      {n > 0 && conv !== null && <p className="muted small">{usd(amountUsd)} · {ils(amountUsd)} · {among.length ? `כל אחת: ${usd(amountUsd / among.length)} · ${ils(amountUsd / among.length)}` : 'בחרי לפחות אחת'}</p>}
+      {n > 0 && conv !== null && !uneven && <p className="muted small">{usd(amountUsd)} · {ils(amountUsd)} · {among.length ? `כל אחת: ${usd(amountUsd / among.length)} · ${ils(amountUsd / among.length)}` : 'בחרי לפחות אחת'}</p>}
       <label className="btn btn-small upload-btn receipt-btn">
         {receipt ? `🧾 קבלה נבחרה ✓` : '🧾 צילום קבלה (לא חובה)'}
         <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
       </label>
       {receipt && !navigator.onLine && <p className="muted small">אין קליטה כרגע, אז הקבלה לא תישמר. ההוצאה עצמה כן תישמר.</p>}
       {err && <p className="error">{err}</p>}
-      <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length || conv === null}>הוספה</button>
+      <button className="btn btn-primary" disabled={!description || !(n > 0) || !among.length || conv === null || !unevenOk}>הוספה</button>
     </form>
   );
 }

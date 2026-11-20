@@ -4,7 +4,7 @@ import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 type Person = { id: string; display_name: string; is_traveler: boolean };
-type Msg = { title: string; body: string; url: string; to: (u: Person) => boolean };
+type Msg = { title: string; body: string; url: string; to: (u: Person) => boolean; bodyFor?: (id: string) => string };
 
 Deno.serve(async (req) => {
   if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return new Response('forbidden', { status: 403 });
@@ -20,12 +20,16 @@ Deno.serve(async (req) => {
   } else if (table === 'expenses') {
     const actor = r.created_by || r.paid_by;
     const among: string[] = r.split_among || [];
-    const share = among.length ? Number(r.amount_usd) / among.length : 0;
+    const custom: Record<string, number> | null = r.split_amounts && Object.keys(r.split_amounts).length ? r.split_amounts : null;
+    const equal = among.length ? Number(r.amount_usd) / among.length : 0;
+    const base = `${name(r.paid_by)} שילמה: ${r.description} · $${Number(r.amount_usd).toFixed(2)}`;
     msg = {
       title: '💸 הוצאה חדשה',
-      body: `${name(r.paid_by)} שילמה: ${r.description} · $${Number(r.amount_usd).toFixed(2)} (החלק שלך $${share.toFixed(2)})`,
+      body: base,
       url: '#/money',
       to: (u) => u.id !== actor && among.includes(u.id),
+      // החלק האישי (בחלוקה לא שווה הוא שונה לכל אחת)
+      bodyFor: (id: string) => `${base} (החלק שלך $${Number(custom ? custom[id] || 0 : equal).toFixed(2)})`,
     };
   } else if (table === 'wishes') {
     msg = { title: '🌟 חלום הוגשם!', body: r.text, url: '#/wishes', to: (u) => u.is_traveler && u.id !== r.created_by };
@@ -42,7 +46,7 @@ Deno.serve(async (req) => {
   for (const s of subs || []) {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        JSON.stringify({ title: msg.title, body: msg.body, url: msg.url, tag: table }), { TTL: 60 * 60 * 24 });
+        JSON.stringify({ title: msg.title, body: msg.bodyFor ? msg.bodyFor(s.user_id) : msg.body, url: msg.url, tag: table }), { TTL: 60 * 60 * 24 });
       sent++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;

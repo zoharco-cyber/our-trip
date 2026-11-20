@@ -5,6 +5,7 @@ import Slideshow from '../components/Slideshow';
 import { NextBooking } from './Bookings';
 import { LatestStatus, SendStatus } from '../components/Status';
 import Weather from '../components/Weather';
+import DualClock from '../components/DualClock';
 import type { LocationUpdate } from '../lib/types';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
@@ -30,6 +31,7 @@ const BLURB: Record<string, string> = {
   '/book': 'כל הטיול בדף אחד',
   '/songs': 'הפסקול של הטיול',
   '/meds': 'תזכורות פרטיות לתרופות',
+  '/wifi': 'וויי-פיי וקודים של ההוסטלים',
 };
 
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'לילה טוב' : h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 21 ? 'ערב טוב' : 'לילה טוב'; };
@@ -59,6 +61,7 @@ export default function Home() {
       <div className="marquee" aria-hidden="true"><div>
         {[0, 1].map((k) => <span key={k}>✨ {me ? `${greet()} ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
       </div></div>
+      <DualClock />
       <LatestStatus />
       <Slideshow />
       <section className="hero-card">

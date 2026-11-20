@@ -5,7 +5,7 @@ export type Profile = {
 export type TripEvent = { id: string; title: string; starts_at: string; created_by: string | null };
 export type Expense = {
   id: string; description: string; amount_usd: number; orig_amount: number; orig_currency: string;
-  paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string; receipt_path?: string | null;
+  paid_by: string; split_among: string[]; category: string; spent_on: string; created_at: string; receipt_path?: string | null; split_amounts?: Record<string, number> | null;
 };
 export type Transfer = { id: string; from_id: string; to_id: string; amount_usd: number; created_at: string };
 export type ShoppingItem = { id: string; text: string; qty: string | null; done: boolean; week_of: string; created_by: string | null };
@@ -29,3 +29,4 @@ export type Song = { id: string; title: string; artist: string | null; url: stri
 export type DailyAnswer = { id: string; day: string; question: string; answer: string; created_by: string; created_at: string };
 export type Med = { id: string; user_id: string; name: string; times: string[]; tz: string; active: boolean; created_at: string };
 export type BagItem = { id: string; user_id: string; bag: 'big' | 'small'; text: string; checked_at: string | null; created_at: string };
+export type WifiPassword = { id: string; place: string; network: string | null; password: string | null; note: string | null; created_by: string | null; created_at: string };
