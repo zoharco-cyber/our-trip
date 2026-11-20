@@ -773,3 +773,5 @@ h2::before { color: #fff; }
 .login-card .divider { color: #9a9a9a; }
 .login-card .divider::before, .login-card .divider::after { background: #eee; }
 @media (prefers-reduced-motion: reduce) { .logo-ring::before, .logo-ring .spark, .login-wrap h1.login-title::after { animation: none; } }
+/* כותרת מסך הכניסה במרכז */
+.login-wrap h1.login-title { width: auto; justify-self: center; text-align: center; margin-inline: auto; }
