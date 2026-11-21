@@ -1084,3 +1084,6 @@ h2::before { color: #fff; }
 .feat.done .feat-main b { text-decoration: line-through; }
 .feat-where { font-size: .8rem; color: var(--p-strong); }
 .feat-how { margin: 0; padding: 0 0 .8rem; padding-inline-start: 2.9rem; padding-inline-end: .9rem; color: var(--muted); font-size: .9rem; display: grid; gap: .15rem; }
+
+.reset-card { border: 2px dashed var(--danger); }
+.danger-btn { color: #fff; background: var(--danger); border-color: var(--danger); width: fit-content; }

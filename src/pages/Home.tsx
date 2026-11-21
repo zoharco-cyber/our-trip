@@ -65,8 +65,8 @@ export default function Home() {
 
   const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
   const here = locs.rows[0];
-  // עד שמישהי מעדכנת "אנחנו כאן": לימה, היעד הראשון
-  const spot = here ? { lat: here.lat, lng: here.lng, label: here.name } : { lat: -12.046, lng: -77.043, label: 'לימה (היעד הראשון)' };
+  // עד שמישהי מעדכנת "אנחנו כאן": מזג האוויר בבית (היעד הראשון עוד לא ידוע)
+  const spot = here ? { lat: here.lat, lng: here.lng, label: here.name } : { lat: 32.08, lng: 34.78, label: 'בבית, עד ההמראה' };
   const now = Date.now();
   return (
     <div className="stack-lg">

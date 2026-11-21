@@ -58,6 +58,7 @@ export default function Admin() {
         <p className="muted small">שינוי סיסמה: כותבים סיסמה חדשה (לפחות 6 תווים) ולוחצים שמירה. הסיסמה הישנה מפסיקה לעבוד מיד.</p>
         <ul className="pw-list">{profiles.map((t) => <PasswordRow key={t.id} id={t.id} name={t.display_name} color={t.color} />)}</ul>
       </section>
+      <ResetHistory />
     </div>
   );
 }
@@ -243,6 +244,75 @@ function LettersAdmin() {
         );
       })}
       {preview && <LetterReveal name={preview.name} text={preview.text} preview onClose={() => setPreview(null)} />}
+    </section>
+  );
+}
+
+/** איפוס היסטוריה: אחרי 2 תשובות נכונות מתוך מאגר השאלות */
+function ResetHistory() {
+  const [step, setStep] = useState<'idle' | 'warn' | 'ask' | 'busy' | 'done'>('idle');
+  const [qs, setQs] = useState<{ id: number; question: string }[]>([]);
+  const [ans, setAns] = useState<Record<number, string>>({});
+  const [msg, setMsg] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string>('');
+
+  async function call(body: object) {
+    const { data, error } = await supabase.functions.invoke('reset-history', { body });
+    if (error) {
+      try { return await (error as any).context.json(); } catch { return { error: 'network' }; }
+    }
+    return data;
+  }
+  async function start() {
+    setMsg(null);
+    const r = await call({ action: 'start' });
+    if (r?.questions) { setQs(r.questions); setAns({}); setStep('ask'); }
+    else setMsg(r?.error === 'no_questions' ? 'עוד לא הוגדרו שאלות. צריך להגדיר אותן קודם.' : r?.error === 'locked' ? `נעול בגלל טעויות. נסה שוב בעוד ${r.minutes} דקות.` : 'לא הצלחתי להתחבר. בדוק אינטרנט.');
+  }
+  async function submit() {
+    setStep('busy'); setMsg(null);
+    const r = await call({ action: 'reset', answers: qs.map((q) => ({ id: q.id, answer: ans[q.id] || '' })) });
+    if (r?.ok) {
+      // ניקוי מה שנשמר בטלפון הזה
+      try { Object.keys(localStorage).filter((k) => k.startsWith('cache:') || k === 'trip:queue' || k.startsWith('trip:badgesSeen')).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
+      setSummary(`נמחקו ${Object.values(r.counts as Record<string, number>).reduce((a, b) => a + b, 0)} רשומות ו-${r.files} קבצים.`);
+      setStep('done');
+    } else {
+      setStep('ask');
+      setMsg(r?.error === 'wrong' ? `לפחות תשובה אחת לא נכונה. ${r.left > 0 ? `נשארו ${r.left} ניסיונות לפני נעילה של 10 דקות.` : 'האיפוס ננעל ל-10 דקות.'}` : r?.error === 'locked' ? `נעול בגלל טעויות. נסה שוב בעוד ${r.minutes} דקות.` : 'משהו השתבש. נסה שוב.');
+      if (r?.error === 'wrong') start();
+    }
+  }
+
+  return (
+    <section className="card stack reset-card">
+      <h2>🔁 איפוס היסטוריה</h2>
+      {step === 'idle' && <>
+        <p className="muted small">אחרי ההדגמה עם הבנות: מוחק את כל מה שנוסף ומחזיר את האפליקציה למצב התחלתי. דורש 2 תשובות נכונות.</p>
+        <button className="btn danger-btn" onClick={() => setStep('warn')}>איפוס היסטוריה</button>
+      </>}
+      {step === 'warn' && <>
+        <p><b>⚠️ זה ימחק לצמיתות:</b> הוצאות, יומן, תמונות, מסמכים, מפה, עדכונים, קפסולה, חלומות, שירים, הזמנות, סיסמאות וויי-פיי, תיקים, תרופות, כרטיסי חירום, וכל הסימונים.</p>
+        <p className="small"><b>✅ נשאר:</b> החשבונות והסיסמאות, הערכות, האתגרים/הציוד/משימות לפני הטיסה (כמו בהתחלה), מכתבי הפתיחה, תמונות דף הבית, מועד ההשקה ותאריך הסיום.</p>
+        <div className="row gap"><button className="btn danger-btn" onClick={start}>המשך לשאלות</button><button className="btn" onClick={() => setStep('idle')}>ביטול</button></div>
+      </>}
+      {(step === 'ask' || step === 'busy') && <>
+        <p className="small muted">ענה נכון על שתי השאלות כדי לאפס.</p>
+        {qs.map((q) => (
+          <label key={q.id} className="field"><span>{q.question}</span>
+            <input id={`rq-${q.id}`} autoComplete="off" value={ans[q.id] || ''} onChange={(e) => setAns((a) => ({ ...a, [q.id]: e.target.value }))} />
+          </label>
+        ))}
+        <div className="row gap">
+          <button className="btn danger-btn" disabled={step === 'busy' || qs.some((q) => !(ans[q.id] || '').trim())} onClick={submit}>{step === 'busy' ? 'מאפס…' : 'לאפס עכשיו'}</button>
+          <button className="btn" onClick={() => { setStep('idle'); setMsg(null); }}>ביטול</button>
+        </div>
+      </>}
+      {step === 'done' && <>
+        <p className="ok">✓ האפליקציה אופסה ומוכנה לבנות. {summary}</p>
+        <button className="btn btn-primary" onClick={() => location.reload()}>רענון</button>
+      </>}
+      {msg && <p className="error">{msg}</p>}
     </section>
   );
 }
