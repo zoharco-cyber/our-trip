@@ -18,6 +18,7 @@ export default function Reminder() {
   const { me } = useAuth();
   const [state, setState] = useState<State>('loading');
   const [hour, setHour] = useState(21);
+  const [sunset, setSunset] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -31,8 +32,8 @@ export default function Reminder() {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-          const { data } = await supabase.from('push_subscriptions').select('hour').eq('endpoint', sub.endpoint).maybeSingle();
-          if (data) { setHour(data.hour); setState('on'); return; }
+          const { data } = await supabase.from('push_subscriptions').select('hour, sunset').eq('endpoint', sub.endpoint).maybeSingle();
+          if (data) { setHour(data.hour); setSunset(data.sunset !== false); setState('on'); return; }
         }
       } catch { /* ignore */ }
       setState('off');
@@ -49,7 +50,7 @@ export default function Reminder() {
       const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(VAPID_PUBLIC_KEY) });
       const j = sub.toJSON() as any;
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Lima';
-      const { error } = await supabase.from('push_subscriptions').upsert({ endpoint: sub.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, tz, hour, user_id: me.id }, { onConflict: 'endpoint' });
+      const { error } = await supabase.from('push_subscriptions').upsert({ endpoint: sub.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, tz, hour, sunset, user_id: me.id }, { onConflict: 'endpoint' });
       if (error) throw error;
       await reg.showNotification('ההתראות הופעלו 💖', { body: me.is_traveler ? `תזכורת ליומן כל ערב ב-${hour}:00, ועדכונים מהבנות.` : 'תקבל הודעה כשהבנות שולחות עדכון.', dir: 'rtl', lang: 'he', tag: 'journal' });
       setState('on');
@@ -66,6 +67,13 @@ export default function Reminder() {
       if (sub) { await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); }
     } catch { /* ignore */ }
     setState('off'); setBusy(false);
+  }
+  async function toggleSunset(v: boolean) {
+    setSunset(v);
+    if (state !== 'on') return;
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) await supabase.from('push_subscriptions').update({ sunset: v }).eq('endpoint', sub.endpoint);
   }
   async function changeHour(h: number) {
     setHour(h);
@@ -96,6 +104,7 @@ export default function Reminder() {
             </select>
             <span className="muted">(רק אם עוד לא כתבת)</span>
           </div>}
+          {traveler && <label className="check small"><input type="checkbox" checked={sunset} onChange={(e) => toggleSunset(e.target.checked)} /><span>🌅 תזכורת שעה לפני השקיעה, לפי המיקום האחרון</span></label>}
           {state === 'off'
             ? <button className="btn btn-primary" disabled={busy} onClick={enable}>{busy ? 'מפעילה…' : 'הפעלת התראות'}</button>
             : <button className="btn btn-small" disabled={busy} onClick={disable}>כיבוי</button>}

@@ -30,3 +30,4 @@ export type DailyAnswer = { id: string; day: string; question: string; answer: s
 export type Med = { id: string; user_id: string; name: string; times: string[]; tz: string; active: boolean; created_at: string };
 export type BagItem = { id: string; user_id: string; bag: 'big' | 'small'; text: string; checked_at: string | null; created_at: string };
 export type WifiPassword = { id: string; place: string; network: string | null; password: string | null; note: string | null; created_by: string | null; created_at: string };
+export type WelcomeLetter = { user_id: string; content: string; opened_at: string | null; updated_at: string };

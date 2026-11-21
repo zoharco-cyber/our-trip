@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import type { LocationUpdate, Photo, Place, Story } from '../lib/types';
 import { fmtDateTime } from '../lib/util';
 import { placeName } from '../lib/geo';
+import { MAX_TILES, readAreas, saveTiles, tilesFor, writeAreas, type SavedArea } from '../lib/offlineMap';
 import { fmtDate } from '../lib/util';
 import PhotoGrid from '../components/PhotoGrid';
 import PhotoUpload from '../components/PhotoUpload';
@@ -22,6 +23,62 @@ const pin = (color: string, active: boolean) =>
   });
 
 const hereIcon = L.divIcon({ className: 'pin-wrap', html: '<span class="here-pin"><i></i>💖</span>', iconSize: [44, 44], iconAnchor: [22, 22] });
+
+/** נותן גישה לאובייקט המפה מחוץ ל-MapContainer */
+function MapRef({ onMap }: { onMap: (m: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => { onMap(map); }, [map]);
+  return null;
+}
+
+/** הורדת האזור שעל המסך לשימוש בלי קליטה */
+function OfflineArea({ map }: { map: L.Map | null }) {
+  const [areas, setAreas] = useState<SavedArea[]>(readAreas);
+  const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const supported = typeof caches !== 'undefined';
+  if (!supported) return null;
+
+  async function download() {
+    if (!map) return;
+    setMsg(null);
+    if (!navigator.onLine) { setMsg('צריך קליטה כדי להוריד. עשי את זה מראש, בהוסטל עם וויי-פיי.'); return; }
+    const b = map.getBounds();
+    const z = map.getZoom();
+    const bounds = { north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() };
+    // מורידים מהזום הנוכחי ועד 3 רמות פנימה, כל עוד זה לא יותר מדי
+    let zTo = Math.min(16, z + 3), urls = tilesFor(bounds, z, zTo);
+    while (urls.length > MAX_TILES && zTo > z) { zTo--; urls = tilesFor(bounds, z, zTo); }
+    if (urls.length > MAX_TILES) { setMsg('האזור גדול מדי. התקרבי עוד קצת במפה ונסי שוב.'); return; }
+    setBusy({ done: 0, total: urls.length });
+    const c = map.getCenter();
+    const name = (await placeName(c.lat, c.lng)) || 'אזור במפה';
+    const { failed } = await saveTiles(urls, (done) => setBusy({ done, total: urls.length }));
+    setBusy(null);
+    const next = [{ name, tiles: urls.length - failed, at: new Date().toISOString() }, ...areas.filter((a) => a.name !== name)].slice(0, 12);
+    setAreas(next); writeAreas(next);
+    setMsg(failed ? `נשמר, אבל ${failed} חלקים לא ירדו. אפשר לנסות שוב.` : `✓ נשמר: ${name}. המפה של האזור תעבוד גם בלי קליטה (עד זום ${zTo}).`);
+  }
+  async function clearAll() {
+    await caches.delete('map-tiles');
+    setAreas([]); writeAreas([]); setMsg('האזורים השמורים נמחקו מהטלפון.');
+  }
+  return (
+    <div className="offline-area">
+      <button className="btn btn-small" disabled={!!busy || !map} onClick={download}>
+        {busy ? `📥 מוריד… ${Math.round((busy.done / busy.total) * 100)}%` : '📥 שמירת האזור שעל המסך לשימוש בלי קליטה'}
+      </button>
+      {msg && <p className="small">{msg}</p>}
+      {areas.length > 0 && (
+        <details className="small">
+          <summary>אזורים שמורים בטלפון ({areas.length})</summary>
+          <ul>{areas.map((a) => <li key={a.name + a.at}>📍 {a.name}</li>)}</ul>
+          <button className="link-btn" onClick={clearAll}>מחיקת כל האזורים השמורים</button>
+        </details>
+      )}
+    </div>
+  );
+}
 
 /** מזיז את המפה למקום שנבחר בחיפוש */
 function FlyTo({ target }: { target: { lat: number; lng: number; zoom: number; n: number } | null }) {
@@ -118,6 +175,7 @@ export default function MapPage() {
       { enableHighAccuracy: false, timeout: 15000 },
     );
   }
+  const [mapObj, setMapObj] = useState<L.Map | null>(null);
   const [fly, setFly] = useState<{ lat: number; lng: number; zoom: number; n: number } | null>(null);
   const [found, setFound] = useState<Hit | null>(null);
   function pickHit(h: Hit) {
@@ -193,6 +251,7 @@ export default function MapPage() {
           <button className="btn btn-primary" disabled={!name.trim()}>שמירה</button>
         </form>
       )}
+      <OfflineArea map={mapObj} />
       <div className="map-layout">
         <div className="map-box" dir="ltr">
           <MapContainer center={[-14, -64]} zoom={3} minZoom={2} worldCopyJump style={{ height: '100%', width: '100%' }}>
@@ -201,6 +260,7 @@ export default function MapPage() {
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FlyTo target={fly} />
+            <MapRef onMap={setMapObj} />
             {found && <Marker position={[found.lat, found.lng]} icon={pin('#1f7fb8', true)} />}
             {adding && <ClickCatcher onPick={(lat, lng) => setDraft({ lat, lng })} />}
             {locMode === 'pick' && <ClickCatcher onPick={(lat, lng) => saveHere(lat, lng)} />}

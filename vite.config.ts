@@ -43,7 +43,7 @@ export default defineConfig({
           {
             urlPattern: /^https:\/\/[abc]?\.?tile\.openstreetmap\.org\//,
             handler: 'CacheFirst',
-            options: { cacheName: 'map-tiles', expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 60 } },
+            options: { cacheName: 'map-tiles', expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 120 } },
           },
         ],
       },

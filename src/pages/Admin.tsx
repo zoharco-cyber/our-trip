@@ -4,9 +4,11 @@ import { fmtDateTime } from '../lib/util';
 import { supabase } from '../lib/supabase';
 import { OpenButton, useCapsuleOpen } from './Capsule';
 import Reminder from '../components/Reminder';
+import LetterReveal from '../components/LetterReveal';
+import type { WelcomeLetter } from '../lib/types';
 
 export default function Admin() {
-  const { profiles, travelers } = useAuth();
+  const { profiles, travelers, isAdmin, me } = useAuth();
   const { open, reload } = useCapsuleOpen();
   const [meta, setMeta] = useState<{ created_by: string; created_at: string }[]>([]);
   useEffect(() => {
@@ -16,6 +18,8 @@ export default function Admin() {
   async function setOpen(v: boolean) {
     await supabase.from('settings').upsert({ key: 'capsule_open', value: v }); reload();
   }
+  if (!me) return <p className="muted">טוען…</p>;
+  if (!isAdmin) return <p className="muted">העמוד הזה רק למנהל.</p>;
   return (
     <div className="stack-lg narrow">
       <h1>ניהול</h1>
@@ -41,6 +45,7 @@ export default function Admin() {
         </div>
       </section>
       <LaunchAdmin />
+      <LettersAdmin />
       <TripEnd />
       <section className="card stack">
         <h2>ערכות עיצוב</h2>
@@ -185,6 +190,58 @@ function LaunchAdmin() {
         {gState === 'ok' && <p className="ok small">עודכן. סיסמת האורחים החדשה: <b dir="ltr">{gSaved}</b></p>}
         {gState === 'err' && <p className="error">לא הצלחתי לעדכן. בדוק חיבור ונסה שוב.</p>}
       </div>
+    </section>
+  );
+}
+
+/** מכתבי הפתיחה: המנהל כותב מכתב סודי לכל אחת */
+function LettersAdmin() {
+  const { travelers } = useAuth();
+  const [letters, setLetters] = useState<Record<string, WelcomeLetter>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ name: string; text: string } | null>(null);
+  useEffect(() => {
+    supabase.from('welcome_letters').select('*').then(({ data }) => {
+      const m: Record<string, WelcomeLetter> = {};
+      (data || []).forEach((l: any) => { m[l.user_id] = l; });
+      setLetters(m);
+      setDrafts(Object.fromEntries(Object.values(m).map((l) => [l.user_id, l.content])));
+    });
+  }, []);
+  async function save(id: string) {
+    const content = (drafts[id] || '').trim();
+    if (!content) return;
+    const { data, error } = await supabase.from('welcome_letters').upsert({ user_id: id, content, updated_at: new Date().toISOString() }).select().single();
+    if (!error && data) { setLetters((m) => ({ ...m, [id]: data as WelcomeLetter })); setSaved(id); setTimeout(() => setSaved(null), 2000); }
+  }
+  async function resend(id: string) {
+    const { data } = await supabase.from('welcome_letters').update({ opened_at: null }).eq('user_id', id).select().single();
+    if (data) setLetters((m) => ({ ...m, [id]: data as WelcomeLetter }));
+  }
+  return (
+    <section className="card stack">
+      <h2>💌 מכתבי פתיחה</h2>
+      <p className="muted small">מכתב סודי לכל אחת. הוא נפתח לה בהפקה מלאה בכניסה הראשונה אחרי ההשקה, ולא יכול להיפתח לפני. אף אחת לא רואה את המכתב של האחרות.</p>
+      {travelers.map((t) => {
+        const l = letters[t.id];
+        const draft = drafts[t.id] ?? '';
+        return (
+          <div key={t.id} className="letter-edit" style={{ ['--c' as any]: t.color }}>
+            <div className="row-between">
+              <b><i className="dot" /> ל{t.display_name.split(' ')[0]}</b>
+              <span className="small muted">{!l ? 'עוד לא נכתב' : l.opened_at ? `✓ נפתח ${new Date(l.opened_at).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : '✉️ מחכה לה'}</span>
+            </div>
+            <textarea id={`letter-${t.id}`} rows={5} placeholder={`מה תרצה לכתוב ל${t.display_name.split(' ')[0]} לפני הטיול?`} value={draft} onChange={(e) => setDrafts((d) => ({ ...d, [t.id]: e.target.value }))} />
+            <div className="row gap wrap">
+              <button className="btn btn-small btn-primary" disabled={!draft.trim() || draft.trim() === l?.content} onClick={() => save(t.id)}>{saved === t.id ? '✓ נשמר' : 'שמירה'}</button>
+              <button className="btn btn-small" disabled={!draft.trim()} onClick={() => setPreview({ name: t.display_name.split(' ')[0], text: draft.trim() })}>🎬 תצוגה מקדימה</button>
+              {l?.opened_at && <button className="link-btn small" onClick={() => resend(t.id)}>להציג לה שוב בכניסה הבאה</button>}
+            </div>
+          </div>
+        );
+      })}
+      {preview && <LetterReveal name={preview.name} text={preview.text} preview onClose={() => setPreview(null)} />}
     </section>
   );
 }

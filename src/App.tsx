@@ -5,6 +5,7 @@ import { isConfigured } from './lib/supabase';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import { LOGO_URL } from './config';
+import { LetterProvider } from './components/MyLetter';
 import { onQueueChange, readQueue, startQueueSync } from './lib/offline';
 
 // כל עמוד נטען רק כשנכנסים אליו
@@ -79,6 +80,7 @@ export default function App() {
   const primary = guest ? sections : sections.filter((s) => ['/', '/money', '/map', '/shopping'].includes(s.to));
 
   return (
+    <LetterProvider>
     <div className="shell">
       <header className="topbar">
         <div className="topbar-inner">
@@ -122,7 +124,7 @@ export default function App() {
             <Route path="/meds" element={<Meds />} />
             <Route path="/wifi" element={<Wifi />} />
             <Route path="/more" element={<MoreSheet />} />
-            {isAdmin && <Route path="/admin" element={<Admin />} />}
+            <Route path="/admin" element={<Admin />} />
           </>}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -135,6 +137,7 @@ export default function App() {
         {!guest && <NavLink to="/more">עוד</NavLink>}
       </nav>
     </div>
+    </LetterProvider>
   );
 }
 

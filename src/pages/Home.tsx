@@ -6,6 +6,8 @@ import { NextBooking } from './Bookings';
 import { LatestStatus, SendStatus } from '../components/Status';
 import Weather from '../components/Weather';
 import DualClock from '../components/DualClock';
+import HereInfo from '../components/HereInfo';
+import { ReplayLetter } from '../components/MyLetter';
 import type { LocationUpdate } from '../lib/types';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
@@ -68,6 +70,8 @@ export default function Home() {
         <Countdown />
       </section>
       {here && <Weather lat={here.lat} lng={here.lng} label={here.name} />}
+      {here && <HereInfo lat={here.lat} lng={here.lng} />}
+      {!guest && <ReplayLetter />}
       {!guest && <SendStatus />}
       {!guest && <NextBooking />}
 
