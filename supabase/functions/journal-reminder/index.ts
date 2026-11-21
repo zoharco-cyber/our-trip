@@ -57,6 +57,23 @@ Deno.serve(async (req) => {
     let tz = s.tz;
     try { localParts(tz); } catch { tz = 'America/Lima'; }
     const { date, hour } = localParts(tz);
+    // לפני הטיסה: ב-10:00, תזכורת על משימות שהדדליין שלהן עבר או מתקרב (3 ימים)
+    if (!test && hour === 10 && start && date < start && s.pretrip_sent !== date) {
+      const soon = new Date(date + 'T12:00:00Z'); soon.setUTCDate(soon.getUTCDate() + 3);
+      const { data: tasks } = await db.from('pretrip_tasks').select('id, title, due_date').lte('due_date', soon.toISOString().slice(0, 10)).order('due_date');
+      const { data: done } = await db.from('pretrip_done').select('task_id').eq('user_id', s.user_id);
+      const open = (tasks || []).filter((t) => !(done || []).some((d) => d.task_id === t.id));
+      if (open.length) {
+        const daysLeft = Math.round((new Date(start + 'T12:00:00Z').getTime() - new Date(date + 'T12:00:00Z').getTime()) / 864e5);
+        const late = open.filter((t) => t.due_date < date).length;
+        try {
+          await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+            JSON.stringify({ title: `✈️ עוד ${daysLeft} ימים לטיסה`, body: `${late ? '⚠️ ' : ''}לא סימנת: ${open[0].title}${open.length > 1 ? ` ועוד ${open.length - 1}` : ''}`, url: '#/pretrip', tag: 'pretrip' }), { TTL: 60 * 60 * 6 });
+          await db.from('push_subscriptions').update({ pretrip_sent: date }).eq('id', s.id);
+          sent++;
+        } catch { /* ננסה מחר */ }
+      }
+    }
     // שאלת היום: פעם ביום ב-18:00, רק אם עוד לא ענתה (התשובה לא חובה)
     if (!test && hour === QUESTION_HOUR && s.question_sent !== date && !(start && date < start)) {
       const { count: answered } = await db.from('daily_answers').select('id', { count: 'exact', head: true }).eq('created_by', s.user_id).eq('day', date);

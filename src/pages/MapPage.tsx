@@ -13,6 +13,7 @@ import { fmtDate } from '../lib/util';
 import PhotoGrid from '../components/PhotoGrid';
 import PhotoUpload from '../components/PhotoUpload';
 import { Who } from '../components/Avatar';
+import Journey from '../components/Journey';
 
 const pin = (color: string, active: boolean) =>
   L.divIcon({
@@ -251,6 +252,9 @@ export default function MapPage() {
           <button className="btn btn-primary" disabled={!name.trim()}>שמירה</button>
         </form>
       )}
+      <div className="row gap wrap map-tools">
+        <Journey map={mapObj} route={route} />
+      </div>
       <OfflineArea map={mapObj} />
       <div className="map-layout">
         <div className="map-box" dir="ltr">

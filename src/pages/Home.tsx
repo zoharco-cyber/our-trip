@@ -8,6 +8,10 @@ import Weather from '../components/Weather';
 import DualClock from '../components/DualClock';
 import HereInfo from '../components/HereInfo';
 import { ReplayLetter } from '../components/MyLetter';
+import { PretripBanner } from './PreTrip';
+import { WordOfDay } from '../components/SpanishDaily';
+import PhotoPrompt from '../components/PhotoPrompt';
+import BadgeWatcher from '../components/BadgeWatcher';
 import type { LocationUpdate } from '../lib/types';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
@@ -34,6 +38,9 @@ const BLURB: Record<string, string> = {
   '/songs': 'הפסקול של הטיול',
   '/meds': 'תזכורות פרטיות לתרופות',
   '/wifi': 'וויי-פיי וקודים של ההוסטלים',
+  '/pretrip': 'מה לסגור לפני שעולות על המטוס',
+  '/medical': 'סוג דם, אלרגיות וביטוח של כל אחת',
+  '/badges': 'כמה תגים אספת?',
 };
 
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'לילה טוב' : h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 21 ? 'ערב טוב' : 'לילה טוב'; };
@@ -73,6 +80,9 @@ export default function Home() {
       </section>
       <Weather lat={spot.lat} lng={spot.lng} label={spot.label} />
       <HereInfo lat={spot.lat} lng={spot.lng} />
+      {!guest && <div className="daily-duo"><WordOfDay /><PhotoPrompt /></div>}
+      {!guest && <BadgeWatcher />}
+      {!guest && <PretripBanner />}
       {!guest && <ReplayLetter />}
       {!guest && <SendStatus />}
       {!guest && <NextBooking />}

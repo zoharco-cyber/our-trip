@@ -977,3 +977,82 @@ h2::before { color: #fff; }
 .letter-edit { display: grid; gap: .45rem; padding: .7rem .8rem; border-radius: 14px; background: var(--surface-2); border-inline-start: 5px solid var(--c); }
 .letter-edit b { display: inline-flex; align-items: center; gap: .35rem; }
 .lr-tease h2 { width: auto; justify-self: center; }
+
+/* המסע שלנו */
+.journey-plane { display: block; font-size: 30px; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .35)); transition: transform .3s; }
+.map-layout { position: relative; }
+.journey-card { position: fixed; z-index: 1500; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(340px, calc(100vw - 32px));
+  display: flex; gap: .7rem; align-items: center; background: var(--surface); border: 3px solid var(--p-strong); border-radius: 22px; padding: .6rem; box-shadow: 0 14px 40px rgba(0, 0, 0, .3); animation: journeyIn .5s cubic-bezier(.2, 1.4, .4, 1); }
+.journey-card img { width: 84px; height: 84px; object-fit: cover; border-radius: 14px; flex: none; }
+.journey-card > div { display: grid; gap: .1rem; }
+.journey-card b { font-family: var(--font-display); font-size: 1.3rem; color: var(--p-strong); }
+@keyframes journeyIn { from { transform: translateX(-50%) translateY(40px) scale(.8); opacity: 0; } }
+
+/* לפני הטיסה */
+.pretrip-head { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; align-items: center; }
+.pt-days { display: grid; justify-items: center; }
+.pt-days b { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; color: var(--p-strong); }
+.pt-days span { font-size: .8rem; color: var(--muted); }
+.pt-me { display: grid; gap: .2rem; }
+.pt-me b { font-family: var(--font-display); font-size: 1.4rem; }
+.pt-all { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .8rem; }
+.pt-all span { display: inline-flex; align-items: center; gap: .3rem; }
+.pt-done { text-align: center; font-family: var(--font-display); font-size: 1.2rem; }
+.pt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.pt-item { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
+.pt-item .check { flex: 1 1 14rem; }
+.pt-item .check .grow { display: grid; gap: .1rem; }
+.pt-note { display: block; }
+.pt-item.done .check b { text-decoration: line-through; color: var(--muted); }
+.pt-item.late { border-color: var(--danger); }
+.pt-item.soon { border-color: #e8a24a; }
+.pt-side { display: flex; align-items: center; gap: .5rem; }
+.pt-due.late { color: var(--danger); font-weight: 600; }
+.pt-due.soon { color: #c0761f; font-weight: 600; }
+.pt-due.done { color: var(--ok); }
+.pt-banner { display: flex; gap: .7rem; align-items: center; text-decoration: none; color: var(--ink); border-inline-start: 6px solid var(--p-strong); }
+.pt-banner.late { border-inline-start-color: var(--danger); }
+.pt-banner .grow { display: grid; gap: .1rem; }
+.pt-b-icon { font-size: 1.8rem; }
+/* כרטיס חירום */
+.med-link { display: flex; flex-wrap: wrap; gap: .4rem; align-items: baseline; text-decoration: none; color: var(--ink); }
+.med-card { padding: 0; overflow: hidden; border-inline-start: 6px solid var(--c); }
+.med-head { width: 100%; display: flex; align-items: center; gap: .6rem; background: none; border: 0; padding: .8rem 1rem; cursor: pointer; color: var(--ink); text-align: start; font: inherit; }
+.med-cross { color: #d61f3a; font-size: 1.2rem; }
+.med-blood { background: #fde7ea; color: #a3122a; border-radius: 999px; padding: .1rem .6rem; font-weight: 700; font-size: .9rem; }
+.med-dl { margin: 0; padding: 0 1rem 1rem; display: grid; gap: .5rem; }
+.med-dl div { display: grid; gap: .05rem; }
+.med-dl dt { font-size: .8rem; color: var(--muted); }
+.med-dl dd { margin: 0; font-weight: 600; }
+/* תגים */
+.badge-count { background: color-mix(in srgb, var(--c) 15%, var(--surface)); color: var(--c); padding: .15rem .6rem; border-radius: 999px; font-weight: 700; }
+.badge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .5rem; }
+.badge-tile { display: grid; justify-items: center; text-align: center; gap: .15rem; padding: .8rem .5rem; border-radius: 18px; background: var(--surface-2); border: 2px dashed var(--line); color: var(--muted); }
+.badge-tile.on { background: var(--surface); border: 2px solid var(--c); color: var(--ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 35%, transparent); }
+.badge-tile b { font-size: .95rem; }
+.bt-icon { font-size: 2rem; filter: grayscale(1); opacity: .5; }
+.badge-tile.on .bt-icon { filter: none; opacity: 1; }
+.badge-pop { position: fixed; inset: 0; z-index: 6500; display: grid; place-items: center; background: rgba(20, 5, 20, .55); backdrop-filter: blur(3px); padding: 16px; }
+.bp-card { display: grid; justify-items: center; gap: .4rem; background: var(--surface); border-radius: 28px; padding: 1.6rem 1.4rem; text-align: center; border: 3px solid var(--p-strong); box-shadow: 0 20px 60px rgba(0, 0, 0, .35); animation: stamp .5s cubic-bezier(.2, 1.6, .4, 1) both; width: min(320px, 100%); }
+.bp-kicker { font-family: var(--font-display); font-weight: 700; color: var(--p-strong); }
+.bp-icon { font-size: 4.5rem; line-height: 1; animation: floaty 2.4s ease-in-out infinite; }
+.bp-name { font-family: var(--font-display); font-size: 1.5rem; }
+.bp-how { color: var(--muted); font-size: .9rem; margin-bottom: .4rem; }
+/* מילה ואתגר צילום יומיים */
+.daily-duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; }
+.word-day, .photo-prompt { display: grid; gap: .3rem; align-content: start; background: var(--surface); border: 2px solid var(--p-mid); border-radius: 20px; padding: .8rem 1rem; box-shadow: 0 5px 0 color-mix(in srgb, var(--p-strong) 45%, transparent); }
+.wd-kicker, .pp-kicker { font-size: .8rem; color: var(--p-deep); font-weight: 600; }
+.wd-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.wd-row b { font-family: var(--font-display); font-size: 1.7rem; color: var(--p-strong); }
+.pp-text { font-family: var(--font-display); font-size: 1.3rem; color: var(--p-strong); }
+.pp-thumbs { display: flex; gap: 4px; }
+.pp-thumbs img { width: 52px; height: 52px; object-fit: cover; border-radius: 10px; }
+/* חידון */
+.quiz { display: grid; gap: .6rem; }
+.quiz-q { font-family: var(--font-display); font-size: 2rem; color: var(--p-strong); text-align: center; }
+.quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.quiz-opt { border: 2px solid var(--line); background: var(--surface); border-radius: 14px; padding: .7rem .4rem; cursor: pointer; font: inherit; color: var(--ink); }
+.quiz-opt.right { background: #dff5e6; border-color: var(--ok); }
+.quiz-opt.wrong { background: #fde7ea; border-color: var(--danger); }
+.quiz-board { display: flex; flex-wrap: wrap; gap: .8rem; }
+.quiz-board span { display: inline-flex; align-items: center; gap: .3rem; }

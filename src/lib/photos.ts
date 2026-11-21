@@ -38,7 +38,7 @@ async function shrink(file: File, max = 2000): Promise<Blob> {
   } catch { return file; }
 }
 
-export async function uploadPhotos(files: File[], opts: { placeId?: string | null; isPublic: boolean; userId: string }) {
+export async function uploadPhotos(files: File[], opts: { placeId?: string | null; isPublic: boolean; userId: string; promptDay?: string }) {
   let failed = 0, linked = 0;
   // בלי נקודה שנבחרה: מנסים לשייך כל תמונה לנקודה הקרובה במפה לפי המיקום שבקובץ
   let places: Place[] = [];
@@ -59,7 +59,7 @@ export async function uploadPhotos(files: File[], opts: { placeId?: string | nul
     const path = `${opts.userId}/${Date.now()}-${safeFileName(f.name.replace(/\.\w+$/, '.jpg'))}`;
     const up = await supabase.storage.from('photos').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
     if (up.error) { failed++; continue; }
-    await supabase.from('photos').insert({ path, place_id: placeId, is_public: opts.isPublic });
+    await supabase.from('photos').insert({ path, place_id: placeId, is_public: opts.isPublic, prompt_day: opts.promptDay || null });
   }
   return { failed, linked };
 }

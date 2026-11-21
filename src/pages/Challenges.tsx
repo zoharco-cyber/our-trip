@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
-import type { Challenge, ChallengeDone } from '../lib/types';
+import type { Challenge, ChallengeDone, QuizResult } from '../lib/types';
 import { confetti } from '../lib/fx';
 
 /** איש הצללים: דמות בכובע ומעיל, מצוירת ב-SVG */
@@ -34,7 +34,10 @@ export default function Challenges() {
   const [q, setQ] = useState('');
 
   const isDone = (c: string, u: string) => done.rows.some((d) => d.challenge_id === c && d.user_id === u);
-  const score = (u: string) => done.rows.filter((d) => d.user_id === u).reduce((s, d) => s + (ch.rows.find((c) => c.id === d.challenge_id)?.points || 0), 0);
+  const quiz = useTable<QuizResult>('quiz_results');
+  // נקודות: אתגרים + חידון הספרדית השבועי (5 לכל תשובה נכונה)
+  const score = (u: string) => done.rows.filter((d) => d.user_id === u).reduce((s, d) => s + (ch.rows.find((c) => c.id === d.challenge_id)?.points || 0), 0)
+    + quiz.rows.filter((q) => q.user_id === u).reduce((s, q) => s + q.score * 5, 0);
   const board = [...travelers].sort((a, b) => score(b.id) - score(a.id));
 
   async function toggle(c: Challenge, e: React.MouseEvent) {

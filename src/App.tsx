@@ -26,9 +26,13 @@ const Book = lazy(() => import('./pages/Book'));
 const Songs = lazy(() => import('./pages/Songs'));
 const Meds = lazy(() => import('./pages/Meds'));
 const Wifi = lazy(() => import('./pages/Wifi'));
+const PreTrip = lazy(() => import('./pages/PreTrip'));
+const Medical = lazy(() => import('./pages/Medical'));
+const Badges = lazy(() => import('./pages/Badges'));
 
 export const SECTIONS = [
   { to: '/', icon: '🏠', label: 'בית', short: 'בית', guest: true },
+  { to: '/pretrip', icon: '✈️', label: 'לפני הטיסה', short: 'טיסה' },
   { to: '/money', icon: '💸', label: 'כסף', short: 'כסף' },
   { to: '/map', icon: '🗺️', label: 'מפה', short: 'מפה', guest: true },
   { to: '/shopping', icon: '🛒', label: 'קניות לשבוע', short: 'קניות' },
@@ -41,6 +45,8 @@ export const SECTIONS = [
   { to: '/help', icon: '🆘', label: 'עזרה בדרך', short: 'עזרה' },
   { to: '/challenges', icon: '🕵️', label: 'האתגרים של זוהר', short: 'אתגרים' },
   { to: '/songs', icon: '🎵', label: 'שירי הטיול', short: 'שירים' },
+  { to: '/badges', icon: '🏅', label: 'תגים', short: 'תגים' },
+  { to: '/medical', icon: '🩺', label: 'כרטיס חירום', short: 'חירום' },
   { to: '/wifi', icon: '🔐', label: 'סיסמאות', short: 'סיסמאות' },
   { to: '/meds', icon: '💊', label: 'תרופות', short: 'תרופות' },
   { to: '/capsule', icon: '💌', label: 'קפסולת זמן', short: 'קפסולה' },
@@ -123,6 +129,9 @@ export default function App() {
             <Route path="/songs" element={<Songs />} />
             <Route path="/meds" element={<Meds />} />
             <Route path="/wifi" element={<Wifi />} />
+            <Route path="/pretrip" element={<PreTrip />} />
+            <Route path="/medical" element={<Medical />} />
+            <Route path="/badges" element={<Badges />} />
             <Route path="/more" element={<MoreSheet />} />
             <Route path="/admin" element={<Admin />} />
           </>}

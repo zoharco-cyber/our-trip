@@ -7,6 +7,7 @@ import { CURRENCIES } from '../data/currencies';
 import { EMERGENCY, PHRASES } from '../data/help';
 import { fmtDate } from '../lib/util';
 import Guide from './Guide';
+import { WeeklyQuiz, WordOfDay } from '../components/SpanishDaily';
 
 type Tab = 'guide' | 'convert' | 'emergency' | 'spanish';
 
@@ -79,6 +80,7 @@ function Emergency() {
   async function remove(id: string) { await supabase.from('contacts').delete().eq('id', id); contacts.reload(); }
   return (
     <div className="stack-lg">
+      <a href="#/medical" className="card med-link">🩺 <b>כרטיסי חירום רפואיים</b> <span className="small muted">סוג דם, אלרגיות וביטוח של כל אחת</span></a>
       <section className="stack">
         <h2>אנשי קשר שלנו</h2>
         <p className="muted small">ביטוח, שגרירות ישראל במדינה שבה אתן, משפחה. שמרו כאן כדי שיהיה זמין בלי אינטרנט.</p>
@@ -131,6 +133,8 @@ function Spanish() {
   const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
   return (
     <div className="stack-lg">
+      <WordOfDay />
+      <WeeklyQuiz />
       {PHRASES.map((g) => (
         <section key={g.group} className="stack">
           <h2>{g.group}</h2>
