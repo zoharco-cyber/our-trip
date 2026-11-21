@@ -57,6 +57,8 @@ export default function Home() {
 
   const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
   const here = locs.rows[0];
+  // עד שמישהי מעדכנת "אנחנו כאן": לימה, היעד הראשון
+  const spot = here ? { lat: here.lat, lng: here.lng, label: here.name } : { lat: -12.046, lng: -77.043, label: 'לימה (היעד הראשון)' };
   const now = Date.now();
   return (
     <div className="stack-lg">
@@ -69,8 +71,8 @@ export default function Home() {
       <section className="hero-card">
         <Countdown />
       </section>
-      {here && <Weather lat={here.lat} lng={here.lng} label={here.name} />}
-      {here && <HereInfo lat={here.lat} lng={here.lng} />}
+      <Weather lat={spot.lat} lng={spot.lng} label={spot.label} />
+      <HereInfo lat={spot.lat} lng={spot.lng} />
       {!guest && <ReplayLetter />}
       {!guest && <SendStatus />}
       {!guest && <NextBooking />}

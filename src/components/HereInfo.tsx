@@ -27,7 +27,7 @@ export default function HereInfo({ lat, lng }: { lat: number; lng: number }) {
       {elev !== null && (
         <div className={'altitude' + (high ? ' high' : '')}>
           <div className="row-between">
-            <span>⛰️ אתן בגובה <b className="tnum">{Math.round(elev).toLocaleString('he-IL')} מ׳</b></span>
+            <span>⛰️ גובה: <b className="tnum">{Math.round(elev).toLocaleString('he-IL')} מ׳</b></span>
             {high && <button className="link-btn" onClick={() => setOpen((v) => !v)}>{open ? 'הסתרה' : 'טיפים לגובה'}</button>}
           </div>
           {high && !open && <span className="small">גובה רב. כדאי לשתות הרבה ולקחת את זה לאט 💧</span>}
