@@ -23,6 +23,7 @@ export default function Admin() {
   return (
     <div className="stack-lg narrow">
       <h1>ניהול</h1>
+      <a href="#/features" className="card admin-link">📋 <b>הפיצ׳רים של הטיול</b><span className="small muted">כל פיצ׳ר ואיך משתמשים בו, עם סימון של מה כבר הסברת לבנות</span></a>
       <Reminder />
       <section className="card stack">
         <h2>קפסולת הזמן</h2>

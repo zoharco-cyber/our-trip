@@ -29,6 +29,7 @@ const Wifi = lazy(() => import('./pages/Wifi'));
 const PreTrip = lazy(() => import('./pages/PreTrip'));
 const Medical = lazy(() => import('./pages/Medical'));
 const Badges = lazy(() => import('./pages/Badges'));
+const Features = lazy(() => import('./pages/Features'));
 
 export const SECTIONS = [
   { to: '/', icon: '🏠', label: 'בית', short: 'בית', guest: true },
@@ -134,6 +135,7 @@ export default function App() {
             <Route path="/badges" element={<Badges />} />
             <Route path="/more" element={<MoreSheet />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/features" element={<Features />} />
           </>}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1070,3 +1070,17 @@ h2::before { color: #fff; }
 .sj-item { display: flex; gap: .7rem; align-items: flex-start; background: var(--surface); border: 2px solid var(--line); border-inline-start: 6px solid var(--c); border-radius: 18px; padding: .7rem .8rem; }
 .sj-item img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; flex: none; }
 .sj-item p { font-size: 1.05rem; }
+
+/* עמוד הפיצ׳רים (מנהל) */
+.admin-link { display: grid; gap: .15rem; text-decoration: none; color: var(--ink); border-inline-start: 6px solid var(--p-strong); }
+.feat-bar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 56px); z-index: 5; background: var(--bg); padding-block: .5rem; display: grid; gap: .3rem; border-bottom: 1px solid var(--line); }
+.feat-count { font-family: var(--font-display); font-size: 1.3rem; }
+.feat-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.feat { background: var(--surface); border: 2px solid var(--line); border-radius: 16px; }
+.feat.done { background: color-mix(in srgb, var(--ok) 10%, var(--surface)); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.feat-head { display: flex; gap: .7rem; align-items: flex-start; padding: .75rem .9rem; cursor: pointer; }
+.feat-head input { width: 1.3rem; height: 1.3rem; margin-top: .15rem; accent-color: var(--ok); flex: none; }
+.feat-main { display: grid; gap: .1rem; min-width: 0; }
+.feat.done .feat-main b { text-decoration: line-through; }
+.feat-where { font-size: .8rem; color: var(--p-strong); }
+.feat-how { margin: 0; padding: 0 0 .8rem; padding-inline-start: 2.9rem; padding-inline-end: .9rem; color: var(--muted); font-size: .9rem; display: grid; gap: .15rem; }
