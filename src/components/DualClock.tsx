@@ -36,6 +36,8 @@ export default function DualClock() {
   const ilH = hourIn(IL);
   const same = fmt(IL) === fmt(tripTz);
   const callOk = ilH >= 8 && ilH < 22;
+  const tripH = hourIn(tripTz);
+  const tripCallOk = tripH >= 9 && tripH < 22;
   return (
     <section className="dual-clock" aria-label="שעון">
       <div className="dc-side">
@@ -49,7 +51,9 @@ export default function DualClock() {
         <b className="dc-time tnum">{fmt(tripTz)}</b>
         <span className="dc-ico" aria-hidden="true">{icon(hourIn(tripTz))}</span>
       </div>
-      <p className="dc-hint small">{same ? 'אותה שעה כמו בישראל' : callOk ? '📞 זמן טוב להתקשר הביתה' : '🤫 בישראל עכשיו לילה'}</p>
+      <p className="dc-hint small">{same ? 'אותה שעה כמו בישראל' : me?.is_traveler
+        ? (callOk ? '📞 זמן טוב להתקשר הביתה' : '🤫 בישראל עכשיו לילה')
+        : (tripCallOk ? '📞 זמן טוב להתקשר אליהן' : '😴 אצלן עכשיו לילה')}</p>
     </section>
   );
 }

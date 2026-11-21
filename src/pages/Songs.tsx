@@ -10,7 +10,7 @@ const searchLink = (s: Song) => `https://www.youtube.com/results?search_query=${
 const isUrl = (u: string) => /^https?:\/\//i.test(u.trim());
 
 export default function Songs() {
-  const { me } = useAuth();
+  const { me, guest } = useAuth();
   const songs = useTable<Song>('songs', { order: 'created_at', ascending: false });
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -36,9 +36,9 @@ export default function Songs() {
       <div className="row-between">
         <div>
           <h1>שירי הטיול</h1>
-          <p className="muted">שיר שמזכיר לך רגע מהדרך. ביחד זה הפסקול של הטיול.</p>
+          <p className="muted">{guest ? 'השירים שמלווים את הבנות בדרך. אפשר להאזין יחד איתן 🎧' : 'שיר שמזכיר לך רגע מהדרך. ביחד זה הפסקול של הטיול.'}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setOpen((v) => !v)}>{open ? 'סגירה' : '🎵 הוספת שיר'}</button>
+        {!guest && <button className="btn btn-primary" onClick={() => setOpen((v) => !v)}>{open ? 'סגירה' : '🎵 הוספת שיר'}</button>}
       </div>
       {open && (
         <form className="card stack" onSubmit={add}>

@@ -44,7 +44,7 @@ export const SECTIONS = [
   { to: '/bookings', icon: '🎫', label: 'הזמנות', short: 'הזמנות' },
   { to: '/help', icon: '🆘', label: 'עזרה בדרך', short: 'עזרה' },
   { to: '/challenges', icon: '🕵️', label: 'האתגרים של זוהר', short: 'אתגרים' },
-  { to: '/songs', icon: '🎵', label: 'שירי הטיול', short: 'שירים' },
+  { to: '/songs', icon: '🎵', label: 'שירי הטיול', short: 'שירים', guest: true },
   { to: '/badges', icon: '🏅', label: 'תגים', short: 'תגים' },
   { to: '/medical', icon: '🩺', label: 'כרטיס חירום', short: 'חירום' },
   { to: '/wifi', icon: '🔐', label: 'סיסמאות', short: 'סיסמאות' },
@@ -113,6 +113,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/songs" element={<Songs />} />
           {!guest && <>
             <Route path="/money" element={<MoneyPage />} />
             <Route path="/shopping" element={<Shopping />} />
@@ -126,7 +127,6 @@ export default function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/book" element={<Book />} />
-            <Route path="/songs" element={<Songs />} />
             <Route path="/meds" element={<Meds />} />
             <Route path="/wifi" element={<Wifi />} />
             <Route path="/pretrip" element={<PreTrip />} />

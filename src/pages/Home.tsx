@@ -12,6 +12,7 @@ import { PretripBanner } from './PreTrip';
 import { WordOfDay } from '../components/SpanishDaily';
 import PhotoPrompt from '../components/PhotoPrompt';
 import BadgeWatcher from '../components/BadgeWatcher';
+import ParentsCard, { SharedJournal } from '../components/ParentsCard';
 import type { LocationUpdate } from '../lib/types';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
@@ -46,7 +47,7 @@ const BLURB: Record<string, string> = {
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'לילה טוב' : h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 21 ? 'ערב טוב' : 'לילה טוב'; };
 
 export default function Home() {
-  const { guest, me } = useAuth();
+  const { guest, me, isAdmin } = useAuth();
   const { rows, reload } = useTable<TripEvent>('events', { order: 'starts_at' });
   const [title, setTitle] = useState('');
   const [when, setWhen] = useState('');
@@ -73,13 +74,14 @@ export default function Home() {
         {[0, 1].map((k) => <span key={k}>✨ {me ? `${greet()} ${me.display_name.split(' ')[0]}!` : 'ברוכים הבאים!'} ✨ הטיול של הבנות 💖 דרום אמריקה מחכה לנו 🦙 כל יום הוא הרפתקה 🌸 </span>)}
       </div></div>
       <DualClock />
-      <LatestStatus />
+      {guest || isAdmin ? <ParentsCard /> : <LatestStatus />}
       <Slideshow />
       <section className="hero-card">
         <Countdown />
       </section>
       <Weather lat={spot.lat} lng={spot.lng} label={spot.label} />
       <HereInfo lat={spot.lat} lng={spot.lng} />
+      {(guest || isAdmin) && <SharedJournal />}
       {!guest && <div className="daily-duo"><WordOfDay /><PhotoPrompt /></div>}
       {!guest && <BadgeWatcher />}
       {!guest && <PretripBanner />}

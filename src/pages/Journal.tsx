@@ -46,6 +46,10 @@ export default function Journal() {
   const photoRows = entries.rows.filter((e) => e.photo_path).map((e) => ({ path: e.photo_path! } as Photo));
   const urls = usePhotoUrls(photoRows);
 
+  async function toggleShare(e: JournalEntry) {
+    await dbWrite({ table: 'journal_entries', kind: 'update', values: { shared: !e.shared }, match: { id: e.id } });
+    entries.reload();
+  }
   function startEdit() {
     setText(mine?.content || ''); setMood(mine?.mood || null); setFile(null); setEditing(true);
   }
@@ -100,7 +104,11 @@ export default function Journal() {
           {mine && !editing ? (
             <div className="stack">
               <p className="journal-text"><span className="mood">{mine.mood}</span> {mine.content}</p>
-              <button className="btn btn-small" onClick={startEdit}>עריכה</button>
+              <div className="row gap wrap">
+                <button className="btn btn-small" onClick={startEdit}>עריכה</button>
+                <button className={'btn btn-small' + (mine.shared ? ' btn-primary' : '')} onClick={() => toggleShare(mine)}>{mine.shared ? '✓ משותף עם הבית' : '📤 לשתף עם הבית'}</button>
+              </div>
+              <span className="muted small">{mine.shared ? 'ההורים והאורחים רואים את הרשומה הזו בדף הבית. לחיצה מבטלת.' : 'רק הבנות רואות. אפשר לשתף עם ההורים בלחיצה.'}</span>
             </div>
           ) : (!mine && !editing) ? (
             <button className="btn btn-primary" onClick={startEdit}>כתיבה ליומן</button>
@@ -133,7 +141,7 @@ export default function Journal() {
                   if (!e) return null;
                   return (
                     <div key={t.id} className="journal-entry" style={{ ['--c' as any]: t.color }}>
-                      <div className="row gap"><span className="mood big">{e.mood || '•'}</span><Who id={t.id} /></div>
+                      <div className="row gap"><span className="mood big">{e.mood || '•'}</span><Who id={t.id} />{e.shared && <span className="small muted">📤 משותף עם הבית</span>}</div>
                       <p>{e.content}</p>
                       {e.photo_path && urls[e.photo_path] && <img className="journal-photo" src={urls[e.photo_path]} alt={`תמונת היום של ${t.display_name}`} loading="lazy" />}
                     </div>
