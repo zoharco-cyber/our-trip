@@ -1,5 +1,5 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from './lib/auth';
 import { isConfigured } from './lib/supabase';
 import Login from './pages/Login';
@@ -78,6 +78,9 @@ export default function App() {
     if (meta) meta.setAttribute('content', ({ pink: '#e0157f', red: '#d61f3a', purple: '#7b2ff7', midnight: '#0b1026', 'guest-sky': '#1f7fb8' } as Record<string, string>)[skin] || '#e0157f');
   }, [skin]);
   useEffect(() => onQueueChange(() => setQueued(readQueue().length)), []);
+  const { pathname } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => { mainRef.current?.scrollTo(0, 0); window.scrollTo(0, 0); }, [pathname]);
 
   if (!isConfigured) return <SetupNeeded />;
   if (!ready) return <div className="splash">רגע…</div>;
@@ -108,7 +111,7 @@ export default function App() {
       </header>
       {!online && <div className="offline-bar">אין קליטה כרגע. אפשר להמשיך להוסיף הוצאות, קניות, יומן ועוד. הכול יישלח לבד כשהקליטה תחזור.</div>}
       {queued > 0 && <div className="queue-bar">⏳ {queued} {queued === 1 ? 'שינוי מחכה' : 'שינויים מחכים'} לשליחה{online ? '… שולחת עכשיו' : ' עד שתחזור קליטה'}</div>}
-      <main className="page">
+      <main className="page" ref={mainRef}>
         <Suspense fallback={<div className="page-loading" aria-label="טוען">✨</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
