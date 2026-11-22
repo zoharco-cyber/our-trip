@@ -109,6 +109,7 @@ code { background: var(--surface-2); padding: 0 .3em; border-radius: 4px; }
   .topnav { display: none; }
   .bottomnav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+    transform: translate3d(0, 0, 0); -webkit-transform: translate3d(0, 0, 0); -webkit-backface-visibility: hidden; backface-visibility: hidden;
     background: var(--surface); border-top: 1px solid var(--line);
     padding: .35rem max(8px, env(safe-area-inset-right, 0px)) calc(.35rem + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
   }
@@ -498,7 +499,7 @@ input:not([type=checkbox]), select, textarea { border-width: 2px; border-radius:
   border-radius: 24px; padding: 1.5rem clamp(1rem, 3vw, 2rem) 2rem; display: grid; gap: 1.5rem; isolation: isolate;
   box-shadow: 0 0 0 2px #2a1424, 0 20px 50px rgba(0, 0, 0, .45); font-family: 'Frank Ruhl Libre', 'David', serif;
 }
-.shadow-page .fog { position: absolute; inset: -20%; z-index: -1; pointer-events: none; opacity: .5;
+.shadow-page .fog { position: absolute; inset: 0 0 auto 0; height: 520px; z-index: -1; pointer-events: none; opacity: .5;
   background: radial-gradient(ellipse 40% 20% at 20% 80%, rgba(255, 255, 255, .07), transparent), radial-gradient(ellipse 50% 25% at 80% 60%, rgba(255, 45, 138, .08), transparent);
   }
 .shadow-head { display: grid; grid-template-columns: 130px 1fr; gap: 1rem; align-items: center; }
