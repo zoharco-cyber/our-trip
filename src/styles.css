@@ -1093,3 +1093,34 @@ h2::before { color: #fff; }
 
 .reset-card { border: 2px dashed var(--danger); }
 .danger-btn { color: #fff; background: var(--danger); border-color: var(--danger); width: fit-content; }
+
+/* ---------- בדיקת מערכת (מנהל) ---------- */
+.sys-summary { padding: .6rem .8rem; border-radius: 12px; font-weight: 600; }
+.sys-summary.ok { background: color-mix(in srgb, #1f9d55 14%, var(--surface)); }
+.sys-summary.warn { background: color-mix(in srgb, #e8a400 20%, var(--surface)); }
+.sys-users { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.sys-users li { display: grid; grid-template-columns: minmax(0, 1fr); gap: .15rem; padding: .6rem .8rem; border-radius: 12px; background: var(--surface-2); border-inline-start: 4px solid var(--c); }
+.sys-push.on { color: #1f9d55; } .sys-push.off { color: #c2410c; }
+.sys-meter { display: grid; gap: .3rem; }
+.sys-bar { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.sys-bar i { display: block; height: 100%; border-radius: inherit; background: #1f9d55; }
+.sys-meter.t-warn .sys-bar i { background: #e8a400; } .sys-meter.t-bad .sys-bar i { background: #dc2626; }
+
+/* ---------- תפריט "עוד" בקבוצות ---------- */
+.more-sheet { display: grid; gap: 1.2rem; }
+.more-group { display: grid; gap: .55rem; }
+.more-group h2 { font-size: 1rem; margin: 0; padding: 0 .2rem; background: none; box-shadow: none; color: var(--ink); opacity: .8; }
+.more-group h2::before, .more-group h2::after { content: none; }
+.more-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+.more-sheet .more-quick a { flex-direction: column; justify-content: center; gap: .3rem; padding: .7rem .3rem; text-align: center; font-size: .82rem; border-radius: 18px; }
+.more-quick .more-ico { width: 2.6rem; height: 2.6rem; }
+
+/* ---------- אתגרים: מדינות ועוד תיקים ---------- */
+.sh-countries { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding-bottom: .2rem; margin-top: -.6rem; }
+.sh-countries::-webkit-scrollbar { display: none; }
+.sh-countries button { flex: none; background: #120b14; color: var(--sh-dim); border: 1px solid var(--sh-line); border-radius: 999px; padding: .35rem .75rem; font: inherit; font-size: .88rem; cursor: pointer; white-space: nowrap; }
+.sh-countries button small { opacity: .7; margin-inline-start: .15rem; font-family: ui-monospace, monospace; }
+.sh-countries button.on { background: var(--sh-neon); border-color: var(--sh-neon); color: #fff; }
+.sh-more { justify-self: center; background: transparent; color: var(--sh-ink); border: 1px dashed var(--sh-neon); border-radius: 999px; padding: .6rem 1.4rem; font: inherit; cursor: pointer; }
+.sh-more small { color: var(--sh-dim); }
+.sh-empty { text-align: center; color: var(--sh-dim); font-style: italic; }

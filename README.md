@@ -8,7 +8,7 @@
 
 ### 1. Supabase
 1. נרשמים ב-supabase.com ופותחים פרויקט חדש (Free). אזור מומלץ: Frankfurt.
-2. **SQL Editor > New query**, מדביקים את כל התוכן של `supabase/schema.sql` ולוחצים **Run**. אחר כך אותו דבר עם הקבצים `supabase/v2.sql` עד `supabase/v14-reset.sql`, לפי הסדר.
+2. **SQL Editor > New query**, מדביקים את כל התוכן של `supabase/schema.sql` ולוחצים **Run**. אחר כך אותו דבר עם הקבצים `supabase/v2.sql` עד `supabase/v15-status.sql`, לפי הסדר.
 3. **Authentication > Sign In / Providers > Email**: מכבים את **Confirm email**.
 4. **Authentication > Users > Add user > Create new user**, ומסמנים **Auto Confirm User**. יוצרים ארבעה משתמשים:
    | מי | אימייל |

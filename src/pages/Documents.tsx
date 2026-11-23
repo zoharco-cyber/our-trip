@@ -5,6 +5,7 @@ import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
 import type { Doc } from '../lib/types';
 import { fmtDate, fmtSize, safeFileName } from '../lib/util';
+import { IMG, shrinkImage, shrunkName } from '../lib/image';
 import { Empty } from '../components/Avatar';
 
 const k = (id: string) => `doc:${id}`;
@@ -42,7 +43,9 @@ export default function Documents() {
     e.target.value = '';
     if (!me || !files.length) return;
     setBusy(true); setErr(null);
-    for (const f of files) {
+    for (const orig of files) {
+      const blob = await shrinkImage(orig, IMG.doc);
+      const f = blob === orig ? orig : new File([blob], shrunkName(orig.name, blob, orig), { type: 'image/jpeg' });
       const path = `${me.id}/${Date.now()}-${safeFileName(f.name)}`;
       const up = await supabase.storage.from('documents').upload(path, f, { contentType: f.type || undefined });
       if (up.error) { setErr(`"${f.name}" לא הועלה. קבצים עד 50MB, ובחיבור לאינטרנט.`); continue; }

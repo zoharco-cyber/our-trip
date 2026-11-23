@@ -1,9 +1,12 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useTable } from '../lib/useTable';
 import { supabase } from '../lib/supabase';
 import type { Challenge, ChallengeDone, QuizResult } from '../lib/types';
 import { confetti } from '../lib/fx';
+import { ANYWHERE, COUNTRIES, countriesOf } from '../data/countries';
+
+const PAGE = 20;
 
 /** איש הצללים: דמות בכובע ומעיל, מצוירת ב-SVG */
 function ShadowMan() {
@@ -32,6 +35,8 @@ export default function Challenges() {
   const [points, setPoints] = useState('10');
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
   const [q, setQ] = useState('');
+  const [country, setCountry] = useState<string | null>(null);
+  const [shown, setShown] = useState(PAGE);
 
   const isDone = (c: string, u: string) => done.rows.some((d) => d.challenge_id === c && d.user_id === u);
   const quiz = useTable<QuizResult>('quiz_results');
@@ -39,6 +44,21 @@ export default function Challenges() {
   const score = (u: string) => done.rows.filter((d) => d.user_id === u).reduce((s, d) => s + (ch.rows.find((c) => c.id === d.challenge_id)?.points || 0), 0)
     + quiz.rows.filter((q) => q.user_id === u).reduce((s, q) => s + q.score * 5, 0);
   const board = [...travelers].sort((a, b) => score(b.id) - score(a.id));
+
+  const cOf = useMemo(() => new Map(ch.rows.map((c) => [c.id, countriesOf(c.title + ' ' + (c.details || ''))])), [ch.rows]);
+  const passBase = (c: Challenge) => {
+    const d = !!me && isDone(c.id, me.id);
+    if (me?.is_traveler && filter === 'open' && d) return false;
+    if (me?.is_traveler && filter === 'done' && !d) return false;
+    const t = q.trim();
+    return !t || c.title.includes(t) || (c.details || '').includes(t);
+  };
+  const base = ch.rows.map((c, i) => ({ c, i })).filter(({ c }) => passBase(c));
+  const list = country ? base.filter(({ c }) => cOf.get(c.id)?.includes(country)) : base;
+  const chips = [...COUNTRIES.map((c) => ({ name: c.name, flag: c.flag })), { name: ANYWHERE, flag: '🌎' }]
+    .map((c) => ({ ...c, n: base.filter(({ c: x }) => cOf.get(x.id)?.includes(c.name)).length }))
+    .filter((c) => c.n > 0);
+  const pick = (fn: () => void) => { fn(); setShown(PAGE); };
 
   async function toggle(c: Challenge, e: React.MouseEvent) {
     if (!me) return;
@@ -87,21 +107,24 @@ export default function Challenges() {
       <div className="shadow-filters">
         <div className="sh-seg" role="group" aria-label="סינון">
           {([['open', 'מחכים לי'], ['done', 'ביצעתי'], ['all', 'הכול']] as const).map(([k, l]) => (
-            <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>
+            <button key={k} className={filter === k ? 'on' : ''} onClick={() => pick(() => setFilter(k))}>{l}</button>
           ))}
         </div>
-        <input id="ch-q" className="sh-search" placeholder="חיפוש: לאמה, בוליביה, טנגו…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input id="ch-q" className="sh-search" placeholder="חיפוש: לאמה, בוליביה, טנגו…" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE); }} />
         <span className="sh-count">{ch.rows.length} תיקים · {ch.rows.reduce((s, c) => s + c.points, 0)} נק׳ בסך הכול</span>
       </div>
+      <div className="sh-countries" role="group" aria-label="סינון לפי מדינה">
+        <button className={!country ? 'on' : ''} onClick={() => pick(() => setCountry(null))}>הכול <small>{base.length}</small></button>
+        {chips.map((c) => (
+          <button key={c.name} className={country === c.name ? 'on' : ''} onClick={() => pick(() => setCountry(country === c.name ? null : c.name))}>
+            <span aria-hidden="true">{c.flag}</span> {c.name} <small>{c.n}</small>
+          </button>
+        ))}
+      </div>
 
+      {list.length === 0 && <p className="sh-empty">{filter === 'open' && !q && !country ? 'ביצעתן הכול. איש הצללים מרוצה… בינתיים.' : 'אין תיקים שמתאימים לסינון.'}</p>}
       <ul className="dossiers">
-        {ch.rows.map((c, i) => ({ c, i })).filter(({ c }) => {
-          const d = !!me && isDone(c.id, me.id);
-          if (me?.is_traveler && filter === 'open' && d) return false;
-          if (me?.is_traveler && filter === 'done' && !d) return false;
-          const t = q.trim();
-          return !t || c.title.includes(t) || (c.details || '').includes(t);
-        }).map(({ c, i }) => {
+        {list.slice(0, shown).map(({ c, i }) => {
           const mine = !!me && isDone(c.id, me.id);
           return (
             <li key={c.id} className={'dossier' + (mine ? ' done' : '')}>
@@ -123,6 +146,11 @@ export default function Challenges() {
           );
         })}
       </ul>
+      {list.length > shown && (
+        <button className="sh-more" onClick={() => setShown((n) => n + PAGE)}>
+          עוד {Math.min(PAGE, list.length - shown)} תיקים <small>(נשארו {list.length - shown})</small>
+        </button>
+      )}
 
       {isAdmin && (
         <form className="shadow-form" onSubmit={add}>

@@ -7,6 +7,7 @@ import { usePhotoUrls } from '../lib/photos';
 import type { JournalEntry, Photo, TripEvent } from '../lib/types';
 import { FIRST_FLIGHT } from '../config';
 import { addDays, fmtDate, safeFileName, todayISO } from '../lib/util';
+import { IMG, shrinkImage, shrunkName } from '../lib/image';
 import { Who, Empty } from '../components/Avatar';
 import Reminder from '../components/Reminder';
 import { questionFor } from '../data/questions';
@@ -61,8 +62,9 @@ export default function Journal() {
     let photoSkipped = false;
     if (file && !navigator.onLine) photoSkipped = true;
     else if (file) {
-      const path = `journal/${me.id}/${day}-${Date.now()}-${safeFileName(file.name)}`;
-      const up = await supabase.storage.from('photos').upload(path, file, { contentType: file.type || 'image/jpeg' });
+      const blob = await shrinkImage(file, IMG.photo);
+      const path = `journal/${me.id}/${day}-${Date.now()}-${safeFileName(shrunkName(file.name, blob, file))}`;
+      const up = await supabase.storage.from('photos').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
       if (!up.error) photo_path = path;
     }
     const r = await dbWrite({ table: 'journal_entries', kind: 'upsert', values: { day, content: text.trim(), mood, photo_path, created_by: me.id }, onConflict: 'day,created_by' });

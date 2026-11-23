@@ -1,7 +1,7 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from './lib/auth';
-import { isConfigured } from './lib/supabase';
+import { isConfigured, supabase } from './lib/supabase';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import { LOGO_URL } from './config';
@@ -64,6 +64,13 @@ function useOnline() {
   return on;
 }
 
+function deviceLabel() {
+  const ua = navigator.userAgent;
+  const kind = /iPhone/.test(ua) ? 'אייפון' : /iPad/.test(ua) ? 'אייפד' : /Android/.test(ua) ? 'אנדרואיד' : 'מחשב';
+  const app = window.matchMedia?.('(display-mode: standalone)').matches || (navigator as any).standalone ? 'אפליקציה' : 'דפדפן';
+  return `${kind} · ${app}`;
+}
+
 export default function App() {
   const { ready, session, guest, me, isAdmin, signOut } = useAuth();
   const online = useOnline();
@@ -78,9 +85,23 @@ export default function App() {
     if (meta) meta.setAttribute('content', ({ pink: '#e0157f', red: '#d61f3a', purple: '#7b2ff7', midnight: '#0b1026', 'guest-sky': '#1f7fb8' } as Record<string, string>)[skin] || '#e0157f');
   }, [skin]);
   useEffect(() => onQueueChange(() => setQueued(readQueue().length)), []);
+  // "נראתה לאחרונה" לבדיקת המערכת של המנהל (פעם ב-10 דקות לכל היותר, ורק כשיש קליטה)
+  useEffect(() => {
+    if (!me?.id || !online) return;
+    const touch = () => {
+      if (document.visibilityState !== 'visible') return;
+      let last = 0; try { last = Number(localStorage.getItem('trip:seen')) || 0; } catch { /* ignore */ }
+      if (Date.now() - last < 10 * 60e3) return;
+      try { localStorage.setItem('trip:seen', String(Date.now())); } catch { /* ignore */ }
+      supabase.rpc('touch_seen', { device: deviceLabel() }).then(() => {}, () => {});
+    };
+    touch();
+    document.addEventListener('visibilitychange', touch);
+    return () => document.removeEventListener('visibilitychange', touch);
+  }, [me?.id, online]);
   const { pathname } = useLocation();
   const mainRef = useRef<HTMLElement>(null);
-  useEffect(() => { mainRef.current?.scrollTo(0, 0); window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => { mainRef.current?.scrollTo(0, 0); window.scrollTo(0, 0); countVisit(pathname); }, [pathname]);
 
   if (!isConfigured) return <SetupNeeded />;
   if (!ready) return <div className="splash">רגע…</div>;
@@ -155,19 +176,62 @@ export default function App() {
   );
 }
 
+// כמה פעמים כל אחת נכנסה לכל עמוד (רק בטלפון שלה), בשביל "הכי בשימוש אצלך"
+const VISITS = 'trip:visits';
+function readVisits(): Record<string, number> { try { return JSON.parse(localStorage.getItem(VISITS) || '{}'); } catch { return {}; } }
+function countVisit(path: string) {
+  if (path === '/more' || path === '/') return;
+  const v = readVisits(); v[path] = (v[path] || 0) + 1;
+  try { localStorage.setItem(VISITS, JSON.stringify(v)); } catch { /* ignore */ }
+}
+
+const PRIMARY = ['/', '/money', '/map', '/shopping'];
+const GROUPS: { title: string; items: string[] }[] = [
+  { title: '🧭 בדרך', items: ['/help', '/bookings', '/wifi', '/pretrip', '/gear'] },
+  { title: '💼 סידורים ובריאות', items: ['/docs', '/meds', '/medical'] },
+  { title: '📸 זיכרונות', items: ['/journal', '/gallery', '/songs', '/book', '/capsule'] },
+  { title: '🎉 כיף', items: ['/challenges', '/wishes', '/badges'] },
+];
+
+function MoreLink({ s }: { s: (typeof SECTIONS)[number] }) {
+  return s.to === '/challenges' ? (
+    <NavLink to={s.to} className="more-shadow">
+      <span className="ms-man" aria-hidden="true"><svg viewBox="0 0 60 80"><path fill="#050307" d="M12 20 Q30 15 48 20 L45 22 Q30 20 15 22 Z M18 21 Q19 8 30 8 Q41 8 42 21 Z M22 22 Q30 25 38 22 Q38 33 30 35 Q22 33 22 22 Z M30 34 L17 39 Q8 48 10 66 L12 80 L48 80 L50 66 Q52 48 43 39 Z" /><circle className="ms-eye" cx="27" cy="28" r="1" fill="#ff2d8a" /><circle className="ms-eye" cx="33" cy="28" r="1" fill="#ff2d8a" /></svg></span>
+      <span className="ms-text"><small>תיק מסווג</small>{s.label}</span>
+    </NavLink>
+  ) : <NavLink to={s.to}><span className="more-ico" aria-hidden="true">{s.icon}</span>{s.label}</NavLink>;
+}
+
 function MoreSheet() {
   const { isAdmin } = useAuth();
+  const byPath = new Map(SECTIONS.map((s) => [s.to, s]));
+  const visits = readVisits();
+  const top = Object.entries(visits)
+    .filter(([p, n]) => n >= 3 && byPath.has(p) && !PRIMARY.includes(p))
+    .sort((a, b) => b[1] - a[1]).slice(0, 4).map(([p]) => byPath.get(p)!);
+  // עמוד חדש שנוסף ולא שובץ בקבוצה לא ייעלם
+  const grouped = new Set(GROUPS.flatMap((g) => g.items));
+  const rest = SECTIONS.filter((s) => !PRIMARY.includes(s.to) && !grouped.has(s.to));
+  const groups = rest.length ? [...GROUPS, { title: '✨ עוד', items: rest.map((s) => s.to) }] : GROUPS;
   return (
     <div className="more-sheet">
-      <div className="more-grid">
-        {SECTIONS.map((s) => s.to === '/challenges' ? (
-          <NavLink key={s.to} to={s.to} className="more-shadow">
-            <span className="ms-man" aria-hidden="true"><svg viewBox="0 0 60 80"><path fill="#050307" d="M12 20 Q30 15 48 20 L45 22 Q30 20 15 22 Z M18 21 Q19 8 30 8 Q41 8 42 21 Z M22 22 Q30 25 38 22 Q38 33 30 35 Q22 33 22 22 Z M30 34 L17 39 Q8 48 10 66 L12 80 L48 80 L50 66 Q52 48 43 39 Z" /><circle className="ms-eye" cx="27" cy="28" r="1" fill="#ff2d8a" /><circle className="ms-eye" cx="33" cy="28" r="1" fill="#ff2d8a" /></svg></span>
-            <span className="ms-text"><small>תיק מסווג</small>{s.label}</span>
-          </NavLink>
-        ) : <NavLink key={s.to} to={s.to}><span className="more-ico" aria-hidden="true">{s.icon}</span>{s.label}</NavLink>)}
-        {isAdmin && <NavLink to="/admin" className="more-admin"><span className="more-ico" aria-hidden="true">⚙️</span>ניהול</NavLink>}
-      </div>
+      {top.length >= 2 && (
+        <section className="more-group more-top">
+          <h2>⭐ הכי בשימוש אצלך</h2>
+          <div className="more-quick">
+            {top.map((s) => <NavLink key={s.to} to={s.to}><span className="more-ico" aria-hidden="true">{s.icon}</span><span>{s.short}</span></NavLink>)}
+          </div>
+        </section>
+      )}
+      {groups.map((g) => (
+        <section key={g.title} className="more-group">
+          <h2>{g.title}</h2>
+          <div className="more-grid">
+            {g.items.map((p) => byPath.get(p)).filter(Boolean).map((s) => <MoreLink key={s!.to} s={s!} />)}
+          </div>
+        </section>
+      ))}
+      {isAdmin && <div className="more-grid"><NavLink to="/admin" className="more-admin"><span className="more-ico" aria-hidden="true">⚙️</span>ניהול</NavLink></div>}
     </div>
   );
 }

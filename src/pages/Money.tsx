@@ -8,6 +8,7 @@ import type { Expense, Transfer } from '../lib/types';
 import { EXPENSE_CATEGORIES } from '../config';
 import { CURRENCIES } from '../data/currencies';
 import { fmtDate, todayISO } from '../lib/util';
+import { IMG, shrinkImage, shrunkName } from '../lib/image';
 import { Who, Empty } from '../components/Avatar';
 import { paidStamp, reducedMotion } from '../lib/fx';
 import type { TripEvent } from '../lib/types';
@@ -310,8 +311,9 @@ function ExpenseForm({ onDone, suggested }: { onDone: () => void; suggested?: st
     // קבלה (לא חובה): עולה רק כשיש קליטה
     let receipt_path: string | null = null;
     if (receipt && navigator.onLine && me) {
-      const path = `receipts/${me.id}/${Date.now()}-${safeFileName(receipt.name)}`;
-      const up = await supabase.storage.from('photos').upload(path, receipt, { contentType: receipt.type || 'image/jpeg' });
+      const blob = await shrinkImage(receipt, IMG.receipt);
+      const path = `receipts/${me.id}/${Date.now()}-${safeFileName(shrunkName(receipt.name, blob, receipt))}`;
+      const up = await supabase.storage.from('photos').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
       if (!up.error) receipt_path = path;
     }
     const r = await dbWrite({ table: 'expenses', kind: 'insert', values: {

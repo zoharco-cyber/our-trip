@@ -24,6 +24,7 @@ export default function Admin() {
     <div className="stack-lg narrow">
       <h1>ניהול</h1>
       <a href="#/features" className="card admin-link">📋 <b>הפיצ׳רים של הטיול</b><span className="small muted">כל פיצ׳ר ואיך משתמשים בו, עם סימון של מה כבר הסברת לבנות</span></a>
+      <SystemStatus />
       <Reminder />
       <section className="card stack">
         <h2>קפסולת הזמן</h2>
@@ -60,6 +61,90 @@ export default function Admin() {
       </section>
       <ResetHistory />
     </div>
+  );
+}
+
+type Status = {
+  users: { id: string; last_seen_at: string | null; device: string | null; push: number; push_last: string | null }[];
+  storage: Record<string, { bytes: number; files: number }>;
+  db_bytes: number;
+};
+const MB = 1024 * 1024;
+const STORAGE_LIMIT = 1024 * MB; // התוכנית החינמית: 1GB קבצים
+const DB_LIMIT = 500 * MB;       // ו-500MB מסד נתונים
+const mb = (b: number) => b >= 1024 * MB ? Math.round((b / 1024 / MB) * 10) / 10 + 'GB' : (b >= 100 * MB ? Math.round(b / MB) : Math.round((b / MB) * 10) / 10) + 'MB';
+
+function ago(iso: string | null) {
+  if (!iso) return null;
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60e3);
+  if (m < 2) return 'עכשיו';
+  if (m < 60) return `לפני ${m} דק׳`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `לפני ${h === 1 ? 'שעה' : h === 2 ? 'שעתיים' : h + ' שעות'}`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'אתמול' : `לפני ${d} ימים`;
+}
+
+function Meter({ label, used, limit }: { label: string; used: number; limit: number }) {
+  const pct = Math.min(100, (used / limit) * 100);
+  const tone = pct > 85 ? 'bad' : pct > 60 ? 'warn' : 'ok';
+  return (
+    <div className={'sys-meter t-' + tone}>
+      <div className="row-between small"><span>{label}</span><span className="tnum">{mb(used)} מתוך {mb(limit)}</span></div>
+      <div className="sys-bar"><i style={{ width: Math.max(1.5, pct) + '%' }} /></div>
+    </div>
+  );
+}
+
+function SystemStatus() {
+  const { profiles } = useAuth();
+  const [st, setSt] = useState<Status | null>(null);
+  const [err, setErr] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function load() {
+    setBusy(true);
+    const { data, error } = await supabase.rpc('admin_system_status');
+    setBusy(false);
+    if (error || !data) { setErr(true); return; }
+    setErr(false); setSt(data as Status);
+  }
+  useEffect(() => { load(); }, []);
+  const files = st ? Object.values(st.storage).reduce((s, b) => s + b.bytes, 0) : 0;
+  const nFiles = st ? Object.values(st.storage).reduce((s, b) => s + b.files, 0) : 0;
+  const people = profiles.filter((p) => p.is_traveler || p.is_admin);
+  const missingPush = st ? people.filter((p) => p.is_traveler && !(st.users.find((u) => u.id === p.id)?.push)) : [];
+
+  return (
+    <section className="card stack sys-card">
+      <div className="row-between">
+        <h2>🩺 בדיקת מערכת</h2>
+        <button className="btn btn-small" onClick={load} disabled={busy}>{busy ? 'בודק…' : 'רענון'}</button>
+      </div>
+      {err && <p className="muted small">לא הצלחתי לבדוק כרגע. צריך חיבור לאינטרנט.</p>}
+      {st && <>
+        <p className={'sys-summary ' + (missingPush.length ? 'warn' : 'ok')}>
+          {missingPush.length
+            ? `🔕 ${missingPush.map((p) => p.display_name.split(' ')[0]).join(' ו')} עוד לא ${missingPush.length > 1 ? 'הפעילו' : 'הפעילה'} התראות`
+            : '✅ כל המטיילות הפעילו התראות'}
+        </p>
+        <ul className="sys-users">
+          {people.map((p) => {
+            const u = st.users.find((x) => x.id === p.id);
+            const seen = ago(u?.last_seen_at || null);
+            return (
+              <li key={p.id} style={{ ['--c' as any]: p.color }}>
+                <b><i className="dot" /> {p.display_name.split(' ')[0]}</b>
+                <span className="small">{seen ? <>{p.is_admin ? 'נכנס' : 'נכנסה'} {seen}{u?.device && <span className="muted"> · {u.device}</span>}</> : <span className="muted">{p.is_admin ? 'עוד לא נכנס' : 'עוד לא נכנסה'} מאז העדכון</span>}</span>
+                <span className={'sys-push small ' + (u?.push ? 'on' : 'off')}>{u?.push ? `🔔 התראות פעילות${u.push > 1 ? ` (${u.push} מכשירים)` : ''}` : '🔕 בלי התראות'}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <Meter label={`📸 קבצים · ${nFiles}`} used={files} limit={STORAGE_LIMIT} />
+        <Meter label="🗄️ מסד הנתונים" used={st.db_bytes} limit={DB_LIMIT} />
+        <p className="muted small">"נכנסה" מתעדכן כשהיא פותחת את האפליקציה עם קליטה. התראות מופעלות בעמוד הבית בכל טלפון בנפרד.</p>
+      </>}
+    </section>
   );
 }
 
