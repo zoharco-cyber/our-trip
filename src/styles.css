@@ -1124,3 +1124,16 @@ h2::before { color: #fff; }
 .sh-more { justify-self: center; background: transparent; color: var(--sh-ink); border: 1px dashed var(--sh-neon); border-radius: 999px; padding: .6rem 1.4rem; font: inherit; cursor: pointer; }
 .sh-more small { color: var(--sh-dim); }
 .sh-empty { text-align: center; color: var(--sh-dim); font-style: italic; }
+
+/* ---------- מצב חיסכון בסוללה ---------- */
+html[data-saver] *, html[data-saver] *::before, html[data-saver] *::after { animation: none !important; transition: none !important; }
+html[data-saver] * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html[data-saver] body { background-image: none !important; }
+html[data-saver] body::after, html[data-saver] .floating-money, html[data-saver] .shadow-page .fog, html[data-saver] .fx-canvas { display: none !important; }
+.lowbat { margin: .6rem auto 0; width: min(1100px, calc(100% - 24px)); background: #2a1a05; color: #ffe2b0; border: 1px solid #b26b00; border-radius: 16px; padding: .7rem .9rem; display: grid; gap: .4rem; flex: none; }
+.lowbat-head { display: flex; align-items: center; justify-content: space-between; }
+.lowbat .icon-btn { color: inherit; }
+.saver-card { display: grid; gap: .6rem; }
+.saver-seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-2); border-radius: 999px; padding: 3px; }
+.saver-seg button { border: 0; background: transparent; color: var(--ink); padding: .5rem; border-radius: 999px; font: inherit; cursor: pointer; }
+.saver-seg button.on { background: var(--brand); color: var(--brand-ink); font-weight: 600; }

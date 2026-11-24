@@ -1,7 +1,7 @@
 // אפקטים: קונפטי, חותמות, נצנצים. הכול מכבד "הפחתת תנועה" של המכשיר.
 
 export const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  typeof window !== 'undefined' && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.saver === '1');
 
 const PALETTE = ['#ff3fa4', '#ff8fd0', '#ffc94d', '#b56cff', '#ffffff', '#6fd6ff'];
 

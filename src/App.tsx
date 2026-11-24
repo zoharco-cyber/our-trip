@@ -7,6 +7,8 @@ import Home from './pages/Home';
 import { LOGO_URL } from './config';
 import { LetterProvider } from './components/MyLetter';
 import { onQueueChange, readQueue, startQueueSync } from './lib/offline';
+import { LOW, setSaverPref, useSaver, type SaverPref } from './lib/saver';
+import { postStatus } from './components/Status';
 
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
@@ -77,7 +79,12 @@ export default function App() {
   const [queued, setQueued] = useState(() => readQueue().length);
   useEffect(() => startQueueSync(), []);
   // ערכת העיצוב של מי שמחוברת (המנהל קובע). מסך הכניסה ואורחים: ורוד
-  const skin = guest ? 'guest-sky' : session && me?.theme ? me.theme : 'pink';
+  const saver = useSaver();
+  const baseSkin = guest ? 'guest-sky' : session && me?.theme ? me.theme : 'pink';
+  // במצב חיסכון: הערכה הכהה (מסך כהה חוסך סוללה במסכי OLED)
+  const skin = saver.active && session && !guest ? 'midnight' : baseSkin;
+  // נטענה מעל הסף: הפס של "סוללה חלשה" יחזור בפעם הבאה שתרד
+  useEffect(() => { if (!saver.low) try { sessionStorage.removeItem('trip:lowbat'); } catch { /* ignore */ } }, [saver.low]);
   useEffect(() => {
     if (skin === 'pink') delete document.documentElement.dataset.skin;
     else document.documentElement.dataset.skin = skin;
@@ -131,6 +138,7 @@ export default function App() {
         </div>
       </header>
       {!online && <div className="offline-bar">אין קליטה כרגע. אפשר להמשיך להוסיף הוצאות, קניות, יומן ועוד. הכול יישלח לבד כשהקליטה תחזור.</div>}
+      {me?.is_traveler && saver.low && <LowBattery level={saver.battery.level} saverOn={saver.active} />}
       {queued > 0 && <div className="queue-bar">⏳ {queued} {queued === 1 ? 'שינוי מחכה' : 'שינויים מחכים'} לשליחה{online ? '… שולחת עכשיו' : ' עד שתחזור קליטה'}</div>}
       <main className="page" ref={mainRef}>
         <Suspense fallback={<div className="page-loading" aria-label="טוען">✨</div>}>
@@ -202,6 +210,62 @@ function MoreLink({ s }: { s: (typeof SECTIONS)[number] }) {
   ) : <NavLink to={s.to}><span className="more-ico" aria-hidden="true">{s.icon}</span>{s.label}</NavLink>;
 }
 
+function LowBattery({ level, saverOn }: { level: number; saverOn: boolean }) {
+  const { me } = useAuth();
+  const pct = Math.round(level * 100);
+  // נסגר עד שהסוללה נטענת ויורדת שוב
+  const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem('trip:lowbat') === '1'; } catch { return false; } });
+  const [sent, setSent] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (hidden) return null;
+  const hide = () => { setHidden(true); try { sessionStorage.setItem('trip:lowbat', '1'); } catch { /* ignore */ } };
+  async function send() {
+    if (!me) return;
+    setBusy(true);
+    const { r, located } = await postStatus(me.id, `🔋 הסוללה כמעט נגמרת (${pct}%). אחזור כשאטען`, { withLoc: true });
+    setBusy(false);
+    setSent(r === 'error' ? 'לא נשלח. נסי שוב.' : r === 'queued' ? 'נשמר, ויישלח כשתחזור קליטה.' : located ? 'נשלח, עם המיקום 📍' : 'נשלח (בלי מיקום).');
+  }
+  return (
+    <div className="lowbat" role="status">
+      <div className="lowbat-head">
+        <b>🪫 נשארו {pct}% סוללה</b>
+        <button className="icon-btn" aria-label="סגירה" onClick={hide}>×</button>
+      </div>
+      <p className="small">{saverOn ? 'עברתי למצב חיסכון: כהה ובלי אנימציות.' : 'אפשר לעבור למצב חיסכון: כהה ובלי אנימציות.'}</p>
+      {sent ? <p className="small"><b>{sent}</b></p> : (
+        <div className="row gap wrap">
+          <button className="btn btn-small btn-primary" disabled={busy} onClick={send}>{busy ? 'שולחת…' : '📍 לשלוח לבנות ולבית איפה אני'}</button>
+          {saverOn
+            ? <button className="btn btn-small" onClick={() => { setSaverPref('off'); hide(); }}>בלי מצב חיסכון</button>
+            : <button className="btn btn-small" onClick={() => setSaverPref('on')}>🔋 הפעלת חיסכון</button>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SaverToggle() {
+  const { pref, active, battery } = useSaver();
+  const opts: [SaverPref, string][] = [['auto', 'אוטומטי'], ['on', 'פועל'], ['off', 'כבוי']];
+  return (
+    <section className="more-group">
+      <h2>🔋 מצב חיסכון בסוללה</h2>
+      <div className="card saver-card">
+        <div className="saver-seg" role="group" aria-label="מצב חיסכון">
+          {opts.map(([k, l]) => <button key={k} className={pref === k ? 'on' : ''} onClick={() => setSaverPref(k)}>{l}</button>)}
+        </div>
+        <p className="small muted">
+          {active ? '✅ פועל עכשיו: מסך כהה, בלי אנימציות וקונפטי. ' : 'כהה ובלי אנימציות, כדי שהטלפון יחזיק עוד קצת. '}
+          {battery.supported
+            ? `במצב אוטומטי נדלק לבד מתחת ל-${Math.round(LOW * 100)}% (עכשיו ${Math.round(battery.level * 100)}%${battery.charging ? ', בטעינה' : ''}).`
+            : 'הטלפון הזה (אייפון) לא מאפשר לאתר לראות את הסוללה, אז "אוטומטי" לא יידלק לבד. כשהסוללה נמוכה, לוחצים "פועל".'}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function MoreSheet() {
   const { isAdmin } = useAuth();
   const byPath = new Map(SECTIONS.map((s) => [s.to, s]));
@@ -231,6 +295,7 @@ function MoreSheet() {
           </div>
         </section>
       ))}
+      <SaverToggle />
       {isAdmin && <div className="more-grid"><NavLink to="/admin" className="more-admin"><span className="more-ico" aria-hidden="true">⚙️</span>ניהול</NavLink></div>}
     </div>
   );

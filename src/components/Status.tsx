@@ -38,6 +38,20 @@ export function LatestStatus() {
   );
 }
 
+/** שולחת עדכון לבית (ואופציונלית מיקום ל"אנחנו כאן"). נשמר בטלפון אם אין קליטה. */
+export async function postStatus(userId: string, text: string, opts: { place?: string; withLoc: boolean }) {
+  let lat: number | null = null, lng: number | null = null;
+  if (opts.withLoc && navigator.geolocation) {
+    await new Promise<void>((res) => navigator.geolocation.getCurrentPosition(
+      (p) => { lat = p.coords.latitude; lng = p.coords.longitude; res(); }, () => res(), { timeout: 10000, maximumAge: 300000 }));
+  }
+  const now = new Date().toISOString();
+  const where = opts.place?.trim() || (lat !== null && lng !== null ? await placeName(lat, lng) : null);
+  const r = await dbWrite({ table: 'status_updates', kind: 'insert', values: { id: newId(), message: text.trim(), place: where, lat, lng, created_by: userId, created_at: now } });
+  if (lat !== null && lng !== null) await dbWrite({ table: 'location_updates', kind: 'insert', values: { id: newId(), lat, lng, name: where, created_by: userId, created_at: now } });
+  return { r, located: lat !== null };
+}
+
 /** שליחת עדכון "אנחנו בסדר" להורים ולמנהל */
 export function SendStatus() {
   const { me } = useAuth();
@@ -52,15 +66,7 @@ export function SendStatus() {
   async function send(text: string, e?: React.MouseEvent) {
     if (!text.trim()) return;
     setBusy(true); setDone(null);
-    let lat: number | null = null, lng: number | null = null;
-    if (withLoc && navigator.geolocation) {
-      await new Promise<void>((res) => navigator.geolocation.getCurrentPosition(
-        (p) => { lat = p.coords.latitude; lng = p.coords.longitude; res(); }, () => res(), { timeout: 10000, maximumAge: 300000 }));
-    }
-    const now = new Date().toISOString();
-    const where = place.trim() || (lat !== null && lng !== null ? await placeName(lat, lng) : null);
-    const r = await dbWrite({ table: 'status_updates', kind: 'insert', values: { id: newId(), message: text.trim(), place: where, lat, lng, created_by: me!.id, created_at: now } });
-    if (lat !== null && lng !== null) await dbWrite({ table: 'location_updates', kind: 'insert', values: { id: newId(), lat, lng, name: where, created_by: me!.id, created_at: now } });
+    const { r } = await postStatus(me!.id, text, { place, withLoc });
     setBusy(false);
     if (r === 'error') { setDone('לא נשלח. נסי שוב.'); return; }
     confetti(e?.clientX, e?.clientY, 40, ['💖', '✨']);
