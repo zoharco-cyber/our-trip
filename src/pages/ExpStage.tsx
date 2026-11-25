@@ -57,6 +57,7 @@ export default function ExpStage() {
     if (c.kind === 'vault') return { locks: Object.keys(a[k(st.scene, 'lock')] || {}), opened: !!Object.keys(a[k(st.scene, 'open')] || {}).length };
     if (c.kind === 'spot') { const who = profiles.find((p) => p.slug === c.who)?.id; return { spot: who ? (a[k(st.scene)] || {})[who] : undefined }; }
     if (c.kind === 'takeoff') return { fail: (a[k(st.scene, 'fail')] || {}).n || 0 };
+    if (c.kind === 'flight' || c.kind === 'dest') { const who = profiles.find((p) => p.slug === c.who)?.id; return { val: who ? (a[k(st.scene)] || {})[who] : undefined, conf: a[k(st.scene, 'c')] || {} }; }
     return {};
   }
   function broadcast(st = sRef.current) {
@@ -80,8 +81,11 @@ export default function ExpStage() {
     setS((x) => {
       if (a.scene !== x.scene && !(a.key === 'c')) return x;
       const key = k(a.scene, a.key || '');
-      if (x.ans[key]?.[a.uid] !== undefined && SCENES[a.scene].kind !== 'takeoff') return x;
+      const kind = SCENES[a.scene].kind;
+      const fixable = (kind === 'flight' || kind === 'dest') && !a.key; // תיקון: התשובה החדשה מחליפה, והאישורים מתאפסים
+      if (x.ans[key]?.[a.uid] !== undefined && kind !== 'takeoff' && !fixable && a.key !== 'c') return x;
       const ans = { ...x.ans, [key]: { ...(x.ans[key] || {}), [a.uid]: a.v } };
+      if (fixable) ans[k(a.scene, 'c')] = {};
       const joined = x.joined.includes(a.uid) ? x.joined : [...x.joined, a.uid];
       sideEffects(a);
       return { ...x, ans, joined };
@@ -93,8 +97,8 @@ export default function ExpStage() {
     const i = girls.findIndex((g) => g.id === a.uid);
     if (c.kind !== 'takeoff') confetti(innerWidth * (0.2 + 0.3 * Math.max(0, i)), innerHeight * 0.7, 40, ['✦', '💖']);
     // תשובות של סימולציה (חזרה גנרלית) לא נשמרות בנתונים האמיתיים
-    if (c.kind === 'flight' && !a.sim) saveFlight(a.v);
-    if (c.kind === 'dest') { setDestInfo(a.v); if (!a.sim) saveDest(a.v); }
+    if (c.kind === 'flight' && !a.key && !a.sim) saveFlight(a.v);
+    if (c.kind === 'dest' && !a.key) { setDestInfo(a.v); if (!a.sim) saveDest(a.v); }
     if (c.kind === 'vault' && a.key === 'open') openVault(!!a.sim);
   }
   async function saveFlight(v: { date: string; time: string }) {
@@ -157,8 +161,10 @@ export default function ExpStage() {
       waiting: (id) => ['לראות את מאצ׳ו פיצ׳ו בזריחה', 'לרקוד טנגו בבואנוס איירס', 'לישון במלון של מלח'][ids.indexOf(id) % 3],
       forget: (id) => ['המטען של הטלפון', 'הדרכון', 'כרית צוואר'][ids.indexOf(id) % 3], takeoff: () => Date.now(),
     };
-    if (c.kind === 'flight' && who) onAnswer({ uid: who, scene: sc0, v: { date: '2026-12-22', time: '06:30' } });
-    else if (c.kind === 'dest' && who) onAnswer({ uid: who, scene: sc0, v: { country: 'פרו', city: 'לימה' } });
+    if ((c.kind === 'flight' || c.kind === 'dest') && who) {
+      if (A(sc0)[who] === undefined) onAnswer({ uid: who, scene: sc0, v: c.kind === 'flight' ? { date: '2026-12-22', time: '06:30' } : { country: 'פרו', city: 'לימה' } });
+      else ids.filter((id) => id !== who).forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'c', v: true }));
+    }
     else if (c.kind === 'vault') {
       if (!Object.keys(A(sc0, 'lock')).length) ids.forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'lock', v: true }));
       else if (who) onAnswer({ uid: who, scene: sc0, key: 'open', v: true });
@@ -217,6 +223,10 @@ export default function ExpStage() {
   }
   if (phase === 'reveal') return <Reveal girls={girls} big sound={sound.current} onDone={() => setPhase('exp')} />;
 
+  const Confirms = ({ conf }: { conf: Record<string, boolean> }) => {
+    const others = girls.filter((g) => g.id !== W(sc.who)?.id && present.includes(g.id));
+    return <div className="xs-conf">{others.map((g) => <span key={g.id} style={{ ['--c' as any]: g.color }} className={conf[g.id] === undefined ? '' : conf[g.id] ? 'yes' : 'no'}>{conf[g.id] === undefined ? '…' : conf[g.id] ? '✅' : '🤔'} {g.name}</span>)}</div>;
+  };
   // ---- הסצנות ----
   const W = (slug?: string) => bySlug(slug);
   let view: JSX.Element;
@@ -234,11 +244,13 @@ export default function ExpStage() {
       const chars = v ? `${v.date.slice(8, 10)}.${v.date.slice(5, 7)} ${v.time}`.split('') : '--.-- --:--'.split('');
       view = (<><span className="xs-kick">פרטי המבצע · 1 / 3</span><h1 className="xs-h">מועד ההמראה, לפי <b style={{ color: W(sc.who)?.color }}>{nameOf(W(sc.who)?.id)}</b></h1>
         <div className="xs-board" dir="ltr">{chars.map((c, i) => c === '.' || c === ':' || c === ' ' ? <span key={i} className="xs-f sep">{c}</span> : <span key={i + c} className={'xs-f' + (v ? ' flip' : ' spin')} style={{ animationDelay: `${i * 90}ms` }}>{v ? c : '0'}</span>)}</div>
-        <p className="xs-sub">{v ? `✈ TLV → ??? · ${v.date.slice(0, 4)}` : `${nameOf(W(sc.who)?.id)} בוחרת…`}</p></>); break; }
+        <p className="xs-sub">{v ? `✈ TLV → ??? · ${v.date.slice(0, 4)}` : `${nameOf(W(sc.who)?.id)} בוחרת…`}</p>
+        {v && <Confirms conf={A(s.scene, 'c')} />}</>); break; }
     case 'dest': { const v = curAns[W(sc.who)?.id || ''] as { country: string; city: string } | undefined;
       view = (<><span className="xs-kick">פרטי המבצע · 2 / 3</span><h1 className="xs-h">היעד הראשון, לפי <b style={{ color: W(sc.who)?.color }}>{nameOf(W(sc.who)?.id)}</b></h1>
         <div className={'xs-route' + (v ? ' go' : '')}><span className="xs-pt">TLV<small>ישראל</small></span><span className="xs-arc"><i>✈️</i></span><span className="xs-pt dst">{v ? v.city : '???'}<small>{v ? v.country : 'בוחרת…'}</small></span></div>
-        {v && <p className="xs-stampline">📍 {v.city}, {v.country}</p>}</>); break; }
+        {v && <p className="xs-stampline" key={v.city}>📍 {v.city}, {v.country}</p>}
+        {v && <Confirms conf={A(s.scene, 'c')} />}</>); break; }
     case 'vault': { const locks = Object.keys(A(s.scene, 'lock')); const opened = Object.keys(A(s.scene, 'open')).length > 0;
       view = (<><span className="xs-kick">פרטי המבצע · 3 / 3</span><h1 className="xs-h">הכספת של <b style={{ color: W(sc.who)?.color }}>{nameOf(W(sc.who)?.id)}</b></h1>
         <div className={'xs-vault' + (opened ? ' open' : '')}><div className="xs-door"><span className="xs-dial" />

@@ -1414,3 +1414,7 @@ html[data-saver] .ft-glow, html[data-saver] .ft-ring { display: none; }
 .xs-sum-list > div { border-top: .5vmin solid var(--c); padding-top: 1.5vmin; display: grid; gap: .8vmin; text-align: start; font-size: 2.3vmin; } .xs-sum-list b { color: var(--c); font-size: 2.8vmin; }
 .stage-wait-wrap { place-items: center; }
 .exp-admin { border: 2px solid var(--brand); }
+.xs-conf { display: flex; gap: 2vw; }
+.xs-conf span { font-size: 2.6vmin; font-weight: 700; padding: .8vmin 2.2vmin; border-radius: 999px; border: 2px solid var(--c); color: rgba(255, 255, 255, .55); }
+.xs-conf span.yes { background: color-mix(in srgb, var(--c) 35%, transparent); color: #fff; animation: tagPop .5s cubic-bezier(.2, 1.8, .4, 1); }
+.xs-conf span.no { border-style: dashed; color: #ffd27a; animation: tagPop .5s; }

@@ -13,6 +13,7 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
   const ch = useRef<ReturnType<typeof expChannel> | null>(null);
   const sentKey = (scene: number, key = '') => `trip:expSent:${epoch}:${scene}:${key}`;
   const [, force] = useState(0);
+  const [fixing, setFixing] = useState(false);
   const wasSent = (scene: number, key = '') => { try { return !!localStorage.getItem(sentKey(scene, key)); } catch { return false; } };
 
   useEffect(() => {
@@ -60,8 +61,17 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
     case 'recruit': body = <Screen />; break;
     case 'finger': body = sent ? <Sent text="זוהית ✓" /> : <Finger onDone={() => send(st.scene, true)} />; break;
     case 'hotline': body = sent ? <Sent text="הקו נבדק ✓" /> : <Hotline uid={me.id} onDone={(r) => send(st.scene, r)} />; break;
-    case 'flight': body = mine(sc.who) ? (sent ? <Sent /> : <FlightPick onSend={(v) => send(st.scene, v)} />) : <Look who={first(sc.who)} sub="היא קובעת את מועד ההמראה" />; break;
-    case 'dest': body = mine(sc.who) ? (sent ? <Sent /> : <DestPick onSend={(v) => send(st.scene, v)} />) : <Look who={first(sc.who)} sub="היא בוחרת את היעד הראשון" />; break;
+    case 'flight': case 'dest': {
+      const val = st.shared?.val as any; const conf = (st.shared?.conf as Record<string, boolean>) || {};
+      const label = val ? (sc.kind === 'flight' ? `${val.date.slice(8, 10)}.${val.date.slice(5, 7)}, בשעה ${val.time}` : `${val.city}, ${val.country}`) : '';
+      if (mine(sc.who)) body = sent && !fixing ? (<><Sent /><button className="xp-skip" onClick={() => { try { localStorage.removeItem(sentKey(st.scene)); } catch { /* ignore */ } setFixing(true); }}>✏️ לתקן</button></>)
+        : sc.kind === 'flight' ? <FlightPick onSend={(v) => { setFixing(false); send(st.scene, v); }} /> : <DestPick onSend={(v) => { setFixing(false); send(st.scene, v); }} />;
+      else if (val && conf[me.id] === undefined) body = (<><p className="xp-q">{first(sc.who)} אומרת:</p><p className="xp-quote">{label}</p><p className="xp-q">נכון?</p>
+        <div className="xp-yn"><button onClick={() => send(st.scene, true, 'c')}>✅ נכון</button><button onClick={() => send(st.scene, false, 'c')}>🤔 לא בטוח</button></div></>);
+      else if (val) body = <Sent text={conf[me.id] ? 'אישרת ✓' : 'סימנת שלא בטוח 🤔'} />;
+      else body = <Look who={first(sc.who)} sub={sc.kind === 'flight' ? 'היא קובעת את מועד ההמראה' : 'היא בוחרת את היעד הראשון'} />;
+      break;
+    }
     case 'vault': {
       const locks = (st.shared?.locks as string[]) || [];
       const all = st.joined.every((u) => locks.includes(u));
