@@ -61,6 +61,7 @@ function ensureLayer() {
 /** קונפטי מנקודה במסך (או ממרכז המסך) */
 export function confetti(x?: number, y?: number, count = 140, shapes: string[] = []) {
   if (reducedMotion()) return;
+  if (document.documentElement.dataset.noconfetti) return; // בחוויה ובמסך הבמה: בלי קונפטי (כבד מדי)
   const L = ensureLayer();
   const room = Math.max(0, MAX_PARTS - L.parts.length);
   const n = Math.min(room, shapes.length ? Math.round(count * .6) : count); // אימוג׳ים כבדים יותר: פחות מהם

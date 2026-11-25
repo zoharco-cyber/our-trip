@@ -47,6 +47,7 @@ export function Passport({ g, i, stamped, dim, flight }: { g: Girl; i: number; s
 /** הרגע של האפס: הבזק, פיצוץ, והדרכונים נחתמים אחד-אחד */
 export function Reveal({ girls, sound, big, flight, onDone }: { girls: Girl[]; sound?: Sound; big?: boolean; flight?: string; onDone?: () => void }) {
   const [stage, setStage] = useState(0); // 0 הבזק, 1..n דרכונים, n+1 כותרת
+  useEffect(() => { document.documentElement.dataset.noconfetti = '1'; return () => { delete document.documentElement.dataset.noconfetti; }; }, []);
   useEffect(() => {
     sound?.boom(); buzz([200, 80, 300]);
     const colors = girls.map((g) => g.color);

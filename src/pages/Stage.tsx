@@ -26,6 +26,7 @@ export default function Stage() {
   const girls: Girl[] = useMemo(() => travelers.map((t) => ({ id: t.id, name: t.display_name.split(' ')[0], color: t.color })), [travelers]);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
+  useEffect(() => { document.documentElement.dataset.noconfetti = '1'; return () => { delete document.documentElement.dataset.noconfetti; }; }, []);
   useEffect(() => { document.documentElement.classList.add('stage-lock'); return () => document.documentElement.classList.remove('stage-lock'); }, []);
   useEffect(() => {
     supabase.from('events').select('starts_at').order('starts_at').limit(1).then(({ data }) => {

@@ -45,6 +45,7 @@ export default function ExpStage() {
   const colorOf = (id?: string) => profiles.find((p) => p.id === id)?.color || '#fff';
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
+  useEffect(() => { document.documentElement.dataset.noconfetti = '1'; return () => { delete document.documentElement.dataset.noconfetti; }; }, []);
   // המסך הגדול נעול במקום: בלי גלילה הצידה (חיצים, עכבר, טאץ׳ פד)
   useEffect(() => {
     const root = document.documentElement; root.classList.add('stage-lock');

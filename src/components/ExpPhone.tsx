@@ -17,6 +17,7 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
   const [fixing, setFixing] = useState(false);
   const wasSent = (scene: number, key = '') => { try { return !!localStorage.getItem(sentKey(scene, key)); } catch { return false; } };
 
+  useEffect(() => { document.documentElement.dataset.noconfetti = '1'; return () => { delete document.documentElement.dataset.noconfetti; }; }, []);
   useEffect(() => {
     ch.current = expChannel((s) => { if (s.epoch === epoch) setSt(s); }, null, null);
     const test = (e: Event) => setSt((e as CustomEvent).detail);
