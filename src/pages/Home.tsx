@@ -7,7 +7,6 @@ import { LatestStatus, SendStatus } from '../components/Status';
 import Weather from '../components/Weather';
 import DualClock from '../components/DualClock';
 import HereInfo from '../components/HereInfo';
-import { ReplayLetter } from '../components/MyLetter';
 import { PretripBanner } from './PreTrip';
 import { WordOfDay } from '../components/SpanishDaily';
 import PhotoPrompt from '../components/PhotoPrompt';
@@ -85,7 +84,6 @@ export default function Home() {
       {!guest && <div className="daily-duo"><WordOfDay /><PhotoPrompt /></div>}
       {!guest && <BadgeWatcher />}
       {!guest && <PretripBanner />}
-      {!guest && <ReplayLetter />}
       {!guest && <SendStatus />}
       {!guest && <NextBooking />}
 

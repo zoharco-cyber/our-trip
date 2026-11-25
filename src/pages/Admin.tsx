@@ -48,7 +48,6 @@ export default function Admin() {
         </div>
       </section>
       <LaunchAdmin />
-      <LettersAdmin />
       <TripEnd />
       <section className="card stack">
         <h2>ערכות עיצוב</h2>

@@ -18,7 +18,7 @@ export function LetterProvider({ children }: { children: ReactNode }) {
     supabase.from('welcome_letters').select('*').eq('user_id', me.id).maybeSingle().then(({ data }) => {
       if (!data) return;
       setLetter(data as WelcomeLetter);
-      if (!data.opened_at) setShow(true);
+      // בוטל לבקשת זוהר: המכתב לא נפתח לבד בכניסה הראשונה
     });
   }, [me?.id]);
   async function close() {
