@@ -65,11 +65,12 @@ export function useExpSetting() {
 export const doneKey = (epoch: number) => `trip:exp:${epoch}`;
 
 /** ערוץ משותף. self:false — לא מקבלים את מה ששלחנו */
-export function expChannel(onState: ((s: StageState) => void) | null, onAnswer: ((a: Answer) => void) | null, onJoin: ((uid: string) => void) | null) {
+export function expChannel(onState: ((s: StageState) => void) | null, onAnswer: ((a: Answer) => void) | null, onJoin: ((uid: string) => void) | null, onDial?: (uid: string, v: number) => void) {
   const ch = supabase.channel('exp-briefing', { config: { broadcast: { self: false } } });
   if (onState) ch.on('broadcast', { event: 'state' }, (m) => onState(m.payload as StageState));
   if (onAnswer) ch.on('broadcast', { event: 'ans' }, (m) => onAnswer(m.payload as Answer));
   if (onJoin) ch.on('broadcast', { event: 'join' }, (m) => onJoin((m.payload as { uid: string }).uid));
+  if (onDial) ch.on('broadcast', { event: 'dial' }, (m) => { const p = m.payload as { uid: string; v: number }; onDial(p.uid, p.v); });
   ch.subscribe();
   return ch;
 }
@@ -98,3 +99,15 @@ export async function enablePush(userId: string): Promise<'on' | 'denied' | 'ins
     return 'on';
   } catch { return 'error'; }
 }
+
+/** פיצוח הכספת: הקוד הוא תאריך ההמראה שאלה בחרה — יום (אלה), חודש (ליהי), שנה בשתי ספרות (ליאור) */
+export const DIAL_MAX = 40;
+export function vaultCodes(flight: { date: string } | undefined, ids: { ella?: string; lihi?: string; lior?: string }) {
+  const d = flight?.date || '2026-12-22';
+  const out: Record<string, number> = {};
+  if (ids.ella) out[ids.ella] = Number(d.slice(8, 10));
+  if (ids.lihi) out[ids.lihi] = Number(d.slice(5, 7));
+  if (ids.lior) out[ids.lior] = Number(d.slice(2, 4)) % DIAL_MAX;
+  return out;
+}
+export const CODE_HINT: Record<string, string> = { t1: 'היום בחודש שבו ממריאות', t2: 'החודש שבו ממריאות', t3: 'השנה שבה ממריאות (שתי ספרות)' };

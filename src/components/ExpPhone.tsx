@@ -3,7 +3,7 @@ import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { useMoney } from '../lib/money';
 import { buzz } from '../lib/launch';
-import { COUNTRIES, SCENES, doneKey, enablePush, expChannel, isIOS, isStandalone, type StageState } from '../lib/experience';
+import { CODE_HINT, COUNTRIES, DIAL_MAX, SCENES, doneKey, enablePush, expChannel, isIOS, isStandalone, type StageState } from '../lib/experience';
 import { Passport } from './LaunchShow';
 
 /** הטלפון של כל בת בזמן "התדריך" */
@@ -35,12 +35,17 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
     if (!st || !me) return;
     const raw = (() => { try { return localStorage.getItem(sentKey(st.scene)); } catch { return null; } })();
     if (raw && !st.answered.includes(me.id)) { const t = setTimeout(() => send(st.scene, JSON.parse(raw)), 2500); return () => clearTimeout(t); }
+    // גם פריצה והפקדה בכספת: נשלחות שוב עד שהמסך מאשר
+    for (const [key, list] of [['crack', 'cracked'], ['lock', 'locks']] as const) {
+      const ack = (st.shared?.[list] as string[] | undefined) || [];
+      if (SCENES[st.scene]?.kind === 'vault' && wasSent(st.scene, key) && !ack.includes(me.id)) { const t = setTimeout(() => send(st.scene, true, key), 2500); return () => clearTimeout(t); }
+    }
   }, [st]);
 
   useEffect(() => {
     if (st && SCENES[st.scene]?.kind === 'done') {
       try { localStorage.setItem(doneKey(epoch), 'done'); } catch { /* ignore */ }
-      const t = setTimeout(onFinish, 4200); return () => clearTimeout(t);
+      const t = setTimeout(onFinish, 8600); return () => clearTimeout(t);
     }
   }, [st?.scene]);
 
@@ -75,11 +80,16 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
     case 'vault': {
       const locks = (st.shared?.locks as string[]) || [];
       const all = st.joined.every((u) => locks.includes(u));
-      if (!wasSent(st.scene, 'lock') && !locks.includes(me.id)) body = <VaultInput uid={me.id} onLock={() => send(st.scene, true, 'lock')} />;
+      const cracked = (st.shared?.cracked as string[]) || [];
+      const code = ((st.shared?.codes as Record<string, number>) || {})[me.id];
+      const allCracked = st.joined.every((u) => cracked.includes(u));
+      if (!cracked.includes(me.id) && !wasSent(st.scene, 'crack') && code !== undefined) body = <Dial code={code} hint={CODE_HINT[me.slug] || ''} onMove={(v) => ch.current?.send({ type: 'broadcast', event: 'dial', payload: { uid: me.id, v } })} onCrack={() => send(st.scene, true, 'crack')} />;
+      else if (!allCracked) body = (<><span className="xp-eye">🔓</span><p className="xp-look">פרצת! ✓</p><span className="xp-small">מחכות שכל החוגות ייפרצו</span></>);
+      else if (!wasSent(st.scene, 'lock') && !locks.includes(me.id)) body = <VaultInput uid={me.id} onLock={() => send(st.scene, true, 'lock')} />;
       else if (mine(sc.who)) body = st.shared?.opened ? <Sent text="הכספת נפתחה!" /> : all
-        ? (<><p className="xp-q">כל המנעולים סגורים.<br />את שומרת הכספת.</p><button className="xp-go xp-huge" onClick={() => send(st.scene, true, 'open')}>🔓 פתחי את הכספת</button></>)
-        : (<><span className="xp-eye">🔒</span><p className="xp-look">נעלת ✓</p><span className="xp-small">מחכות לשאר המנעולים, ואז את פותחת</span></>);
-      else body = all ? <Look who={first(sc.who)} sub="היא פותחת את הכספת" /> : (<><span className="xp-eye">🔒</span><p className="xp-look">נעלת ✓</p><span className="xp-small">הסכום נשאר סודי</span></>);
+        ? (<><p className="xp-q">כולן הפקידו.<br />את שומרת הכספת.</p><button className="xp-go xp-huge" onClick={() => send(st.scene, true, 'open')}>💰 חשפי את הקופה</button></>)
+        : (<><span className="xp-eye">💰</span><p className="xp-look">הפקדת ✓</p><span className="xp-small">מחכות לשאר, ואז את חושפת את הקופה</span></>);
+      else body = all ? <Look who={first(sc.who)} sub="היא חושפת את הקופה" /> : (<><span className="xp-eye">💰</span><p className="xp-look">הפקדת ✓</p><span className="xp-small">הסכום נשאר סודי</span></>);
       break;
     }
     case 'likely': body = sent ? <Sent text="ההצבעה נשלחה" /> : (<><p className="xp-q">{sc.q}</p><div className="xp-vote">{travelers.map((t) => <button key={t.id} style={{ ['--c' as any]: t.color }} onClick={() => send(st.scene, t.id)}>{t.display_name.split(' ')[0]}{t.id === me.id ? ' (אני)' : ''}</button>)}</div></>); break;
@@ -93,7 +103,7 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
     case 'waiting': body = sent ? <Sent text="נשמר בחלומות שלך 🌠" /> : <TextAsk q={sc.q!} ph="למשל: לראות את מאצ׳ו פיצ׳ו בזריחה" onSend={async (v) => { await supabase.from('wishes').insert({ text: v, created_by: me.id }); send(st.scene, v); }} />; break;
     case 'forget': body = sent ? <Sent text="נוסף לתיק הקטן שלך ⭐" /> : <TextAsk q={sc.q!} ph="למשל: המטען של הטלפון" onSend={async (v) => { await supabase.from('bag_items').insert({ text: '⭐ ' + v, bag: 'small', user_id: me.id }); send(st.scene, v); }} />; break;
     case 'takeoff': body = (<><p className="xp-q">כולכן ביחד, בדיוק באותו רגע:</p><button className="xp-go xp-huge xp-plane" onClick={() => send(st.scene, Date.now())}>✈️ המראה</button>{(st.shared?.fail as number) > 0 && <p className="xp-warn">לא מסונכרנות! עוד פעם 😅</p>}</>); break;
-    default: body = (<><span className="xp-eye">💖</span><p className="xp-look">ברוכה הבאה<br /><b>לאפליקציה</b></p><span className="xp-small">ההרפתקה מתחילה</span></>);
+    default: body = <SelfDestruct />;
   }
   return (
     <div className="xp" style={{ ['--c' as any]: me.color }}>
@@ -162,10 +172,10 @@ function VaultInput({ uid, onLock }: { uid: string; onLock: () => void }) {
     await supabase.from('profiles').update({ initial_budget_usd: Math.round(usd) }).eq('id', uid);
     setBusy(false); onLock();
   }
-  return (<><span className="xp-eye">🔐</span><p className="xp-q">התקציב שלך לטיול<br /><small>סודי. רק הסכום המשותף ייחשף</small></p>
+  return (<><span className="xp-eye">💰</span><p className="xp-q">כמה את מפקידה?<br /><small>התקציב שלך לטיול. סודי, רק הסכום המשותף ייחשף</small></p>
     <div className="xp-money"><input inputMode="decimal" value={n} onChange={(e) => setN(e.target.value.replace(/[^\d.]/g, ''))} placeholder="0" />
       <div className="xp-cur">{(['USD', 'ILS'] as const).map((k) => <button key={k} className={cur === k ? 'on' : ''} onClick={() => setCur(k)}>{k === 'USD' ? '$' : '₪'}</button>)}</div></div>
-    <button className="xp-go" disabled={!Number(n) || busy} onClick={lock}>🔒 נעילה</button>
+    <button className="xp-go" disabled={!Number(n) || busy} onClick={lock}>💰 הפקדה בכספת</button>
     <span className="xp-small">אפשר לשנות אחר כך בעמוד הכסף</span></>);
 }
 
@@ -174,4 +184,65 @@ function TextAsk({ q, ph, onSend }: { q: string; ph: string; onSend: (v: string)
   return (<><p className="xp-q">{q}</p>
     <textarea className="xp-text" rows={3} value={v} placeholder={ph} maxLength={120} onChange={(e) => setV(e.target.value)} />
     <button className="xp-go" disabled={!v.trim()} onClick={() => onSend(v.trim())}>שליחה למסך ✦</button></>);
+}
+
+/** חוגת כספת: מסובבים באצבע, "חם/קר" לפי הקרבה, ומחזיקים שנייה על הספרה הנכונה */
+function Dial({ code, hint, onMove, onCrack }: { code: number; hint: string; onMove: (v: number) => void; onCrack: () => void }) {
+  const [v, setV] = useState(0);
+  const [hold, setHold] = useState(0);
+  const [late, setLate] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const last = useRef({ sent: 0, v: -1 });
+  const done = useRef(false);
+  const dist = Math.min(Math.abs(v - code), DIAL_MAX - Math.abs(v - code));
+  const heat = Math.max(0, 1 - dist / 10); // 0 קר … 1 בדיוק
+  useEffect(() => { const t = setTimeout(() => setLate(true), 40_000); return () => clearTimeout(t); }, []);
+  // מחזיקה על הספרה הנכונה שנייה אחת = נפרץ
+  useEffect(() => {
+    if (dist !== 0 || done.current) { setHold(0); return; }
+    buzz(25);
+    const t0 = Date.now();
+    const t = setInterval(() => { const p = Math.min(1, (Date.now() - t0) / 1000); setHold(p); if (p >= 1 && !done.current) { done.current = true; clearInterval(t); buzz([80, 40, 160]); onCrack(); } }, 50);
+    return () => clearInterval(t);
+  }, [dist === 0]);
+  function at(e: React.PointerEvent) {
+    const r = ref.current!.getBoundingClientRect();
+    const a = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI;
+    const n = Math.round((((a + 90) % 360 + 360) % 360) / (360 / DIAL_MAX)) % DIAL_MAX;
+    if (n !== v) { setV(n); if (Math.abs(n - code) <= 2) buzz(8); }
+    const now = Date.now();
+    if (n !== last.current.v && now - last.current.sent > 110) { last.current = { sent: now, v: n }; onMove(n); }
+  }
+  const lo = Math.max(0, code - 3), hi = Math.min(DIAL_MAX - 1, code + 3);
+  return (<>
+    <p className="xp-q">פצחי את החוגה שלך<br /><small>הספרה שלך: {hint}</small></p>
+    <div ref={ref} className={'xp-dial' + (dist === 0 ? ' hit' : '')} style={{ ['--heat' as any]: heat, ['--hold' as any]: hold }}
+      onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); at(e); }} onPointerMove={(e) => { if (e.buttons || e.pointerType === 'touch') at(e); }} onContextMenu={(e) => e.preventDefault()}>
+      <div className="xp-dial-face" style={{ transform: `rotate(${-v * (360 / DIAL_MAX)}deg)` }}>
+        {Array.from({ length: DIAL_MAX }, (_, n) => <span key={n} style={{ transform: `rotate(${(n * 360) / DIAL_MAX}deg)` }}><i className={n % 5 === 0 ? 'big' : ''} />{n % 5 === 0 && <b>{n}</b>}</span>)}
+      </div>
+      <span className="xp-dial-ptr">▼</span>
+      <b className="xp-dial-num tnum">{String(v).padStart(2, '0')}</b>
+    </div>
+    <span className="xp-small">{dist === 0 ? 'החזיקי… 🔓' : heat > .7 ? '🔥 חם מאוד!' : heat > .3 ? '♨️ מתחמם' : '❄️ קר'}</span>
+    {late && dist !== 0 && <span className="xp-hint">רמז: בין {lo} ל־{hi}</span>}
+  </>);
+}
+
+/** "ההודעה הזאת תושמד": ספירה, שריפה, ומתחת לאפר — האפליקציה */
+function SelfDestruct() {
+  const [n, setN] = useState(5);
+  useEffect(() => { const t = setInterval(() => setN((x) => { if (x <= 1) { clearInterval(t); buzz([300]); return 0; } buzz(40); return x - 1; }), 1000); return () => clearInterval(t); }, []);
+  return (
+    <div className={'xp-sd' + (n === 0 ? ' burn' : '')}>
+      <div className="xp-sd-paper">
+        <span className="xp-sd-stamp">TOP SECRET</span>
+        <p className="xp-q">התדריך הושלם.</p>
+        <p className="xp-sd-text">ההודעה הזאת תושמד בעוד</p>
+        <b className="xp-sd-num tnum" key={n}>{n}</b>
+        <span className="xp-small">ברוכה הבאה לאפליקציה 💖</span>
+      </div>
+      {n === 0 && <div className="xp-sd-fire">{Array.from({ length: 26 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 7) * 0.08}s` }} />)}</div>}
+    </div>
+  );
 }

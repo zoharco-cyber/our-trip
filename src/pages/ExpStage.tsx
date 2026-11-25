@@ -3,7 +3,7 @@ import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { confetti } from '../lib/fx';
 import { makeSound, useLaunchAt } from '../lib/launch';
-import { COUNTRIES, SCENES, expChannel, useExpSetting, type Answer, type StageState } from '../lib/experience';
+import { COUNTRIES, DIAL_MAX, SCENES, expChannel, useExpSetting, vaultCodes, type Answer, type StageState } from '../lib/experience';
 import { FinalTen, Passport, Reveal, type Girl } from '../components/LaunchShow';
 
 type Saved = { scene: number; joined: string[]; ans: Record<string, Record<string, any>> };
@@ -51,10 +51,17 @@ export default function ExpStage() {
   const present = s.joined.filter((u) => travelers.some((t) => t.id === u));
   const A = (scene: number, key = '') => s.ans[k(scene, key)] || {};
 
+  const [dials, setDials] = useState<Record<string, number>>({});
+  function codesFor(st: Saved) {
+    const fi = SCENES.findIndex((x) => x.kind === 'flight');
+    const id = (slug: string) => profiles.find((p) => p.slug === slug)?.id;
+    const ella = id('t1');
+    return vaultCodes(ella ? (st.ans[k(fi)] || {})[ella] : undefined, { ella, lihi: id('t2'), lior: id('t3') });
+  }
   // ---- שידור מצב לטלפונים ----
   function shared(st: Saved) {
     const c = SCENES[st.scene]; const a = st.ans;
-    if (c.kind === 'vault') return { locks: Object.keys(a[k(st.scene, 'lock')] || {}), opened: !!Object.keys(a[k(st.scene, 'open')] || {}).length };
+    if (c.kind === 'vault') return { locks: Object.keys(a[k(st.scene, 'lock')] || {}), opened: !!Object.keys(a[k(st.scene, 'open')] || {}).length, codes: codesFor(st), cracked: Object.keys(a[k(st.scene, 'crack')] || {}) };
     if (c.kind === 'spot') { const who = profiles.find((p) => p.slug === c.who)?.id; return { spot: who ? (a[k(st.scene)] || {})[who] : undefined }; }
     if (c.kind === 'takeoff') return { fail: (a[k(st.scene, 'fail')] || {}).n || 0 };
     if (c.kind === 'flight' || c.kind === 'dest') { const who = profiles.find((p) => p.slug === c.who)?.id; return { val: who ? (a[k(st.scene)] || {})[who] : undefined, conf: a[k(st.scene, 'c')] || {} }; }
@@ -69,7 +76,7 @@ export default function ExpStage() {
   }
   useEffect(() => {
     if (!epoch || !isAdmin) return;
-    ch.current = expChannel(null, (a) => onAnswer(a), (uid) => setS((x) => (x.joined.includes(uid) ? x : (sound.current?.stamp(), { ...x, joined: [...x.joined, uid] }))));
+    ch.current = expChannel(null, (a) => onAnswer(a), (uid) => setS((x) => (x.joined.includes(uid) ? x : (sound.current?.stamp(), { ...x, joined: [...x.joined, uid] }))), (uid, v) => setDials((d) => ({ ...d, [uid]: v })));
     const t = setInterval(() => broadcast(), 2000);
     return () => { clearInterval(t); if (ch.current) supabase.removeChannel(ch.current); };
   }, [epoch, isAdmin, profiles.length]);
@@ -166,7 +173,8 @@ export default function ExpStage() {
       else ids.filter((id) => id !== who).forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'c', v: true }));
     }
     else if (c.kind === 'vault') {
-      if (!Object.keys(A(sc0, 'lock')).length) ids.forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'lock', v: true }));
+      if (Object.keys(A(sc0, 'crack')).length < ids.length) ids.forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'crack', v: true }));
+      else if (!Object.keys(A(sc0, 'lock')).length) ids.forEach((id) => onAnswer({ uid: id, scene: sc0, key: 'lock', v: true }));
       else if (who) onAnswer({ uid: who, scene: sc0, key: 'open', v: true });
     } else if (c.kind === 'spot' && who) {
       if (!A(sc0)[who]) onAnswer({ uid: who, scene: sc0, v: 'תשובה לדוגמה 😅' });
@@ -177,7 +185,15 @@ export default function ExpStage() {
     const key = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       if (!started || phase !== 'exp') return; // בזמן הספירה וחתימת הדרכונים המקשים לא מזיזים סצנות
-      if (e.key === ' ' || e.key === 'ArrowLeft') { e.preventDefault(); go(1); }
+      if (e.key === ' ' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const cur = sRef.current; const cracked = Object.keys(cur.ans[k(cur.scene, 'crack')] || {});
+        if (SCENES[cur.scene].kind === 'vault' && present.some((u) => !cracked.includes(u))) {
+          present.filter((u) => !cracked.includes(u)).forEach((u) => onAnswer({ uid: u, scene: cur.scene, key: 'crack', v: 'admin' }));
+          return;
+        }
+        go(1);
+      }
       if (e.key === 'ArrowRight') go(-1);
       if (e.key === 's' || e.key === 'ד') simulate();
     };
@@ -252,11 +268,35 @@ export default function ExpStage() {
         {v && <p className="xs-stampline" key={v.city}>📍 {v.city}, {v.country}</p>}
         {v && <Confirms conf={A(s.scene, 'c')} />}</>); break; }
     case 'vault': { const locks = Object.keys(A(s.scene, 'lock')); const opened = Object.keys(A(s.scene, 'open')).length > 0;
-      view = (<><span className="xs-kick">פרטי המבצע · 3 / 3</span><h1 className="xs-h">הכספת של <b style={{ color: W(sc.who)?.color }}>{nameOf(W(sc.who)?.id)}</b></h1>
-        <div className={'xs-vault' + (opened ? ' open' : '')}><div className="xs-door"><span className="xs-dial" />
-          <div className="xs-locks">{girls.map((g) => <span key={g.id} className={locks.includes(g.id) ? 'on' : ''} style={{ ['--c' as any]: g.color }}>{locks.includes(g.id) ? '🔒' : '🔓'}<small>{g.name}</small></span>)}</div></div>
-          {opened && <div className="xs-total"><small>בקופה של שלושתכן</small><b className="tnum">${(vaultTotal ?? 0).toLocaleString('en-US')}</b></div>}</div>
-        <p className="xs-sub">{opened ? 'הסכומים נשמרו בעמוד הכסף, כל אחת יכולה לעדכן' : locks.length < present.length ? 'כל אחת מקלידה בסוד את התקציב שלה' : `כל המנעולים סגורים. ${nameOf(W(sc.who)?.id)}, פתחי!`}</p></>); break; }
+      const cracked = Object.keys(A(s.scene, 'crack')); const codes = codesFor(s);
+      const allCracked = present.length > 0 && present.every((u) => cracked.includes(u));
+      const codeLine = girls.map((g) => (cracked.includes(g.id) || allCracked ? String(codes[g.id] ?? '??').padStart(2, '0') : '??')).join(' · ');
+      view = (<><span className="xs-kick">פרטי המבצע · 3 / 3</span>
+        <h1 className="xs-h">{allCracked ? <>הכספת פרוצה. עכשיו: <b style={{ color: '#ffd35c' }}>הפקדה</b></> : <>פיצוח הכספת של המבצע</>}</h1>
+        {!allCracked ? (<>
+          <div className="xs-row">{girls.map((g) => { const v = dials[g.id] ?? 0; const ok = cracked.includes(g.id); return (
+            <div key={g.id} className={'xs-crack' + (ok ? ' ok' : '')} style={{ ['--c' as any]: g.color }}>
+              <svg viewBox="0 0 200 200" className="xs-crack-dial" style={{ transform: `rotate(${-(ok ? codes[g.id] : v) * (360 / DIAL_MAX)}deg)` }}>
+                <circle cx="100" cy="100" r="92" />
+                {Array.from({ length: DIAL_MAX }, (_, n) => { const a = (n * 360) / DIAL_MAX; return <g key={n} transform={`rotate(${a} 100 100)`}><line x1="100" y1="10" x2="100" y2={n % 5 === 0 ? 26 : 18} />{n % 5 === 0 && <text x="100" y="42" textAnchor="middle">{n}</text>}</g>; })}
+              </svg>
+              <span className="xs-crack-ptr">▼</span>
+              <b className="xs-crack-num tnum">{String(ok ? codes[g.id] : v).padStart(2, '0')}</b>
+              <span className="xs-crack-name">{g.name} {ok ? '✓' : ''}</span>
+            </div>); })}</div>
+          <p className="xs-code tnum" dir="ltr">{codeLine}</p></>
+        ) : (
+          <div className={'xs-vault open'}>
+            <div className="xs-door"><span className="xs-dial" /></div>
+            <div className="xs-inside">
+              <p className="xs-code tnum done" dir="ltr">{codeLine}</p>
+              <p className="xs-sub">הקוד היה יום ההמראה ✈️</p>
+              <div className="xs-locks">{girls.map((g) => <span key={g.id} className={locks.includes(g.id) ? 'on' : ''} style={{ ['--c' as any]: g.color }}>{locks.includes(g.id) ? '💰' : '⏳'}<small>{g.name}</small></span>)}</div>
+              {opened && <div className="xs-total"><small>בקופה של שלושתכן</small><b className="tnum">${(vaultTotal ?? 0).toLocaleString('en-US')}</b></div>}
+            </div>
+          </div>
+        )}
+        <p className="xs-sub">{!allCracked ? 'כל אחת מסובבת את החוגה שלה עד שהיא מוצאת את הספרה' : opened ? 'הסכומים נשמרו בעמוד הכסף, כל אחת יכולה לעדכן' : locks.length < present.length ? 'כל אחת מפקידה בסוד את התקציב שלה' : `כולן הפקידו. ${nameOf(W(sc.who)?.id)}, חשפי את הקופה!`}</p></>); break; }
     case 'likely': { const votes = curAns as Record<string, string>; const n = Object.keys(votes).length; const done = present.length > 0 && present.every((u) => votes[u]);
       const count = (id: string) => Object.values(votes).filter((v) => v === id).length; const max = Math.max(0, ...girls.map((g) => count(g.id)));
       view = (<><span className="xs-kick">מי הכי סביר ש…</span><h1 className="xs-h">{sc.q}</h1>

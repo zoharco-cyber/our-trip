@@ -1418,3 +1418,49 @@ html[data-saver] .ft-glow, html[data-saver] .ft-ring { display: none; }
 .xs-conf span { font-size: 2.6vmin; font-weight: 700; padding: .8vmin 2.2vmin; border-radius: 999px; border: 2px solid var(--c); color: rgba(255, 255, 255, .55); }
 .xs-conf span.yes { background: color-mix(in srgb, var(--c) 35%, transparent); color: #fff; animation: tagPop .5s cubic-bezier(.2, 1.8, .4, 1); }
 .xs-conf span.no { border-style: dashed; color: #ffd27a; animation: tagPop .5s; }
+
+/* ---------- פיצוח הכספת ---------- */
+.xp-dial { position: relative; width: min(78vw, 300px); aspect-ratio: 1; border-radius: 50%; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+  background: radial-gradient(circle, #1c1620 55%, #0d0a10 56%, #241c29 72%, #0d0a10 100%);
+  box-shadow: 0 0 calc(10px + var(--heat) * 50px) color-mix(in srgb, #ff3b2f calc(var(--heat) * 100%), #3aa0ff), inset 0 0 30px #000; transition: box-shadow .2s; }
+.xp-dial.hit { box-shadow: 0 0 calc(40px + var(--hold) * 60px) #3dff9a, inset 0 0 30px #000; }
+.xp-dial-face { position: absolute; inset: 0; transition: transform .08s linear; }
+.xp-dial-face span { position: absolute; left: 50%; top: 0; height: 50%; width: 0; transform-origin: bottom center; display: grid; justify-items: center; align-content: start; }
+.xp-dial-face i { display: block; width: 2px; height: 10px; background: rgba(255, 255, 255, .35); margin-top: 8px; } .xp-dial-face i.big { height: 18px; width: 3px; background: #fff; }
+.xp-dial-face b { font-size: .8rem; color: rgba(255, 255, 255, .8); margin-top: 2px; }
+.xp-dial-ptr { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: var(--c); font-size: 1.2rem; text-shadow: 0 0 10px var(--c); }
+.xp-dial-num { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Frank Ruhl Libre', serif; font-size: 3.6rem; font-weight: 900; pointer-events: none;
+  color: color-mix(in srgb, #ff5a4a calc(var(--heat) * 100%), #8cc8ff); }
+.xp-dial.hit .xp-dial-num { color: #3dff9a; text-shadow: 0 0 20px #3dff9a; }
+.xs-crack { position: relative; display: grid; justify-items: center; gap: 1.5vh; width: 26vmin; }
+.xs-crack-dial { width: 26vmin; height: 26vmin; transition: transform .15s linear; filter: drop-shadow(0 0 1.5vmin color-mix(in srgb, var(--c) 50%, transparent)); }
+.xs-crack-dial circle { fill: #141117; stroke: color-mix(in srgb, var(--c) 60%, #333); stroke-width: 3; }
+.xs-crack-dial line { stroke: rgba(255, 255, 255, .5); stroke-width: 1.5; } .xs-crack-dial text { fill: rgba(255, 255, 255, .75); font-size: 11px; font-family: var(--font-body); }
+.xs-crack-ptr { position: absolute; top: -2.6vmin; color: var(--c); font-size: 3vmin; text-shadow: 0 0 1vmin var(--c); }
+.xs-crack-num { position: absolute; top: 0; height: 26vmin; display: grid; place-items: center; font-family: 'Frank Ruhl Libre', serif; font-size: 7vmin; font-weight: 900; color: rgba(255, 255, 255, .85); pointer-events: none; }
+.xs-crack-name { font-size: 3vmin; font-weight: 800; color: var(--c); }
+.xs-crack.ok .xs-crack-dial { filter: drop-shadow(0 0 4vmin var(--c)); } .xs-crack.ok .xs-crack-dial circle { fill: color-mix(in srgb, var(--c) 30%, #141117); }
+.xs-crack.ok .xs-crack-num { color: #fff; animation: tagPop .5s cubic-bezier(.2, 1.8, .4, 1); }
+.xs-code { font-family: ui-monospace, monospace; font-size: 6vmin; font-weight: 800; letter-spacing: .15em; color: rgba(255, 255, 255, .55); }
+.xs-code.done { color: #3dff9a; text-shadow: 0 0 3vmin #3dff9a; animation: tagPop .7s cubic-bezier(.2, 1.6, .4, 1); }
+.xs-inside { display: grid; justify-items: center; gap: 2vh; }
+.xs-inside .xs-locks { position: static; } .xs-inside .xs-locks span { font-size: 6vmin; }
+
+/* ---------- השמדה עצמית ---------- */
+.xp-sd { position: relative; width: 100%; display: grid; place-items: center; }
+.xp-sd-paper { position: relative; width: 100%; padding: 2rem 1.2rem; border-radius: 6px; background: linear-gradient(170deg, #f4ecd8, #e6d8b8); color: #2a2230; display: grid; justify-items: center; gap: .5rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .6); }
+.xp-sd-paper .xp-q { color: #2a2230; }
+.xp-sd-paper .xp-small { color: #6d5f4f; }
+.xp-sd-stamp { border: 3px double #b3122e; color: #b3122e; font-family: ui-monospace, monospace; font-weight: 800; letter-spacing: .2em; padding: .2rem .7rem; transform: rotate(-6deg); }
+.xp-sd-text { font-weight: 700; }
+.xp-sd-num { font-family: 'Frank Ruhl Libre', serif; font-size: 5rem; font-weight: 900; line-height: 1; color: #b3122e; animation: tagPop .5s cubic-bezier(.2, 1.8, .4, 1); }
+.xp-sd.burn .xp-sd-paper { animation: burnAway 1.9s ease-in forwards; }
+@keyframes burnAway {
+  0% { filter: none; }
+  30% { filter: sepia(1) brightness(.9) contrast(1.4); transform: scale(1.02) rotate(-1deg); }
+  60% { filter: sepia(1) brightness(.4) contrast(2); clip-path: polygon(0 18%, 15% 10%, 30% 22%, 48% 8%, 66% 20%, 82% 6%, 100% 16%, 100% 100%, 0 100%); }
+  100% { filter: brightness(0); opacity: 0; transform: translateY(20px) scale(.9); clip-path: polygon(0 90%, 20% 84%, 40% 94%, 60% 82%, 80% 92%, 100% 86%, 100% 100%, 0 100%); }
+}
+.xp-sd-fire { position: absolute; inset: -20px; pointer-events: none; }
+.xp-sd-fire i { position: absolute; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(#fff6a8, #ff8a00 50%, transparent 70%); animation: ember 1.8s ease-out forwards; }
+@keyframes ember { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-70vh) scale(.2); opacity: 0; } }
