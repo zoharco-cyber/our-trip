@@ -170,6 +170,7 @@ export default function ExpStage() {
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (!started || phase !== 'exp') return; // בזמן הספירה וחתימת הדרכונים המקשים לא מזיזים סצנות
       if (e.key === ' ' || e.key === 'ArrowLeft') { e.preventDefault(); go(1); }
       if (e.key === 'ArrowRight') go(-1);
       if (e.key === 's' || e.key === 'ד') simulate();
