@@ -178,11 +178,11 @@ export default function ExpStage() {
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   });
 
-  async function start() {
+  async function start(skipLaunch = false) {
     sound.current = makeSound(); sound.current.unlock();
     try { await document.documentElement.requestFullscreen?.(); } catch { /* ignore */ }
     try { await (navigator as any).wakeLock?.request('screen'); } catch { /* ignore */ }
-    if (launchAt && launchAt > Date.now() && s.scene === 0) setPhase('launch');
+    if (!skipLaunch && launchAt && launchAt > Date.now() && s.scene === 0) setPhase('launch');
     setStarted(true);
   }
 
@@ -195,7 +195,8 @@ export default function ExpStage() {
       <ShadowMan big />
       <h1>התדריך</h1>
       <p>{launchAt && launchAt > Date.now() ? `קודם הספירה להשקה (${new Date(launchAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}), ואז הלובי.` : 'הבנות שמתחברות עכשיו נכנסות ישר לחוויה.'}</p>
-      <button className="xs-btn xs-go" onClick={start}>▶ התחלה (מסך מלא + סאונד)</button>
+      <button className="xs-btn xs-go" onClick={() => start()}>▶ התחלה (מסך מלא + סאונד)</button>
+      {launchAt && launchAt > Date.now() && <button className="xs-btn" onClick={() => start(true)}>🧪 חזרה גנרלית: ישר לסצנות, בלי הספירה</button>}
       <small>רווח / ← = הסצנה הבאה · → = אחורה · S = סימולציה של תשובות (לחזרה גנרלית)</small>
     </div>
   );
