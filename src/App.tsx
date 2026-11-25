@@ -12,10 +12,13 @@ import { postStatus } from './components/Status';
 import { deviceLabel } from './lib/health';
 import { ErrorBoundary, ReportProblem } from './components/Problems';
 import PinGate from './components/PinGate';
+import { doneKey, useExpSetting } from './lib/experience';
 
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
 const Stage = lazy(() => import('./pages/Stage'));
+const ExpStage = lazy(() => import('./pages/ExpStage'));
+const ExpPhone = lazy(() => import('./components/ExpPhone'));
 const Shopping = lazy(() => import('./pages/Shopping'));
 const Wishes = lazy(() => import('./pages/Wishes'));
 const Documents = lazy(() => import('./pages/Documents'));
@@ -105,6 +108,11 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', touch);
   }, [me?.id, online]);
   const { pathname } = useLocation();
+  // "התדריך": בזמן שהחוויה פעילה, מטיילת שעוד לא סיימה אותה נכנסת ישר אליה
+  const expSet = useExpSetting();
+  const [expDoneTick, setExpDoneTick] = useState(0);
+  const inExperience = !!(expSet?.active && me?.is_traveler && session && !guest && (() => { try { return localStorage.getItem(doneKey(expSet.epoch)) !== 'done'; } catch { return true; } })());
+  void expDoneTick;
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => { mainRef.current?.scrollTo(0, 0); window.scrollTo(0, 0); countVisit(pathname); }, [pathname]);
 
@@ -113,6 +121,8 @@ export default function App() {
   // מסך הבמה של ההשקה: פתוח לכולם, בלי התחברות ובלי תפריטים
   if (pathname === '/stage') return <Suspense fallback={<div className="splash">…</div>}><Stage /></Suspense>;
   if (!session && !guest) return <Login />;
+  if (pathname === '/experience' && session && !guest) return <Suspense fallback={<div className="splash">…</div>}><ExpStage /></Suspense>;
+  if (inExperience && expSet) return <Suspense fallback={<div className="splash">…</div>}><ExpPhone epoch={expSet.epoch} onFinish={() => { setExpDoneTick((x) => x + 1); location.hash = '#/'; }} /></Suspense>;
 
   const sections = SECTIONS.filter((s) => !guest || s.guest);
   const primary = guest ? sections : sections.filter((s) => ['/', '/money', '/map', '/shopping'].includes(s.to));

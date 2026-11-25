@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Countdown from '../components/Countdown';
 import Slideshow from '../components/Slideshow';
@@ -64,8 +64,16 @@ export default function Home() {
 
   const locs = useTable<LocationUpdate>('location_updates', { order: 'created_at', ascending: false, filter: (q) => q.limit(1) });
   const here = locs.rows[0];
-  // עד שמישהי מעדכנת "אנחנו כאן": מזג האוויר בבית (היעד הראשון עוד לא ידוע)
-  const spot = here ? { lat: here.lat, lng: here.lng, label: here.name } : { lat: 32.08, lng: 34.78, label: 'בבית, עד ההמראה' };
+  // עד שמישהי מעדכנת "אנחנו כאן": היעד הראשון (נבחר בתדריך), ואם עוד לא נבחר — הבית
+  const [dest, setDest] = useState<{ city: string; country: string; lat: number; lng: number } | null>(() => { try { return JSON.parse(localStorage.getItem('cache:firstDest') || 'null'); } catch { return null; } });
+  useEffect(() => {
+    supabase.from('settings').select('value').eq('key', 'first_destination').maybeSingle().then(({ data }) => {
+      const v = data?.value as any; if (v?.lat) { setDest(v); try { localStorage.setItem('cache:firstDest', JSON.stringify(v)); } catch { /* ignore */ } }
+    });
+  }, []);
+  const spot = here ? { lat: here.lat, lng: here.lng, label: here.name }
+    : dest ? { lat: dest.lat, lng: dest.lng, label: `היעד הראשון: ${dest.city}` }
+    : { lat: 32.08, lng: 34.78, label: 'בבית, עד ההמראה' };
   const now = Date.now();
   return (
     <div className="stack-lg">

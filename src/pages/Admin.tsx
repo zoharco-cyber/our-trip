@@ -24,6 +24,7 @@ export default function Admin() {
     <div className="stack-lg narrow">
       <h1>ניהול</h1>
       <a href="#/features" className="card admin-link">📋 <b>הפיצ׳רים של הטיול</b><span className="small muted">כל פיצ׳ר ואיך משתמשים בו, עם סימון של מה כבר הסברת לבנות</span></a>
+      <ExperienceAdmin />
       <SystemStatus />
       <ProblemsAdmin />
       <Reminder />
@@ -93,6 +94,34 @@ function Meter({ label, used, limit }: { label: string; used: number; limit: num
       <div className="row-between small"><span>{label}</span><span className="tnum">{mb(used)} מתוך {mb(limit)}</span></div>
       <div className="sys-bar"><i style={{ width: Math.max(1.5, pct) + '%' }} /></div>
     </div>
+  );
+}
+
+function ExperienceAdmin() {
+  const [v, setV] = useState<{ active: boolean; epoch: number } | null | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+  const load = () => supabase.from('settings').select('value').eq('key', 'experience').maybeSingle().then(({ data }) => setV((data?.value as any) || null));
+  useEffect(() => { load(); }, []);
+  async function set(active: boolean, fresh: boolean) {
+    setBusy(true);
+    const value = { active, epoch: fresh || !v?.epoch ? Date.now() : v.epoch };
+    await supabase.from('settings').upsert({ key: 'experience', value });
+    setV(value); setBusy(false);
+  }
+  return (
+    <section className="card stack exp-admin">
+      <h2>🎬 חוויית הפתיחה: התדריך</h2>
+      <p className="small muted">כשהחוויה פעילה, כל מטיילת שמתחברת נכנסת ישר אליה (לפני האפליקציה). המסך הגדול נפתח במחשב המחובר לטלוויזיה, כשאתה מחובר כמנהל.</p>
+      <p><b>{v === undefined ? 'טוען…' : v?.active ? '🟢 פעילה' : '⚪ כבויה'}</b></p>
+      <div className="row gap wrap">
+        {v?.active
+          ? <button className="btn" disabled={busy} onClick={() => set(false, false)}>⏹ עצירה (הבנות נכנסות לאפליקציה)</button>
+          : <button className="btn btn-primary" disabled={busy} onClick={() => set(true, !v)}>▶ הפעלה</button>}
+        <a className="btn" href="#/experience">📺 פתיחת המסך הגדול</a>
+        <button className="btn" disabled={busy} onClick={() => { if (confirm('לאפס? כל אחת תעבור את החוויה מההתחלה (התשובות שכבר נשמרו באפליקציה נשארות).')) set(true, true); }}>↺ איפוס והתחלה מחדש</button>
+      </div>
+      <p className="small muted">חזרה גנרלית: הפעלה ← פתיחת המסך הגדול ← "S" במקלדת ממלא תשובות לדוגמה. אחרי החזרה: איפוס.</p>
+    </section>
   );
 }
 
