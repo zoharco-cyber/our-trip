@@ -44,6 +44,13 @@ export default function ExpStage() {
   const colorOf = (id?: string) => profiles.find((p) => p.id === id)?.color || '#fff';
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
+  // המסך הגדול נעול במקום: בלי גלילה הצידה (חיצים, עכבר, טאץ׳ פד)
+  useEffect(() => {
+    const root = document.documentElement; root.classList.add('stage-lock');
+    const fix = () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); const se = document.scrollingElement; if (se && (se.scrollLeft || se.scrollTop)) { se.scrollLeft = 0; se.scrollTop = 0; } };
+    fix(); window.addEventListener('scroll', fix, { passive: true }); const t = setInterval(fix, 500);
+    return () => { root.classList.remove('stage-lock'); window.removeEventListener('scroll', fix); clearInterval(t); };
+  }, []);
   useEffect(() => { if (!epoch) return; try { const v = localStorage.getItem(store); if (v) setS(JSON.parse(v)); } catch { /* ignore */ } }, [epoch]);
   useEffect(() => { if (epoch) try { localStorage.setItem(store, JSON.stringify(s)); } catch { /* ignore */ } }, [s]);
 
@@ -194,7 +201,8 @@ export default function ExpStage() {
         }
         go(1);
       }
-      if (e.key === 'ArrowRight') go(-1);
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(-1); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'PageUp' || e.key === 'PageDown' || e.key === 'Home' || e.key === 'End') e.preventDefault();
       if (e.key === 's' || e.key === 'ד') simulate();
     };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
