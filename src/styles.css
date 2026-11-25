@@ -1464,3 +1464,12 @@ html[data-saver] .ft-glow, html[data-saver] .ft-ring { display: none; }
 .xp-sd-fire { position: absolute; inset: -20px; pointer-events: none; }
 .xp-sd-fire i { position: absolute; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(#fff6a8, #ff8a00 50%, transparent 70%); animation: ember 1.8s ease-out forwards; }
 @keyframes ember { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-70vh) scale(.2); opacity: 0; } }
+
+/* ---------- התדריך: צללי תריסים ---------- */
+.xs::before { content: ""; position: absolute; inset: -8%; pointer-events: none;
+  background: radial-gradient(ellipse at 20% 45%, rgba(255, 45, 138, .16), transparent 55%), repeating-linear-gradient(-14deg, rgba(255, 170, 210, .075) 0 2.4vmin, transparent 2.4vmin 6.1vmin);
+  transform: skewY(-4deg); }
+.xp::before { content: ""; position: fixed; inset: -10%; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(-14deg, rgba(255, 170, 210, .07) 0 14px, transparent 14px 36px); transform: skewY(-4deg); }
+.xp > * { position: relative; z-index: 1; }
+.xp > .xp-top, .xp > .xp-who, .xp > .xp-dots { position: fixed; }
