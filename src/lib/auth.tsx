@@ -3,6 +3,10 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase, isConfigured } from './supabase';
 import type { Profile } from './types';
 import { EMAIL_DOMAIN } from '../config';
+import { wipeThisDevice } from './wipe';
+
+const LOGIN_AT = 'trip:loginAt';
+let userSignOut = false; // יציאה רגילה בלחיצה: לא מוחקים כלום
 
 type AuthState = {
   ready: boolean;
@@ -50,10 +54,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
+      setSession(s);
+      // החיבור בוטל בשרת (המנהל ניתק את כל המכשירים): מוחקים את המידע מהטלפון
+      if (e === 'SIGNED_OUT' && !userSignOut) {
+        let had = false; try { had = !!localStorage.getItem(LOGIN_AT); } catch { /* ignore */ }
+        if (had) wipeThisDevice('expired');
+      }
+      userSignOut = false;
+    });
     reloadProfiles();
     return () => sub.subscription.unsubscribe();
   }, [reloadProfiles]);
+
+  // בדיקה: האם המנהל ניתק את המשתמשת אחרי שהתחברה בטלפון הזה?
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (!uid) return;
+    let loginAt = '';
+    try {
+      loginAt = localStorage.getItem(LOGIN_AT) || '';
+      if (!loginAt) { loginAt = session!.user.last_sign_in_at || new Date().toISOString(); localStorage.setItem(LOGIN_AT, loginAt); }
+    } catch { /* ignore */ }
+    const check = async () => {
+      if (!navigator.onLine || document.visibilityState !== 'visible') return;
+      const { data } = await supabase.from('device_revocations').select('revoked_at').eq('user_id', uid).maybeSingle();
+      if (data?.revoked_at && loginAt && new Date(data.revoked_at) > new Date(loginAt)) wipeThisDevice('revoked');
+    };
+    check();
+    const t = setInterval(check, 5 * 60e3);
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('online', check);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', check); window.removeEventListener('online', check); };
+  }, [session?.user.id]);
 
   const me = profiles.find((p) => p.id === session?.user.id) || null;
   // אורח עם סיסמה (לפני ההשקה) מתחבר כמשתמש guest, ונחשב אורח לכל דבר
@@ -73,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async signIn(slug, password) {
       const { error } = await supabase.auth.signInWithPassword({ email: `${slug}@${EMAIL_DOMAIN}`, password });
       if (error) return error.message.includes('Invalid') ? 'הסיסמה לא נכונה' : 'אין חיבור כרגע. נסי שוב בעוד רגע.';
-      try { localStorage.removeItem(GUEST_KEY); } catch { /* ignore */ }
+      try { localStorage.removeItem(GUEST_KEY); localStorage.setItem(LOGIN_AT, new Date().toISOString()); localStorage.removeItem('trip:wipedNotice'); } catch { /* ignore */ }
       setGuest(false);
       reloadProfiles();
       return null;
@@ -90,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async signOut() {
       try { localStorage.removeItem(GUEST_KEY); } catch { /* ignore */ }
       setGuest(false);
+      userSignOut = true;
+      try { localStorage.removeItem(LOGIN_AT); } catch { /* ignore */ }
       await supabase.auth.signOut();
     },
     reloadProfiles,

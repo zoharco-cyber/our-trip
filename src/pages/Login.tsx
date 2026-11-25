@@ -86,8 +86,16 @@ export default function Login() {
     if (msg) setErr(msg);
   }
 
+  const [wiped, setWiped] = useState(() => { try { return localStorage.getItem('trip:wipedNotice'); } catch { return null; } });
   return (
     <div className="login-wrap">
+      {wiped && (
+        <div className="wiped-note" role="status">
+          <b>🔒 נותקת מהטלפון הזה</b>
+          <span className="small">{wiped === 'revoked' ? 'המנהל ניתק את החשבון מכל המכשירים, והמידע שנשמר בטלפון נמחק ליתר ביטחון.' : 'החיבור פג, והמידע שנשמר בטלפון נמחק ליתר ביטחון.'} אפשר להתחבר מחדש עם הסיסמה (אם היא שונתה, זוהר ישלח לך את החדשה). הכול חוזר מהשרת.</span>
+          <button className="link-btn" onClick={() => { setWiped(null); try { localStorage.removeItem('trip:wipedNotice'); } catch { /* ignore */ } }}>הבנתי</button>
+        </div>
+      )}
       <div className="login-hero">
         <div className="logo-ring">
           <img className="login-logo" src={LOGO_URL} alt="הלוגו של הטיול" />

@@ -25,6 +25,7 @@ export default function Admin() {
       <h1>ניהול</h1>
       <a href="#/features" className="card admin-link">📋 <b>הפיצ׳רים של הטיול</b><span className="small muted">כל פיצ׳ר ואיך משתמשים בו, עם סימון של מה כבר הסברת לבנות</span></a>
       <SystemStatus />
+      <ProblemsAdmin />
       <Reminder />
       <section className="card stack">
         <h2>קפסולת הזמן</h2>
@@ -96,6 +97,84 @@ function Meter({ label, used, limit }: { label: string; used: number; limit: num
   );
 }
 
+type AppError = { id: string; user_id: string | null; created_at: string; kind: 'auto' | 'report'; message: string; details: any; resolved: boolean };
+type Weekly = { at: string; ok: boolean; issues: string[] };
+
+function ProblemsAdmin() {
+  const { nameOf } = useAuth();
+  const [rows, setRows] = useState<AppError[] | null>(null);
+  const [weekly, setWeekly] = useState<Weekly | null>(null);
+  const [showDone, setShowDone] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+  async function load() {
+    const { data } = await supabase.from('app_errors').select('*').order('created_at', { ascending: false }).limit(60);
+    setRows((data || []) as AppError[]);
+    const w = await supabase.from('settings').select('value').eq('key', 'weekly_check').maybeSingle();
+    setWeekly((w.data?.value as Weekly) || null);
+  }
+  useEffect(() => { load(); }, []);
+  async function resolve(id: string, v: boolean) {
+    setRows((r) => r && r.map((x) => (x.id === id ? { ...x, resolved: v } : x)));
+    await supabase.from('app_errors').update({ resolved: v }).eq('id', id);
+  }
+  async function clearResolved() {
+    await supabase.from('app_errors').delete().eq('resolved', true); load();
+  }
+  const list = (rows || []).filter((r) => showDone || !r.resolved);
+  const openCount = (rows || []).filter((r) => !r.resolved).length;
+  return (
+    <section className="card stack probs-card">
+      <div className="row-between">
+        <h2>🐞 תקלות ודיווחים</h2>
+        <button className="btn btn-small" onClick={load}>רענון</button>
+      </div>
+      {weekly && (
+        <div className={'weekly ' + (weekly.ok ? 'ok' : 'warn')}>
+          <b>{weekly.ok ? '✅ הבדיקה השבועית: הכול תקין' : `⚠️ הבדיקה השבועית: ${weekly.issues.length} דברים לבדוק`}</b>
+          <span className="small muted"> · {fmtDateTime(weekly.at)}</span>
+          {!weekly.ok && <ul className="small">{weekly.issues.map((x) => <li key={x}>{x}</li>)}</ul>}
+        </div>
+      )}
+      <p className="muted small">תקלות שקרו לבנות נשלחות לכאן אוטומטית, ודיווחים מהכפתור "משהו לא עובד?" שבתפריט "עוד". על כל אחד מגיעה אליך התראה.</p>
+      {rows && list.length === 0 && <p className="small">{openCount === 0 ? '🎉 אין תקלות פתוחות.' : ''}</p>}
+      <ul className="probs">
+        {list.map((e) => {
+          const d = e.details || {};
+          return (
+            <li key={e.id} className={'prob' + (e.resolved ? ' done' : '') + (e.kind === 'report' ? ' report' : '')}>
+              <button className="prob-head" onClick={() => setOpen(open === e.id ? null : e.id)} aria-expanded={open === e.id}>
+                <span>{e.kind === 'report' ? '📩' : '🐞'}</span>
+                <span className="grow">
+                  <b>{e.message}</b>
+                  <span className="small muted">{e.user_id ? nameOf(e.user_id) : 'אורח/ת'} · {fmtDateTime(e.created_at)}{d.device ? ` · ${d.device}` : ''}{d.path ? ` · ${d.path}` : ''}</span>
+                </span>
+              </button>
+              {open === e.id && (
+                <div className="prob-body small">
+                  <dl>
+                    <dt>גרסה</dt><dd dir="ltr">{d.version || '?'}</dd>
+                    <dt>קליטה</dt><dd>{d.online === false ? 'בלי' : 'יש'}{d.queue ? ` · ${d.queue} שינויים מחכים` : ''}{d.saver ? ' · מצב חיסכון' : ''}</dd>
+                    <dt>מסך</dt><dd dir="ltr">{d.screen || '?'}</dd>
+                  </dl>
+                  {d.recent?.length > 0 && <><b>שגיאות אחרונות בטלפון</b><ul className="prob-recent" dir="ltr">{d.recent.slice(-5).map((x: any, i: number) => <li key={i}>{x.at?.slice(5, 16).replace('T', ' ')} {x.where} — {x.msg}</li>)}</ul></>}
+                  {d.stack && <details><summary>פרטים טכניים</summary><pre dir="ltr">{d.stack}</pre></details>}
+                  <button className="btn btn-small" onClick={() => resolve(e.id, !e.resolved)}>{e.resolved ? 'החזרה לפתוחות' : '✅ טופל'}</button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {(rows || []).some((r) => r.resolved) && (
+        <div className="row gap wrap">
+          <button className="link-btn" onClick={() => setShowDone((v) => !v)}>{showDone ? 'הסתרת מה שטופל' : 'הצגת מה שטופל'}</button>
+          <button className="link-btn" onClick={clearResolved}>מחיקת מה שטופל</button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SystemStatus() {
   const { profiles } = useAuth();
   const [st, setSt] = useState<Status | null>(null);
@@ -105,8 +184,9 @@ function SystemStatus() {
     setBusy(true);
     const { data, error } = await supabase.rpc('admin_system_status');
     setBusy(false);
-    if (error || !data) { setErr(true); return; }
-    setErr(false); setSt(data as Status);
+    const d = data as Status | null;
+    if (error || !d || !Array.isArray(d.users)) { setErr(true); return; }
+    setErr(false); setSt({ users: d.users, storage: d.storage || {}, db_bytes: d.db_bytes || 0 });
   }
   useEffect(() => { load(); }, []);
   const files = st ? Object.values(st.storage).reduce((s, b) => s + b.bytes, 0) : 0;
@@ -151,6 +231,46 @@ function SystemStatus() {
 const WORDS = ['lama', 'condor', 'andes', 'tango', 'salsa', 'cusco', 'inca', 'sol', 'mango', 'luna', 'playa', 'cafe'];
 const randomPw = () => WORDS[Math.floor(Math.random() * WORDS.length)] + String(1000 + Math.floor(Math.random() * 9000));
 
+/** טלפון נגנב/אבד: מנתק את המשתמשת מכל המכשירים ומוחק מהם את המידע השמור */
+function RevokeRow({ id, name }: { id: string; name: string }) {
+  const { me } = useAuth();
+  const [step, setStep] = useState<'idle' | 'confirm' | 'busy' | 'done' | 'err'>('idle');
+  const [last, setLast] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.from('device_revocations').select('revoked_at').eq('user_id', id).maybeSingle().then(({ data }) => setLast(data?.revoked_at || null));
+  }, [id, step]);
+  const first = name.split(' ')[0];
+  const self = me?.id === id;
+  async function go() {
+    setStep('busy');
+    const { error } = await supabase.rpc('admin_revoke', { target: id });
+    setStep(error ? 'err' : 'done');
+  }
+  return (
+    <div className="revoke">
+      {step === 'idle' && <button type="button" className="link-btn revoke-btn" onClick={() => setStep('confirm')}>📵 טלפון נגנב? ניתוק מכל המכשירים</button>}
+      {step === 'confirm' && (
+        <div className="revoke-confirm stack">
+          <b>לנתק את {first} מכל המכשירים?</b>
+          <ul className="small">
+            <li>{self ? 'גם אתה תצטרך' : `${first} תצטרך`} להתחבר מחדש בכל טלפון.</li>
+            <li>בטלפון שנגנב: ברגע שהוא מתחבר לאינטרנט ופותחים את האפליקציה, כל המידע השמור בו נמחק (מסמכים, סיסמאות, רשימות).</li>
+            <li><b>חשוב:</b> שנה {self ? 'את הסיסמה שלך' : `גם את הסיסמה של ${first}`} כאן למעלה, כדי שמי שמחזיק בטלפון לא יוכל להתחבר שוב.</li>
+          </ul>
+          <div className="row gap">
+            <button type="button" className="btn btn-small btn-danger" onClick={go}>כן, לנתק</button>
+            <button type="button" className="btn btn-small" onClick={() => setStep('idle')}>ביטול</button>
+          </div>
+        </div>
+      )}
+      {step === 'busy' && <p className="small muted">מנתק…</p>}
+      {step === 'done' && <p className="ok small">✅ {first} נותקה מכל המכשירים. עכשיו שנה לה סיסמה ושלח לה את החדשה.</p>}
+      {step === 'err' && <p className="error">לא הצלחתי לנתק. בדוק חיבור ונסה שוב.</p>}
+      {last && step === 'idle' && <span className="small muted"> · נותקה לאחרונה {fmtDateTime(last)}</span>}
+    </div>
+  );
+}
+
 function PasswordRow({ id, name, color }: { id: string; name: string; color: string }) {
   const [pw, setPw] = useState('');
   const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'err'>('idle');
@@ -172,6 +292,7 @@ function PasswordRow({ id, name, color }: { id: string; name: string; color: str
       </div>
       {state === 'ok' && <p className="ok small">הסיסמה עודכנה. הסיסמה החדשה: <b dir="ltr">{saved}</b> (שלח לה אותה)</p>}
       {state === 'err' && <p className="error">לא הצלחתי לעדכן. בדוק חיבור לאינטרנט ונסה שוב.</p>}
+      <RevokeRow id={id} name={name} />
     </li>
   );
 }

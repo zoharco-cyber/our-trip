@@ -9,6 +9,9 @@ import { LetterProvider } from './components/MyLetter';
 import { onQueueChange, readQueue, startQueueSync } from './lib/offline';
 import { LOW, setSaverPref, useSaver, type SaverPref } from './lib/saver';
 import { postStatus } from './components/Status';
+import { deviceLabel } from './lib/health';
+import { ErrorBoundary, ReportProblem } from './components/Problems';
+import PinGate from './components/PinGate';
 
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
@@ -66,12 +69,6 @@ function useOnline() {
   return on;
 }
 
-function deviceLabel() {
-  const ua = navigator.userAgent;
-  const kind = /iPhone/.test(ua) ? 'אייפון' : /iPad/.test(ua) ? 'אייפד' : /Android/.test(ua) ? 'אנדרואיד' : 'מחשב';
-  const app = window.matchMedia?.('(display-mode: standalone)').matches || (navigator as any).standalone ? 'אפליקציה' : 'דפדפן';
-  return `${kind} · ${app}`;
-}
 
 export default function App() {
   const { ready, session, guest, me, isAdmin, signOut } = useAuth();
@@ -141,6 +138,7 @@ export default function App() {
       {me?.is_traveler && saver.low && <LowBattery level={saver.battery.level} saverOn={saver.active} />}
       {queued > 0 && <div className="queue-bar">⏳ {queued} {queued === 1 ? 'שינוי מחכה' : 'שינויים מחכים'} לשליחה{online ? '… שולחת עכשיו' : ' עד שתחזור קליטה'}</div>}
       <main className="page" ref={mainRef}>
+        <ErrorBoundary resetKey={pathname}>
         <Suspense fallback={<div className="page-loading" aria-label="טוען">✨</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -151,7 +149,7 @@ export default function App() {
             <Route path="/money" element={<MoneyPage />} />
             <Route path="/shopping" element={<Shopping />} />
             <Route path="/wishes" element={<Wishes />} />
-            <Route path="/docs" element={<Documents />} />
+            <Route path="/docs" element={<PinGate what="המסמכים"><Documents /></PinGate>} />
             <Route path="/gear" element={<Gear />} />
             <Route path="/guide" element={<Navigate to="/help" replace />} />
             <Route path="/capsule" element={<Capsule />} />
@@ -161,7 +159,7 @@ export default function App() {
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/book" element={<Book />} />
             <Route path="/meds" element={<Meds />} />
-            <Route path="/wifi" element={<Wifi />} />
+            <Route path="/wifi" element={<PinGate what="הסיסמאות"><Wifi /></PinGate>} />
             <Route path="/pretrip" element={<PreTrip />} />
             <Route path="/medical" element={<Medical />} />
             <Route path="/badges" element={<Badges />} />
@@ -172,6 +170,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
       </main>
       <nav className="bottomnav" aria-label="ניווט מהיר">
         {primary.map((s) => (
@@ -296,6 +295,10 @@ function MoreSheet() {
         </section>
       ))}
       <SaverToggle />
+      <section className="more-group">
+        <h2>🛠️ עזרה טכנית</h2>
+        <ReportProblem />
+      </section>
       {isAdmin && <div className="more-grid"><NavLink to="/admin" className="more-admin"><span className="more-ico" aria-hidden="true">⚙️</span>ניהול</NavLink></div>}
     </div>
   );

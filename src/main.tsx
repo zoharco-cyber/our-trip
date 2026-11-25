@@ -6,6 +6,9 @@ import App from './App';
 import { AuthProvider } from './lib/auth';
 import { MoneyProvider } from './lib/money';
 import { registerSW } from 'virtual:pwa-register';
+import { installErrorHandlers } from './lib/health';
+
+installErrorHandlers();
 
 // גרסה חדשה של האתר מתקינה את עצמה לבד: בודקים כשחוזרים לאפליקציה ופעם בשעה
 registerSW({

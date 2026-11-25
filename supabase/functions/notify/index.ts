@@ -3,14 +3,14 @@
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-type Person = { id: string; display_name: string; is_traveler: boolean };
+type Person = { id: string; display_name: string; is_traveler: boolean; is_admin: boolean };
 type Msg = { title: string; body: string; url: string; to: (u: Person) => boolean; bodyFor?: (id: string) => string };
 
 Deno.serve(async (req) => {
   if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return new Response('forbidden', { status: 403 });
   const { table, record: r } = await req.json();
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-  const { data: people } = await db.from('profiles').select('id, display_name, is_traveler');
+  const { data: people } = await db.from('profiles').select('id, display_name, is_traveler, is_admin');
   const name = (id: string) => (people || []).find((p: Person) => p.id === id)?.display_name.split(' ')[0] || 'מישהי';
 
   let msg: Msg | null = null;
@@ -35,6 +35,13 @@ Deno.serve(async (req) => {
     msg = { title: '🌟 חלום הוגשם!', body: r.text, url: '#/wishes', to: (u) => u.is_traveler && u.id !== r.created_by };
   } else if (table === 'status_updates') {
     msg = { title: `💖 עדכון מ${name(r.created_by)}`, body: r.place ? `${r.message} · ${r.place}` : r.message, url: '', to: (u) => u.id !== r.created_by };
+  } else if (table === 'app_errors') {
+    // רק למנהל: תקלה אוטומטית או דיווח של אחת הבנות
+    const who = r.user_id ? name(r.user_id) : 'אורח/ת';
+    const where = r.details?.path ? ` · ${r.details.path}` : '';
+    msg = r.kind === 'report'
+      ? { title: `📩 ${who} דיווחה שמשהו לא עובד`, body: String(r.message).slice(0, 180), url: '#/admin', to: (u) => u.is_admin }
+      : { title: `🐞 תקלה אצל ${who}`, body: String(r.message).slice(0, 140) + where, url: '#/admin', to: (u) => u.is_admin };
   }
   if (!msg) return Response.json({ sent: 0 });
 

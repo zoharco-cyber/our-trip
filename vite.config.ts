@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
+
+// גרסה שמופיעה בדיווחי תקלות: תאריך הבנייה + הקומיט
+let commit = 'dev';
+try { commit = execSync('git rev-parse --short HEAD').toString().trim(); } catch { /* ignore */ }
+const APP_VERSION = `${new Date().toISOString().slice(0, 16).replace('T', ' ')} · ${process.env.GITHUB_SHA?.slice(0, 7) || commit}`;
 
 // BASE_PATH מוגדר אוטומטית בפרסום ל-GitHub Pages (למשל /our-trip/)
 export default defineConfig({
   base: process.env.BASE_PATH || '/',
+  define: { __APP_VERSION__: JSON.stringify(APP_VERSION) },
   plugins: [
     react(),
     VitePWA({
