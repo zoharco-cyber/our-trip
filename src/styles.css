@@ -1478,3 +1478,8 @@ html.stage-lock, html.stage-lock body { overflow: hidden !important; width: 100%
 html.stage-lock body::after { display: none; }
 html.stage-lock body { background: #060408 !important; }
 .xs { left: 0; top: 0; right: auto; bottom: auto; }
+
+/* ---------- הפרופיל שלי ---------- */
+.pill-link { text-decoration: none; color: inherit; }
+.profile-head { display: flex; align-items: center; gap: 1rem; }
+.profile-av { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 1.8rem; font-weight: 800; color: #fff; background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent); flex: none; }

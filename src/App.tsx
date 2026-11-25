@@ -17,6 +17,7 @@ import { doneKey, useExpSetting } from './lib/experience';
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
 const Stage = lazy(() => import('./pages/Stage'));
+const Profile = lazy(() => import('./pages/Profile'));
 const ExpStage = lazy(() => import('./pages/ExpStage'));
 const ExpPhone = lazy(() => import('./components/ExpPhone'));
 const Shopping = lazy(() => import('./pages/Shopping'));
@@ -141,7 +142,7 @@ export default function App() {
           </nav>
           <div className="who">
             {guest ? <span className="pill">אורח/ת</span> : me && (
-              <span className="pill" style={{ ['--c' as any]: me.color }}><i className="dot" />{me.display_name.split(' ')[0]}</span>
+              <NavLink to="/profile" className="pill pill-link" title="הפרופיל שלי" style={{ ['--c' as any]: me.color }}><i className="dot" />{me.display_name.split(' ')[0]}</NavLink>
             )}
             <button className="link-btn" onClick={signOut}>{guest ? 'כניסה' : 'יציאה'}</button>
           </div>
@@ -179,6 +180,7 @@ export default function App() {
             <Route path="/more" element={<MoreSheet />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/features" element={<Features />} />
+            <Route path="/profile" element={<Profile />} />
           </>}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -307,6 +309,10 @@ function MoreSheet() {
           </div>
         </section>
       ))}
+      <section className="more-group">
+        <h2>👤 אני</h2>
+        <div className="more-grid"><NavLink to="/profile"><span className="more-ico" aria-hidden="true">🔑</span>הפרופיל שלי · סיסמה</NavLink></div>
+      </section>
       <SaverToggle />
       <section className="more-group">
         <h2>🛠️ עזרה טכנית</h2>
