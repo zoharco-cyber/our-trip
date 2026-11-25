@@ -1,10 +1,23 @@
 import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { uploadAvatar } from '../lib/avatar';
 
 /** הפרופיל שלי: שינוי סיסמה עצמאי (מאמתים קודם את הסיסמה הנוכחית) */
 export default function Profile() {
-  const { me, session, isAdmin } = useAuth();
+  const { me, session, isAdmin, reloadProfiles } = useAuth();
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<string | null>(null);
+  async function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; e.target.value = '';
+    if (!f || !me) return;
+    if (!navigator.onLine) { setPhotoMsg('צריך קליטה כדי להעלות תמונה.'); return; }
+    setPhotoBusy(true); setPhotoMsg(null);
+    const url = await uploadAvatar(me.id, f);
+    setPhotoBusy(false);
+    if (!url) { setPhotoMsg('לא הצלחתי להעלות. נסי שוב.'); return; }
+    await reloadProfiles(); setPhotoMsg('התמונה עודכנה ✓');
+  }
   const [cur, setCur] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -34,8 +47,13 @@ export default function Profile() {
   return (
     <div className="stack-lg narrow">
       <div className="profile-head" style={{ ['--c' as any]: me.color }}>
-        <span className="profile-av">{me.display_name[0]}</span>
-        <div><h1>{me.display_name}</h1><p className="muted">{isAdmin ? 'מנהל' : 'מטיילת'}</p></div>
+        <label className={'profile-av' + (photoBusy ? ' busy' : '')} title="החלפת תמונה">
+          {me.avatar_url ? <img src={me.avatar_url} alt="" /> : me.display_name[0]}
+          <span className="profile-cam" aria-hidden="true">📷</span>
+          <input type="file" accept="image/*" hidden onChange={pickPhoto} disabled={photoBusy} />
+        </label>
+        <div><h1>{me.display_name}</h1><p className="muted">{isAdmin ? 'מנהל' : 'מטיילת'}</p>
+          <p className="small">{photoBusy ? 'מעלה…' : photoMsg || 'לחיצה על העיגול: צילום או בחירת תמונה'}</p></div>
       </div>
 
       <form className="card stack" onSubmit={save}>

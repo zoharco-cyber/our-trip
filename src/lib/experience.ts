@@ -5,7 +5,7 @@ import { VAPID_PUBLIC_KEY } from '../config';
 /** "התדריך": חוויית הפתיחה. המסך הגדול (מנהל) מוביל, הטלפונים עוקבים דרך ערוץ Realtime. */
 export const SLUG = { ella: 't1', lihi: 't2', lior: 't3' } as const;
 
-export type SceneKind = 'lobby' | 'recruit' | 'finger' | 'hotline' | 'flight' | 'dest' | 'vault' | 'likely' | 'spot' | 'waiting' | 'forget' | 'takeoff' | 'done';
+export type SceneKind = 'lobby' | 'recruit' | 'finger' | 'password' | 'photo' | 'hotline' | 'flight' | 'dest' | 'vault' | 'likely' | 'spot' | 'waiting' | 'forget' | 'takeoff' | 'done';
 export type Scene = { kind: SceneKind; title: string; q?: string; who?: string; about?: string };
 
 export const LIKELY = ['מי הכי סביר שתאבד את הדרכון?', 'מי תתאהב במקומי?', 'מי תבכה ראשונה מהגעגועים?'];
@@ -13,6 +13,8 @@ export const SCENES: Scene[] = [
   { kind: 'lobby', title: 'הלובי' },
   { kind: 'recruit', title: 'הגיוס' },
   { kind: 'finger', title: 'טביעת אצבע' },
+  { kind: 'password', title: 'קוד גישה' },
+  { kind: 'photo', title: 'תמונת סוכנת' },
   { kind: 'hotline', title: 'קו חם' },
   { kind: 'flight', title: 'מועד ההמראה', who: SLUG.ella },
   { kind: 'dest', title: 'היעד הראשון', who: SLUG.lihi },

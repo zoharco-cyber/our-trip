@@ -5,6 +5,7 @@ import { useMoney } from '../lib/money';
 import { buzz } from '../lib/launch';
 import { CODE_HINT, COUNTRIES, DIAL_MAX, SCENES, doneKey, enablePush, expChannel, isIOS, isStandalone, type StageState } from '../lib/experience';
 import { Passport } from './LaunchShow';
+import { uploadAvatar } from '../lib/avatar';
 
 /** הטלפון של כל בת בזמן "התדריך" */
 export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish: () => void }) {
@@ -65,6 +66,8 @@ export default function ExpPhone({ epoch, onFinish }: { epoch: number; onFinish:
     case 'lobby': body = (<><Passport g={{ id: me.id, name: me.display_name.split(' ')[0], color: me.color }} i={Math.max(0, meIdx)} stamped /><p className="xp-look">את בפנים ✅</p><span className="xp-small">מחכות לשאר הסוכנות…</span>{isIOS() && !isStandalone() && <InstallHint />}</>); break;
     case 'recruit': body = <Screen />; break;
     case 'finger': body = sent ? <Sent text="זוהית ✓" /> : <Finger onDone={() => send(st.scene, true)} />; break;
+    case 'password': body = sent ? <Sent text="קוד הגישה נקבע ✓" /> : <SetPassword onDone={(v) => send(st.scene, v)} />; break;
+    case 'photo': body = sent ? <Sent text="התמונה בדרכון ✓" /> : <AgentPhoto uid={me.id} name={me.display_name.split(' ')[0]} color={me.color} idx={Math.max(0, meIdx)} onDone={(url) => send(st.scene, url)} />; break;
     case 'hotline': body = sent ? <Sent text="הקו נבדק ✓" /> : <Hotline uid={me.id} onDone={(r) => send(st.scene, r)} />; break;
     case 'flight': case 'dest': {
       const val = st.shared?.val as any; const conf = (st.shared?.conf as Record<string, boolean>) || {};
@@ -245,4 +248,52 @@ function SelfDestruct() {
       {n === 0 && <div className="xp-sd-fire">{Array.from({ length: 26 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 7) * 0.08}s` }} />)}</div>}
     </div>
   );
+}
+
+/** קוד גישה אישי: סיסמה חדשה לאפליקציה (במקום זו שזוהר נתן) */
+function SetPassword({ onDone }: { onDone: (v: string) => void }) {
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const ok = pw.length >= 6 && pw === pw2;
+  async function save() {
+    setBusy(true); setErr(null);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) { setErr(/different|same/i.test(error.message) ? 'זו כבר הסיסמה שלך 🙂 בחרי אחרת, או השאירי אותה.' : 'לא הצליח. בדקי קליטה ונסי שוב.'); return; }
+    onDone('new');
+  }
+  return (<><span className="xp-eye">🔑</span><p className="xp-q">קוד גישה אישי<br /><small>בחרי סיסמה חדשה משלך לאפליקציה. רק את תדעי אותה.</small></p>
+    <input className="xp-pw" type={show ? 'text' : 'password'} dir="ltr" autoComplete="new-password" placeholder="סיסמה חדשה (לפחות 6)" value={pw} onChange={(e) => setPw(e.target.value)} />
+    <input className="xp-pw" type={show ? 'text' : 'password'} dir="ltr" autoComplete="new-password" placeholder="שוב, לאישור" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+    <label className="xp-small"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} /> להציג</label>
+    {pw2 && pw !== pw2 && <p className="xp-warn">הסיסמאות לא תואמות</p>}
+    {err && <p className="xp-warn">{err}</p>}
+    <button className="xp-go" disabled={!ok || busy} onClick={save}>{busy ? '…' : '🔒 קביעת קוד'}</button>
+    <button className="xp-skip" onClick={() => onDone('keep')}>להשאיר את הסיסמה הנוכחית</button></>);
+}
+
+/** תמונת סוכנת: סלפי שנכנס לדרכון ונשמר כתמונת הפרופיל */
+function AgentPhoto({ uid, name, color, idx, onDone }: { uid: string; name: string; color: string; idx: number; onDone: (url: string | null) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [url, setUrl] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; e.target.value = '';
+    if (!f) return;
+    setBusy(true); setErr(null);
+    const u = await uploadAvatar(uid, f);
+    setBusy(false);
+    if (!u) { setErr('לא הצליח להעלות. נסי שוב.'); return; }
+    setUrl(u);
+  }
+  return (<><p className="xp-q">תמונת סוכנת<br /><small>צילום לדרכון. בלי לחייך! (או עם 😄)</small></p>
+    <Passport g={{ id: uid, name, color, photo: url }} i={idx} stamped={!!url} />
+    {!url ? (<label className={'xp-go xp-huge' + (busy ? ' busy' : '')}>{busy ? 'מעלה…' : '📸 צילום סלפי'}<input type="file" accept="image/*" capture="user" hidden onChange={pick} disabled={busy} /></label>)
+      : (<><button className="xp-go" onClick={() => onDone(url)}>שליחה למסך ✦</button>
+        <label className="xp-skip">לצלם שוב<input type="file" accept="image/*" capture="user" hidden onChange={pick} /></label></>)}
+    {err && <p className="xp-warn">{err}</p>}
+    {!url && <button className="xp-skip" onClick={() => onDone(null)}>אחר כך</button>}</>);
 }

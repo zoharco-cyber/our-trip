@@ -38,7 +38,8 @@ export default function ExpStage() {
   const sound = useRef<ReturnType<typeof makeSound> | null>(null);
   const ch = useRef<ReturnType<typeof expChannel> | null>(null);
   const sRef = useRef(s); sRef.current = s;
-  const girls: Girl[] = useMemo(() => travelers.map((t) => ({ id: t.id, name: t.display_name.split(' ')[0], color: t.color })), [travelers]);
+  const photoScene = SCENES.findIndex((x) => x.kind === 'photo');
+  const girls: Girl[] = useMemo(() => travelers.map((t) => ({ id: t.id, name: t.display_name.split(' ')[0], color: t.color, photo: (s.ans[k(photoScene)] || {})[t.id] || t.avatar_url || null })), [travelers, s.ans]);
   const bySlug = (slug?: string) => profiles.find((p) => p.slug === slug);
   const nameOf = (id?: string) => profiles.find((p) => p.id === id)?.display_name.split(' ')[0] || '';
   const colorOf = (id?: string) => profiles.find((p) => p.id === id)?.color || '#fff';
@@ -143,7 +144,7 @@ export default function ExpStage() {
   useEffect(() => {
     if (!present.length) return;
     const all = present.every((u) => curAns[u] !== undefined);
-    if ((sc.kind === 'finger' || sc.kind === 'hotline') && all) { const t = setTimeout(() => go(1), 2200); return () => clearTimeout(t); }
+    if ((sc.kind === 'finger' || sc.kind === 'hotline' || sc.kind === 'password') && all) { const t = setTimeout(() => go(1), 2200); return () => clearTimeout(t); }
     if (sc.kind === 'takeoff') {
       const presses = present.map((u) => curAns[u]).filter((x) => typeof x === 'number') as number[];
       if (presses.length === present.length && !A(s.scene, 'ok')[me?.id || 'x']) {
@@ -171,7 +172,7 @@ export default function ExpStage() {
     const c = SCENES[sRef.current.scene]; const sc0 = sRef.current.scene;
     const who = profiles.find((p) => p.slug === c.who)?.id; const about = profiles.find((p) => p.slug === c.about)?.id;
     const fake: Record<string, (id: string) => any> = {
-      finger: () => true, hotline: () => 'on', likely: () => ids[Math.floor(Math.random() * ids.length)],
+      finger: () => true, hotline: () => 'on', password: () => 'new', photo: () => null, likely: () => ids[Math.floor(Math.random() * ids.length)],
       waiting: (id) => ['לראות את מאצ׳ו פיצ׳ו בזריחה', 'לרקוד טנגו בבואנוס איירס', 'לישון במלון של מלח'][ids.indexOf(id) % 3],
       forget: (id) => ['המטען של הטלפון', 'הדרכון', 'כרית צוואר'][ids.indexOf(id) % 3], takeoff: () => Date.now(),
     };
@@ -262,6 +263,10 @@ export default function ExpStage() {
     case 'finger': view = (<><h1 className="xs-h">זיהוי ביומטרי</h1><div className="xs-row">{girls.map((g) => { const ok = curAns[g.id] !== undefined; return (
       <div key={g.id} className={'xs-fp' + (ok ? ' ok' : '')} style={{ ['--c' as any]: g.color }}><span className="xs-fp-ico">🫆</span><b>{g.name}</b><small>{ok ? 'אומתה ✓' : 'סורקת…'}</small></div>); })}</div>
       {present.length > 0 && present.every((u) => curAns[u] !== undefined) && <p className="xs-granted">ACCESS GRANTED</p>}</>); break;
+    case 'password': view = (<><h1 className="xs-h">קוד גישה אישי</h1><p className="xs-sub">כל סוכנת קובעת סיסמה משלה. אף אחד אחר לא יודע אותה.</p><div className="xs-row">{girls.map((g) => { const v = curAns[g.id]; return (
+      <div key={g.id} className={'xs-bell' + (v ? ' on' : '')} style={{ ['--c' as any]: g.color }}><span>{v ? '🔐' : '🔑'}</span><b>{g.name}</b><small>{v === 'new' ? 'קוד חדש נקבע' : v === 'keep' ? 'נשארה עם הקיים' : 'מקלידה…'}</small></div>); })}</div></>); break;
+    case 'photo': view = (<><h1 className="xs-h">תמונות הסוכנות</h1><p className="xs-sub">צילום לדרכון. כל תמונה נכנסת עכשיו לתיק.</p>
+      <div className="xs-cards">{girls.map((g, i) => { const has = curAns[g.id] !== undefined; return <div key={g.id} className={'stage-card' + (has ? ' in' : '')}><Passport g={g} i={i} stamped={has} dim={!has} /><span className="stage-tag">{has ? (curAns[g.id] ? 'צולמה 📸' : 'אחר כך') : 'מצטלמת…'}</span></div>; })}</div></>); break;
     case 'hotline': view = (<><h1 className="xs-h">קו חם לסוכנות</h1><p className="xs-sub">הסוכנות צריכה דרך להשיג אתכן בכל מקום ביבשת</p><div className="xs-row">{girls.map((g) => { const v = curAns[g.id]; return (
       <div key={g.id} className={'xs-bell' + (v === 'on' ? ' on' : v ? ' warn' : '')} style={{ ['--c' as any]: g.color }}><span>{v === 'on' ? '🔔' : v ? '⚠️' : '🔕'}</span><b>{g.name}</b><small>{v === 'on' ? 'הקו פעיל' : v === 'install' ? 'צריך להתקין' : v ? 'אחר כך' : 'מחכה…'}</small></div>); })}</div></>); break;
     case 'flight': { const v = curAns[W(sc.who)?.id || ''] as { date: string; time: string } | undefined;

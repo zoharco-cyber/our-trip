@@ -4,7 +4,7 @@ import { confetti } from '../lib/fx';
 import { buzz, makeSound } from '../lib/launch';
 
 type Sound = ReturnType<typeof makeSound> | null;
-export type Girl = { id: string; name: string; color: string };
+export type Girl = { id: string; name: string; color: string; photo?: string | null };
 
 /** 10 השניות האחרונות: מסך שחור, מספר ענק, פעימת לב (צליל במסך הבמה, רטט בטלפון) */
 export function FinalTen({ at, sound, big, onZero }: { at: number; sound?: Sound; big?: boolean; onZero: () => void }) {
@@ -34,6 +34,7 @@ export function Passport({ g, i, stamped, dim, flight }: { g: Girl; i: number; s
   return (
     <div className={'pp' + (stamped ? ' stamped' : '') + (dim ? ' dim' : '')} style={{ ['--c' as any]: g.color }}>
       <div className="pp-top"><span>דרכון מטיילת</span><span className="tnum">№ 00{i + 1}</span></div>
+      {g.photo && <img className="pp-photo" src={g.photo} alt="" />}
       <b className="pp-name">{g.name}</b>
       <div className="pp-line"><span>יעד</span><b>דרום אמריקה</b></div>
       <div className="pp-line"><span>המראה</span><b className="tnum">{flight || '22.12.2026'}</b></div>

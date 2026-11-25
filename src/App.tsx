@@ -142,7 +142,7 @@ export default function App() {
           </nav>
           <div className="who">
             {guest ? <span className="pill">אורח/ת</span> : me && (
-              <NavLink to="/profile" className="pill pill-link" title="הפרופיל שלי" style={{ ['--c' as any]: me.color }}><i className="dot" />{me.display_name.split(' ')[0]}</NavLink>
+              <NavLink to="/profile" className="pill pill-link" title="הפרופיל שלי" style={{ ['--c' as any]: me.color }}>{me.avatar_url ? <img className="pill-av" src={me.avatar_url} alt="" /> : <i className="dot" />}{me.display_name.split(' ')[0]}</NavLink>
             )}
             <button className="link-btn" onClick={signOut}>{guest ? 'כניסה' : 'יציאה'}</button>
           </div>
