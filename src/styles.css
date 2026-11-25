@@ -1497,3 +1497,10 @@ html.stage-lock body { background: #060408 !important; }
 .xp input.xp-pw { width: 100%; background: #17111b !important; border: 1px solid #3a2133; border-radius: 14px; color: #fff; font: inherit; font-size: 1.1rem; padding: .8rem; text-align: center; }
 label.xp-go { display: block; text-align: center; cursor: pointer; } label.xp-go.busy { opacity: .6; }
 label.xp-skip { cursor: pointer; }
+/* מחשב: התפריט העליון יורד שורה במקום להיחתך */
+@media (min-width: 761px) {
+  .topnav { flex-wrap: wrap; overflow: visible; row-gap: .2rem; min-width: 0; }
+  .topbar-inner > .who { flex: none; }
+}
+.admin-pill { font-weight: 700; }
+@media (max-width: 760px) { .admin-pill { display: none; } }

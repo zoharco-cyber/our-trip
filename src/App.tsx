@@ -141,6 +141,7 @@ export default function App() {
             {isAdmin && <NavLink to="/admin">ניהול</NavLink>}
           </nav>
           <div className="who">
+            {isAdmin && <NavLink to="/admin" className="pill pill-link admin-pill" title="ניהול">⚙️ ניהול</NavLink>}
             {guest ? <span className="pill">אורח/ת</span> : me && (
               <NavLink to="/profile" className="pill pill-link" title="הפרופיל שלי" style={{ ['--c' as any]: me.color }}>{me.avatar_url ? <img className="pill-av" src={me.avatar_url} alt="" /> : <i className="dot" />}{me.display_name.split(' ')[0]}</NavLink>
             )}
