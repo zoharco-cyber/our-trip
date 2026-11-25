@@ -3,20 +3,8 @@ import { useAuth } from '../lib/auth';
 import Countdown from '../components/Countdown';
 import { LOGO_URL } from '../config';
 import { supabase } from '../lib/supabase';
-import { confetti } from '../lib/fx';
-
-/** מועד ההשקה (המנהל קובע). null = אין השקה, האתר פתוח */
-function useLaunch() {
-  const [at, setAt] = useState<number | null>(() => { try { const v = localStorage.getItem('trip:launch'); return v ? Number(v) : null; } catch { return null; } });
-  useEffect(() => {
-    supabase.from('settings').select('value').eq('key', 'launch_at').maybeSingle().then(({ data }) => {
-      const t = data?.value ? new Date(data.value).getTime() : null;
-      setAt(t);
-      try { if (t) localStorage.setItem('trip:launch', String(t)); else localStorage.removeItem('trip:launch'); } catch { /* ignore */ }
-    });
-  }, []);
-  return at;
-}
+import { announceArrival, useLaunchAt } from '../lib/launch';
+import { FinalTen, Reveal } from '../components/LaunchShow';
 
 function LaunchCountdown({ at, onDone }: { at: number; onDone: () => void }) {
   const [now, setNow] = useState(Date.now());
@@ -46,14 +34,17 @@ function LaunchCountdown({ at, onDone }: { at: number; onDone: () => void }) {
         ))}
       </div>
       <span className="launch-when">{when}</span>
+      <FinalTen at={at} onZero={() => {}} />
     </section>
   );
 }
 
 export default function Login() {
   const { signIn, enterAsGuest, signInGuest, profiles } = useAuth();
-  const launchAt = useLaunch();
+  const launchAt = useLaunchAt();
   const [launchedNow, setLaunchedNow] = useState(false);
+  const [show, setShow] = useState<'none' | 'reveal'>('none');
+  const girls = profiles.filter((p) => p.is_traveler).map((p) => ({ id: p.id, name: p.display_name.split(' ')[0], color: p.color }));
   const locked = !!launchAt && launchAt > Date.now() && !launchedNow;
   const [guestOpen, setGuestOpen] = useState(false);
   const [gpw, setGpw] = useState('');
@@ -83,10 +74,14 @@ export default function Login() {
     setBusy(true); setErr(null);
     const msg = await signIn(slug, pw);
     setBusy(false);
-    if (msg) setErr(msg);
+    if (msg) { setErr(msg); return; }
+    // ערב ההשקה: מדליקים אותה על מסך הבמה
+    const p = profiles.find((x) => x.slug === slug);
+    if (p && launchAt && Date.now() - launchAt < 12 * 36e5) announceArrival({ id: p.id, name: p.display_name.split(' ')[0], color: p.color });
   }
 
   const [wiped, setWiped] = useState(() => { try { return localStorage.getItem('trip:wipedNotice'); } catch { return null; } });
+  if (show === 'reveal') return <Reveal girls={girls} onDone={() => { setShow('none'); setLaunchedNow(true); }} />;
   return (
     <div className="login-wrap">
       {wiped && (
@@ -105,7 +100,7 @@ export default function Login() {
         <h1 className="login-title">הטיול שלנו</h1>
         <p className="login-sub">דרום אמריקה ומה שיבוא אחריה</p>
         {locked
-          ? <LaunchCountdown at={launchAt!} onDone={() => { setLaunchedNow(true); confetti(undefined, undefined, 220); }} />
+          ? <LaunchCountdown at={launchAt!} onDone={() => setShow('reveal')} />
           : launchedNow ? <p className="launch-done">🎉 האפליקציה הושקה! ברוכים הבאים</p> : <Countdown compact />}
       </div>
 

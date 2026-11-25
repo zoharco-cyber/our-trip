@@ -15,6 +15,7 @@ import PinGate from './components/PinGate';
 
 // כל עמוד נטען רק כשנכנסים אליו
 const MoneyPage = lazy(() => import('./pages/Money'));
+const Stage = lazy(() => import('./pages/Stage'));
 const Shopping = lazy(() => import('./pages/Shopping'));
 const Wishes = lazy(() => import('./pages/Wishes'));
 const Documents = lazy(() => import('./pages/Documents'));
@@ -109,6 +110,8 @@ export default function App() {
 
   if (!isConfigured) return <SetupNeeded />;
   if (!ready) return <div className="splash">רגע…</div>;
+  // מסך הבמה של ההשקה: פתוח לכולם, בלי התחברות ובלי תפריטים
+  if (pathname === '/stage') return <Suspense fallback={<div className="splash">…</div>}><Stage /></Suspense>;
   if (!session && !guest) return <Login />;
 
   const sections = SECTIONS.filter((s) => !guest || s.guest);
